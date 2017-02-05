@@ -2,5 +2,5 @@
 
 Will be incorporated with the MEDYAN model.
 
-Prerequisites:
+Prerequisites: 
 1. CGAL: https://github.com/CGAL/cgal
