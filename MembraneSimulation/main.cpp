@@ -75,11 +75,9 @@ int main() {
 	// registering neighbours
 	for (Polyhedron::Halfedge_iterator hit = p.halfedges_begin(); hit != p.halfedges_end(); hit++) {
 		int this_index = vertices_index_map[hit->vertex()];
-		vertices[this_index].n.push_back(vertices[vertices_index_map[hit->opposite()->vertex()]].point);
-		vertices[this_index].n_prev.push_back(vertices[vertices_index_map[hit->opposite()->next()->vertex()]].point);
-		vertices[this_index].n_next.push_back(vertices[vertices_index_map[hit->next()->vertex()]].point);
-		//MS::point_3 * t = vertices[vertices_index_map[hit->next()->vertex()]].point;
-		//std::cout << t->x << '\t';
+		vertices[this_index].n.push_back(&vertices[vertices_index_map[hit->opposite()->vertex()]]);
+		vertices[this_index].n_prev.push_back(&vertices[vertices_index_map[hit->opposite()->next()->vertex()]]);
+		vertices[this_index].n_next.push_back(&vertices[vertices_index_map[hit->next()->vertex()]]);
 		vertices[this_index].dump_data_vectors();
 	}
 
