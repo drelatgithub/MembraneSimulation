@@ -9,10 +9,10 @@
 #include"surface_free_energy.h"
 
 // Parameteres in Armijo-Goldstein condition
-const double c = 0.5; // Inequality relaxation
+const double c = 0.4; // Inequality relaxation
 const double tau = 0.5; // Shrink size of alpha after each iteration
 
-const double eps = 1e-5; // Maximum deviation for each coordinate
+const double eps = 1e-3; // Maximum deviation for each coordinate
 
 int minimization(std::vector<MS::vertex> &vertices);
 void test_derivatives(std::vector<MS::vertex> &vertices);
@@ -29,7 +29,23 @@ int MS::simulation_start(std::vector<vertex> &vertices) {
 		vertices[i].make_initial();
 	}
 
-	minimization(vertices);
+	std::ofstream p_out;
+	p_out.open("F:\\p_out.txt");
+
+	//minimization(vertices);
+
+	
+	for (double a = -1; a < 1.5; a += 0.05) {
+		std::cout << update_len(a) << std::endl;
+		minimization(vertices);
+		for (int i = 0; i < len; i++) {
+			p_out << vertices[i].point->x << '\t' << vertices[i].point->y << '\t' << vertices[i].point->z << '\t';
+		}
+		p_out << '\n';
+	}
+	
+
+	p_out.close();
 
 	//test_derivatives(vertices);
 	
@@ -46,6 +62,11 @@ int minimization(std::vector<MS::vertex> &vertices) {
 	double alpha;
 	double beta;
 
+	MS::update_len(-1);
+
+	//std::ofstream tp_out;
+	//tp_out.open("F:\\tp_out.txt");
+	
 	// Initializing
 	for (int i = 0; i < N; i++) {
 		// Get H and d_H
@@ -64,11 +85,13 @@ int minimization(std::vector<MS::vertex> &vertices) {
 
 	while (!finished) {
 		// Find alpha and update coordinates
-		alpha = 0.001; // TODO initial alpha should not be too big (less iterations to find alpha) nor too small (significant decrease in H)
+		alpha = 0.09; // TODO initial alpha should not be too big (less iterations to find alpha) nor too small (significant decrease in H)
 		double judge_lhs, judge_rhs, m = 0;
 		for (int i = 0; i < 3*N; i++) {
 			m += p[i] * d_H[i];
 		}
+		if (m > 0)
+			std::cout << "Warning: along search direction is increasing free energy\n";
 		judge_rhs = c*m;
 
 		int l = 0; // debug counter
@@ -101,12 +124,19 @@ int minimization(std::vector<MS::vertex> &vertices) {
 		}
 
 		// Find beta (Fletcher-Reeves)
+		//double a = 0, b = 0;
+		//for (int i = 0; i < 3 * N; i++) {
+		//	a += d_H_new[i] * d_H_new[i];
+		//	b += d_H[i] * d_H[i];
+		//}
+		//beta = a / b;
+		// Find beta (Polak-Ribiere)
 		double a = 0, b = 0;
 		for (int i = 0; i < 3 * N; i++) {
-			a += d_H_new[i] * d_H_new[i];
+			a += d_H_new[i] * (d_H_new[i] - d_H[i]);
 			b += d_H[i] * d_H[i];
 		}
-		beta = a / b;
+		beta = (a >= 0) ? a / b : 0;
 
 		// Renew search direction
 		for (int i = 0; i < 3 * N; i++) {
@@ -119,7 +149,7 @@ int minimization(std::vector<MS::vertex> &vertices) {
 			if (finished && (
 				vertices[i].point->x - vertices[i].point_last->x > eps || vertices[i].point_last->x - vertices[i].point->x > eps ||
 				vertices[i].point->y - vertices[i].point_last->y > eps || vertices[i].point_last->y - vertices[i].point->y > eps ||
-				vertices[i].point->z - vertices[i].point_last->y > eps || vertices[i].point_last->z - vertices[i].point->z > eps)) {
+				vertices[i].point->z - vertices[i].point_last->z > eps || vertices[i].point_last->z - vertices[i].point->z > eps)) {
 				finished = false;
 			}
 			// Record coordinates as last-time coordinates
@@ -133,7 +163,11 @@ int minimization(std::vector<MS::vertex> &vertices) {
 		}
 
 		k++;
-		std::cout << "Iteration: " << k << "\tFree energy: " << H << std::endl;
+		std::cout << k << "\tm: " << m << "\talpha: " << alpha << "\tFree energy: " << H << std::endl;
+		//for (int i = 0; i < N; i++) {
+		//	tp_out << vertices[i].point->x << '\t' << vertices[i].point->y << '\t' << vertices[i].point->z << '\t';
+		//}
+		//tp_out << '\n';
 	}
 
 	delete[]d_H;
