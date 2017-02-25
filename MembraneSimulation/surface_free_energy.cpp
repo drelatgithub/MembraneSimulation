@@ -24,21 +24,21 @@ double MS::d_h_curv_h(vertex *v, int c_index) {
 		ans += 4 * k_c*(v->curv_h - c_0)*v->dx_curv_h*v->area + 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*v->dx_area;
 		for each(vertex * n in v->n) {
 			int i = n->neighbour_indices_map[v];
-			ans += 4 * k_c*(n->curv_h - c_0)*n->dxn_curv_h[i] * v->area + 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*n->dxn_area[i];
+			ans += 4 * k_c*(n->curv_h - c_0)*n->dxn_curv_h[i] * n->area + 2 * k_c*(n->curv_h - c_0)*(n->curv_h - c_0)*n->dxn_area[i];
 		}
 		break;
 	case 1:
 		ans += 4 * k_c*(v->curv_h - c_0)*v->dy_curv_h*v->area + 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*v->dy_area;
 		for each(vertex * n in v->n) {
 			int i = n->neighbour_indices_map[v];
-			ans += 4 * k_c*(n->curv_h - c_0)*n->dyn_curv_h[i] * v->area + 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*n->dyn_area[i];
+			ans += 4 * k_c*(n->curv_h - c_0)*n->dyn_curv_h[i] * n->area + 2 * k_c*(n->curv_h - c_0)*(n->curv_h - c_0)*n->dyn_area[i];
 		}
 		break;
 	case 2:
 		ans += 4 * k_c*(v->curv_h - c_0)*v->dz_curv_h*v->area + 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*v->dz_area;
 		for each(vertex * n in v->n) {
 			int i = n->neighbour_indices_map[v];
-			ans += 4 * k_c*(n->curv_h - c_0)*n->dzn_curv_h[i] * v->area + 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*n->dzn_area[i];
+			ans += 4 * k_c*(n->curv_h - c_0)*n->dzn_curv_h[i] * n->area + 2 * k_c*(n->curv_h - c_0)*(n->curv_h - c_0)*n->dzn_area[i];
 		}
 		break;
 	}
@@ -55,21 +55,21 @@ double MS::d_h_curv_g(vertex *v, int c_index) {
 		ans += k_g*(v->dx_curv_g*v->area + v->curv_g*v->dx_area);
 		for each(vertex * n in v->n) {
 			int i = n->neighbour_indices_map[v];
-			ans += k_g*(n->dxn_curv_g[i] * v->area + v->curv_g*n->dxn_area[i]);
+			ans += k_g*(n->dxn_curv_g[i] * n->area + n->curv_g * n->dxn_area[i]);
 		}
 		break;
 	case 1:
 		ans += k_g*(v->dy_curv_g*v->area + v->curv_g*v->dy_area);
 		for each(vertex * n in v->n) {
 			int i = n->neighbour_indices_map[v];
-			ans += k_g*(n->dyn_curv_g[i] * v->area + v->curv_g*n->dyn_area[i]);
+			ans += k_g*(n->dyn_curv_g[i] * n->area + n->curv_g * n->dyn_area[i]);
 		}
 		break;
 	case 2:
 		ans += k_g*(v->dz_curv_g*v->area + v->curv_g*v->dz_area);
 		for each(vertex * n in v->n) {
 			int i = n->neighbour_indices_map[v];
-			ans += k_g*(n->dzn_curv_g[i] * v->area + v->curv_g*n->dzn_area[i]);
+			ans += k_g*(n->dzn_curv_g[i] * n->area + n->curv_g * n->dzn_area[i]);
 		}
 		break;
 	}
@@ -115,19 +115,19 @@ double MS::d_h_pressure(vertex *v, int c_index) {
 	case 0:
 		ans += -k_ps / v->area * v->dx_area;
 		for each(vertex * n in v->n) {
-			ans += -k_ps / v->area * n->dxn_area[n->neighbour_indices_map[v]];
+			ans += -k_ps / n->area * n->dxn_area[n->neighbour_indices_map[v]];
 		}
 		break;
 	case 1:
 		ans += -k_ps / v->area * v->dy_area;
 		for each(vertex * n in v->n) {
-			ans += -k_ps / v->area * n->dyn_area[n->neighbour_indices_map[v]];
+			ans += -k_ps / n->area * n->dyn_area[n->neighbour_indices_map[v]];
 		}
 		break;
 	case 2:
 		ans += -k_ps / v->area * v->dz_area;
 		for each(vertex * n in v->n) {
-			ans += -k_ps / v->area * n->dzn_area[n->neighbour_indices_map[v]];
+			ans += -k_ps / n->area * n->dzn_area[n->neighbour_indices_map[v]];
 		}
 		break;
 	}

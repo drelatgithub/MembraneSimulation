@@ -38,7 +38,20 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 	
 	for (double a = -1; a < 1.5; a += 0.05) {
 		std::cout << update_len(a) << std::endl;
+		double h = 0;
+		for (int i = 0; i < len; i++) {
+			h += h_curv_g(vertices[i]);
+		}
+		std::cout << "total h_k: " << h << std::endl;
+
 		minimization(vertices);
+
+		h = 0;
+		for (int i = 0; i < len; i++) {
+			h += h_curv_g(vertices[i]);
+		}
+		std::cout << "total h_k: " << h << std::endl;
+
 		for (int i = 0; i < len; i++) {
 			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
