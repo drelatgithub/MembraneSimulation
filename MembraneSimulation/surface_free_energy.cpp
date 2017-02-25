@@ -1,11 +1,16 @@
+#include<math.h>
+
 #include"surface_free_energy.h"
 #include"surface_mesh.h"
 
 // TODO: Find experimental results for constants
-const double k_c = 0.1; // Bending modulus
-const double k_g = -0.2; // Saddle-splay modulus
+const double k_c = 2.0; // Bending modulus
+const double k_g = -4.0; // Saddle-splay modulus
 const double c_0 = 0.0; // Spontaneous curvature
-const double gamma = 0.01; // Surface tension
+const double gamma = 1.0; // Surface tension
+const double k_ps = 0.02; // Surface pressure constant. For balance around area0, k_ps = area0 * gamma
+const double h_max_ps = log(1000)*k_ps;
+
 
 double polymer_len = 0.6;
 
@@ -99,15 +104,46 @@ double MS::d_h_tension(vertex *v, int c_index) {
 	return ans;
 }
 
+double MS::h_pressure(vertex *v) {
+	if (v->area < 0.001*v->area0)return h_max_ps;
+	return -k_ps*log(v->area / v->area0);
+}
+double MS::d_h_pressure(vertex *v, int c_index) {
+	double ans = 0;
+	if (v->area < 0.001*v->area0)return 0;
+	switch (c_index) {
+	case 0:
+		ans += -k_ps / v->area * v->dx_area;
+		for each(vertex * n in v->n) {
+			ans += -k_ps / v->area * n->dxn_area[n->neighbour_indices_map[v]];
+		}
+		break;
+	case 1:
+		ans += -k_ps / v->area * v->dy_area;
+		for each(vertex * n in v->n) {
+			ans += -k_ps / v->area * n->dyn_area[n->neighbour_indices_map[v]];
+		}
+		break;
+	case 2:
+		ans += -k_ps / v->area * v->dz_area;
+		for each(vertex * n in v->n) {
+			ans += -k_ps / v->area * n->dzn_area[n->neighbour_indices_map[v]];
+		}
+		break;
+	}
+	return ans;
+}
+
 double MS::h_all(vertex * v) {
 	//return h_tension(v);
-	return h_curv_h(v) + h_curv_g(v) + h_tension(v) + h_potential(v);
+	return h_curv_h(v) + h_curv_g(v) + h_tension(v) + h_pressure(v) + h_potential(v);
 }
 double MS::d_h_all(vertex * v, int c_index) {
 	//return d_h_tension(v, c_index);
 	return d_h_curv_h(v, c_index)
 		+ d_h_curv_g(v, c_index)
 		+ d_h_tension(v, c_index)
+		+ d_h_pressure(v, c_index)
 		+ d_h_potential(v, c_index);
 }
 

@@ -27,6 +27,9 @@
     <ClCompile Include="simulation_process.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="mesh_initialization.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="surface_mesh.h">
@@ -36,6 +39,9 @@
       <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="surface_free_energy.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh_initialization.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>

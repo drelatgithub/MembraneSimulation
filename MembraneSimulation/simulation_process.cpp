@@ -14,23 +14,24 @@ const double tau = 0.5; // Shrink size of alpha after each iteration
 
 const double eps = 1e-3; // Maximum deviation for each coordinate
 
-int minimization(std::vector<MS::vertex> &vertices);
-void test_derivatives(std::vector<MS::vertex> &vertices);
+int minimization(std::vector<MS::vertex*> &vertices);
+void test_derivatives(std::vector<MS::vertex*> &vertices);
 
-int MS::simulation_start(std::vector<vertex> &vertices) {
+int MS::simulation_start(std::vector<vertex*> &vertices) {
 	int len = vertices.size();
 
 	for (int i = 0; i < len; i++) {
-		vertices[i].count_neighbours();
+		vertices[i]->count_neighbours();
 		if (i == 0) {
 			int a = 1;
 		}
-		vertices[i].update_geo();
-		vertices[i].make_initial();
+		vertices[i]->update_geo();
+		vertices[i]->make_initial();
 	}
 
-	std::ofstream p_out;
+	std::ofstream p_out, f_out;
 	p_out.open("F:\\p_out.txt");
+	f_out.open("F:\\f_out.txt");
 
 	//minimization(vertices);
 
@@ -39,20 +40,27 @@ int MS::simulation_start(std::vector<vertex> &vertices) {
 		std::cout << update_len(a) << std::endl;
 		minimization(vertices);
 		for (int i = 0; i < len; i++) {
-			p_out << vertices[i].point->x << '\t' << vertices[i].point->y << '\t' << vertices[i].point->z << '\t';
+			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
+			for (int j = 0; j < 3; j++) {
+				f_out << MS::d_h_curv_g(vertices[i], j) << '\t';
+			}
 		}
-		p_out << '\n';
+		p_out << std::endl;
+		f_out << std::endl;
+
+		break;
 	}
 	
 
 	p_out.close();
+	f_out.close();
 
 	//test_derivatives(vertices);
 	
 	return 0;
 }
 
-int minimization(std::vector<MS::vertex> &vertices) {
+int minimization(std::vector<MS::vertex*> &vertices) {
 	bool finished = false;
 	int N = vertices.size(); // Number of vertices
 	double H = 0, H_new = 0;
@@ -62,30 +70,31 @@ int minimization(std::vector<MS::vertex> &vertices) {
 	double alpha;
 	double beta;
 
-	MS::update_len(-1);
-
-	//std::ofstream tp_out;
-	//tp_out.open("F:\\tp_out.txt");
+	//std::ofstream temp_out;
+	//temp_out.open("F:\\temp_out.txt");
 	
 	// Initializing
 	for (int i = 0; i < N; i++) {
 		// Get H and d_H
-		H += MS::h_all(&vertices[i]);
+		H += MS::h_all(vertices[i]);
 		for (int j = 0; j < 3; j++) {
-			d_H[i * 3 + j] = MS::d_h_all(&vertices[i], j);
+			d_H[i * 3 + j] = MS::d_h_all(vertices[i], j);
 			// Initialize search direction
 			p[i * 3 + j] = -d_H[i * 3 + j];
 		}
 
 		// Store vertices location as the last location
-		vertices[i].make_last();
+		vertices[i]->make_last();
+
+		//temp_out << MS::d_h_curv_g(&vertices[i], 0) << '\t' << MS::d_h_curv_g(&vertices[i], 1) << '\t' << MS::d_h_curv_g(&vertices[i], 2) << '\t';
 	}
+	//temp_out.close();
 
 	int k = 0; // Iteration counter. Only for debug use.
 
 	while (!finished) {
 		// Find alpha and update coordinates
-		alpha = 0.09; // TODO initial alpha should not be too big (less iterations to find alpha) nor too small (significant decrease in H)
+		alpha = 0.01; // TODO initial alpha should not be too big (less iterations to find alpha) nor too small (significant decrease in H)
 		double judge_lhs, judge_rhs, m = 0;
 		for (int i = 0; i < 3*N; i++) {
 			m += p[i] * d_H[i];
@@ -97,18 +106,29 @@ int minimization(std::vector<MS::vertex> &vertices) {
 		int l = 0; // debug counter
 		while(true) {
 			for (int i = 0; i < N; i++) {
-				vertices[i].point->x = vertices[i].point_last->x + alpha*p[i * 3];
-				vertices[i].point->y = vertices[i].point_last->y + alpha*p[i * 3 + 1];
-				vertices[i].point->z = vertices[i].point_last->z + alpha*p[i * 3 + 2];
+				vertices[i]->point->x = vertices[i]->point_last->x + alpha*p[i * 3];
+				vertices[i]->point->y = vertices[i]->point_last->y + alpha*p[i * 3 + 1];
+				vertices[i]->point->z = vertices[i]->point_last->z + alpha*p[i * 3 + 2];
 			}
 			for (int i = 0; i < N; i++) {
-				vertices[i].update_geo();
+				vertices[i]->update_geo();
 			}
 			H_new = 0;
 			for (int i = 0; i < N; i++) {
-				H_new += MS::h_all(&vertices[i]);
+				H_new += MS::h_all(vertices[i]);
 			}
 			judge_lhs = (H_new - H) / alpha;
+
+			if (H_new < -1000) { // something is wrong
+				std::ofstream ab_out;
+				ab_out.open("F:\\ab_out.txt");
+				for (int i = 0; i < N; i++) {
+					double a = MS::h_all(vertices[i]);
+					//std::cout << MS::h_all(&vertices[i]) << std::endl;
+					ab_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
+				}
+				ab_out.close();
+			}
 
 			l++;
 
@@ -119,7 +139,7 @@ int minimization(std::vector<MS::vertex> &vertices) {
 		// Find d_H_new (d_H is already calculated in finding alpha)
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < 3; j++) {
-				d_H_new[i * 3 + j] = MS::d_h_all(&vertices[i], j);
+				d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
 			}
 		}
 
@@ -147,13 +167,13 @@ int minimization(std::vector<MS::vertex> &vertices) {
 		finished = true;
 		for (int i = 0; i < N; i++) {
 			if (finished && (
-				vertices[i].point->x - vertices[i].point_last->x > eps || vertices[i].point_last->x - vertices[i].point->x > eps ||
-				vertices[i].point->y - vertices[i].point_last->y > eps || vertices[i].point_last->y - vertices[i].point->y > eps ||
-				vertices[i].point->z - vertices[i].point_last->z > eps || vertices[i].point_last->z - vertices[i].point->z > eps)) {
+				vertices[i]->point->x - vertices[i]->point_last->x > eps || vertices[i]->point_last->x - vertices[i]->point->x > eps ||
+				vertices[i]->point->y - vertices[i]->point_last->y > eps || vertices[i]->point_last->y - vertices[i]->point->y > eps ||
+				vertices[i]->point->z - vertices[i]->point_last->z > eps || vertices[i]->point_last->z - vertices[i]->point->z > eps)) {
 				finished = false;
 			}
 			// Record coordinates as last-time coordinates
-			vertices[i].make_last();
+			vertices[i]->make_last();
 		}
 
 		// Renew H and d_H
@@ -177,7 +197,7 @@ int minimization(std::vector<MS::vertex> &vertices) {
 	return 0;
 }
 
-void test_derivatives(std::vector<MS::vertex> &vertices) {
+void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	// Test local properties (main)
 	/*
 	double l1 = vertices[0].curv_h, l2 = vertices[0].curv_g, l3 = vertices[0].cot_theta2[0];
@@ -256,23 +276,23 @@ void test_derivatives(std::vector<MS::vertex> &vertices) {
 	double *d_H_new = new double[3 * N];
 
 	for (int i = 0; i < N; i++) {
-		H += MS::h_all(&vertices[i]);
+		H += MS::h_all(vertices[i]);
 		for (int j = 0; j < 3; j++) {
-			d_H[i * 3 + j] = MS::d_h_all(&vertices[i], j);
+			d_H[i * 3 + j] = MS::d_h_all(vertices[i], j);
 		}
 	}
 
-	vertices[0].point->y += 0.000001;
-	vertices[100].point->x += 0.000001;
-	vertices[200].point->z += 0.000001;
+	vertices[0]->point->y += 0.000001;
+	vertices[100]->point->x += 0.000001;
+	vertices[200]->point->z += 0.000001;
 	for (int i = 0; i < N; i++) {
-		vertices[i].update_geo();
+		vertices[i]->update_geo();
 	}
 
 	for (int i = 0; i < N; i++) {
-		H_new += MS::h_all(&vertices[i]);
+		H_new += MS::h_all(vertices[i]);
 		for (int j = 0; j < 3; j++) {
-			d_H_new[i * 3 + j] = MS::d_h_all(&vertices[i], j);
+			d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
 		}
 	}
 

@@ -449,7 +449,7 @@ void MS::vertex::update_geo() {
 }
 
 void MS::vertex::make_initial() {
-	area0 = area-0.0001;
+	area0 = area;
 }
 
 void MS::vertex::make_last() {
