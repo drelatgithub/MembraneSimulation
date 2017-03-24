@@ -8,14 +8,32 @@
 #include"surface_mesh.h"
 #include"surface_free_energy.h"
 
-// Parameteres in Armijo-Goldstein condition
-const double c = 0.4; // Inequality relaxation
-const double tau = 0.5; // Shrink size of alpha after each iteration
+#define USE_STEEPEST_DESCENT true
+#define USE_LINE_SEARCH true
 
-const double eps = 1e-3; // Maximum deviation for each coordinate
+/* RUN_MODE
+	0: Normal simulation
+	1: Derivative test
+	2: Normal direction force profile
+*/
+#define RUN_MODE 2
+
+// Wolfe conditions
+// Armijo Rule
+const double c1 = 0.0001; // Inequality relaxation
+const double tau = 0.5; // Shrink size of alpha after each iteration
+// Curvature condition
+const double c2 = 0.1;
+
+const double eps = 5e-3; // Maximum deviation for each coordinate
 
 int minimization(std::vector<MS::vertex*> &vertices);
+
+double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alpha0);
+double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alphal, double alphah);
+
 void test_derivatives(std::vector<MS::vertex*> &vertices);
+void normal_force_profile(std::vector<MS::vertex*> &vertices);
 
 int MS::simulation_start(std::vector<vertex*> &vertices) {
 	int len = vertices.size();
@@ -33,34 +51,46 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 	p_out.open("F:\\p_out.txt");
 	f_out.open("F:\\f_out.txt");
 
-	//minimization(vertices);
 
-	
-	for (double a = -1; a < 1.5; a += 0.05) {
-		std::cout << update_len(a) << std::endl;
-		double h = 0;
-		for (int i = 0; i < len; i++) {
-			h += h_curv_g(vertices[i]);
+	switch (RUN_MODE) {
+	case 0:
+		for (double a = -1.3; a < 1.5; a += 0.05) {
+			std::cout << update_len(a) << std::endl;
+
+			minimization(vertices);
+
+			for (int i = 0; i < len; i++) {
+				p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
+				for (int j = 0; j < 3; j++) {
+					f_out << MS::d_h_all(vertices[i], j) << '\t';
+				}
+			}
+			p_out << std::endl;
+			f_out << std::endl;
+
+			break;
 		}
-		std::cout << "total h_k: " << h << std::endl;
+
+		std::cout << update_len(-3) << std::endl;
 
 		minimization(vertices);
-
-		h = 0;
-		for (int i = 0; i < len; i++) {
-			h += h_curv_g(vertices[i]);
-		}
-		std::cout << "total h_k: " << h << std::endl;
 
 		for (int i = 0; i < len; i++) {
 			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
-				f_out << MS::d_h_curv_g(vertices[i], j) << '\t';
+				f_out << MS::d_h_all(vertices[i], j) << '\t';
 			}
 		}
 		p_out << std::endl;
 		f_out << std::endl;
+		break;
 
+	case 1:
+		test_derivatives(vertices);
+		break;
+
+	case 2:
+		normal_force_profile(vertices);
 		break;
 	}
 	
@@ -68,8 +98,6 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 	p_out.close();
 	f_out.close();
 
-	//test_derivatives(vertices);
-	
 	return 0;
 }
 
@@ -80,11 +108,13 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 	double *d_H = new double[3 * N];
 	double *d_H_new = new double[3 * N];
 	double *p = new double[3 * N]; // Search direction
+	double alpha0;
 	double alpha;
 	double beta;
 
-	//std::ofstream temp_out;
-	//temp_out.open("F:\\temp_out.txt");
+	std::ofstream p_min_out, f_min_out;
+	p_min_out.open("F:\\p_min_out.txt");
+	f_min_out.open("F:\\f_min_out.txt");
 	
 	// Initializing
 	for (int i = 0; i < N; i++) {
@@ -107,82 +137,67 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 	while (!finished) {
 		// Find alpha and update coordinates
-		alpha = 0.01; // TODO initial alpha should not be too big (less iterations to find alpha) nor too small (significant decrease in H)
-		double judge_lhs, judge_rhs, m = 0;
-		for (int i = 0; i < 3*N; i++) {
-			m += p[i] * d_H[i];
+		alpha0 = 0.001; // TODO initial alpha?
+
+		double m = 0, m_new = 0;
+		if (USE_STEEPEST_DESCENT) {
+			for (int i = 0; i < 3 * N; i++) {
+				p[i] = -d_H[i];
+				m += p[i] * d_H[i];
+			}
 		}
-		if (m > 0)
-			std::cout << "Warning: along search direction is increasing free energy\n";
-		judge_rhs = c*m;
-
-		int l = 0; // debug counter
-		while(true) {
-			for (int i = 0; i < N; i++) {
-				vertices[i]->point->x = vertices[i]->point_last->x + alpha*p[i * 3];
-				vertices[i]->point->y = vertices[i]->point_last->y + alpha*p[i * 3 + 1];
-				vertices[i]->point->z = vertices[i]->point_last->z + alpha*p[i * 3 + 2];
+		else {
+			for (int i = 0; i < 3*N; i++) {
+				m += p[i] * d_H[i];
 			}
-			for (int i = 0; i < N; i++) {
-				vertices[i]->update_geo();
-			}
-			H_new = 0;
-			for (int i = 0; i < N; i++) {
-				H_new += MS::h_all(vertices[i]);
-			}
-			judge_lhs = (H_new - H) / alpha;
-
-			if (H_new < -1000) { // something is wrong
-				std::ofstream ab_out;
-				ab_out.open("F:\\ab_out.txt");
+			if (m > 0) {
+				std::cout << "Warning: along search direction is increasing energy. Reassigning search direction.\n";
+				m = 0;
 				for (int i = 0; i < N; i++) {
-					double a = MS::h_all(vertices[i]);
-					//std::cout << MS::h_all(&vertices[i]) << std::endl;
-					ab_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
+					for (int j = 0; j < 3; j++) {
+						// Initialize search direction
+						p[i * 3 + j] = -d_H[i * 3 + j];
+						m += p[i * 3 + j] * d_H[i * 3 + j];
+					}
 				}
-				ab_out.close();
-			}
-
-			l++;
-
-			if (judge_lhs <= judge_rhs)break;
-			else alpha *= tau;
-		}
-
-		// Find d_H_new (d_H is already calculated in finding alpha)
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < 3; j++) {
-				d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
 			}
 		}
 
-		// Find beta (Fletcher-Reeves)
-		//double a = 0, b = 0;
-		//for (int i = 0; i < 3 * N; i++) {
-		//	a += d_H_new[i] * d_H_new[i];
-		//	b += d_H[i] * d_H[i];
-		//}
-		//beta = a / b;
-		// Find beta (Polak-Ribiere)
-		double a = 0, b = 0;
-		for (int i = 0; i < 3 * N; i++) {
-			a += d_H_new[i] * (d_H_new[i] - d_H[i]);
-			b += d_H[i] * d_H[i];
-		}
-		beta = (a >= 0) ? a / b : 0;
+		alpha = line_search(vertices, N, H, H_new, p, d_H_new, m, m_new, alpha0);
+		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
+		// H_new and d_H_new are updated.
 
-		// Renew search direction
-		for (int i = 0; i < 3 * N; i++) {
-			p[i] = -d_H_new[i] + beta*p[i];
+		if (!USE_STEEPEST_DESCENT) {
+			// Find beta (Fletcher-Reeves)
+			double a = 0, b = 0;
+			for (int i = 0; i < 3 * N; i++) {
+				a += d_H_new[i] * d_H_new[i];
+				b += d_H[i] * d_H[i];
+			}
+			beta = a / b;
+			// Find beta (Polak-Ribiere)
+			//double a = 0, b = 0;
+			//for (int i = 0; i < 3 * N; i++) {
+			//	a += d_H_new[i] * (d_H_new[i] - d_H[i]);
+			//	b += d_H[i] * d_H[i];
+			//}
+			//beta = (a >= 0) ? a / b : 0;
+
+			// Renew search direction
+			for (int i = 0; i < 3 * N; i++) {
+				p[i] = -d_H_new[i] + beta*p[i];
+			}
 		}
 
 		// Judge when we should exit loop
 		finished = true;
 		for (int i = 0; i < N; i++) {
 			if (finished && (
-				vertices[i]->point->x - vertices[i]->point_last->x > eps || vertices[i]->point_last->x - vertices[i]->point->x > eps ||
-				vertices[i]->point->y - vertices[i]->point_last->y > eps || vertices[i]->point_last->y - vertices[i]->point->y > eps ||
-				vertices[i]->point->z - vertices[i]->point_last->z > eps || vertices[i]->point_last->z - vertices[i]->point->z > eps)) {
+				abs(d_H_new[i * 3 + 0]) > eps || abs(d_H_new[i * 3 + 1]) > eps || abs(d_H_new[i * 3 + 2]) > eps
+				//vertices[i]->point->x - vertices[i]->point_last->x > eps || vertices[i]->point_last->x - vertices[i]->point->x > eps ||
+				//vertices[i]->point->y - vertices[i]->point_last->y > eps || vertices[i]->point_last->y - vertices[i]->point->y > eps ||
+				//vertices[i]->point->z - vertices[i]->point_last->z > eps || vertices[i]->point_last->z - vertices[i]->point->z > eps
+				)) {
 				finished = false;
 			}
 			// Record coordinates as last-time coordinates
@@ -197,17 +212,154 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 		k++;
 		std::cout << k << "\tm: " << m << "\talpha: " << alpha << "\tFree energy: " << H << std::endl;
-		//for (int i = 0; i < N; i++) {
-		//	tp_out << vertices[i].point->x << '\t' << vertices[i].point->y << '\t' << vertices[i].point->z << '\t';
-		//}
-		//tp_out << '\n';
+		for (int i = 0; i < N; i++) {
+			p_min_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
+			for (int j = 0; j < 3; j++) {
+				f_min_out << d_H[i * 3 + j] << '\t';
+			}
+		}
+		p_min_out << std::endl;
+		f_min_out << std::endl;
 	}
+
+	f_min_out.close();
+	p_min_out.close();
 
 	delete[]d_H;
 	delete[]d_H_new;
 	delete[]p;
 
 	return 0;
+}
+double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alpha0) {
+
+	double alpha = alpha0 * tau;
+	double alphap = 0;
+	double Hp = H;
+	bool accepted = false;
+
+	while (!accepted) {
+		accepted = true;
+
+		for (int i = 0; i < N; i++) {
+			vertices[i]->point->x = vertices[i]->point_last->x + alpha*p[i * 3];
+			vertices[i]->point->y = vertices[i]->point_last->y + alpha*p[i * 3 + 1];
+			vertices[i]->point->z = vertices[i]->point_last->z + alpha*p[i * 3 + 2];
+		}
+		
+		for (int i = 0; i < N; i++) {
+			vertices[i]->update_geo();
+			if (vertices[i]->area <= 0) {
+				accepted = false;
+			}
+		}
+		if (!accepted) {
+			alpha = alphap + (alpha - alphap) * tau;
+			continue;
+		}
+
+		// Renew energy
+		H_new = 0;
+		for (int i = 0; i < N; i++) {
+			H_new += MS::h_all(vertices[i]);
+		}
+
+		if (USE_LINE_SEARCH && (H_new >= Hp || H_new - H > c1*alpha*m)) { // Armijo condition not satisfied.
+			std::cout << "Too far!\talphap: " << alphap << "\talpha: " << alpha << std::endl;
+			alpha = zoom(vertices, N, H, H_new, p, d_H_new, m, m_new, alphap, alpha);
+			return alpha;
+		} // Armijo condition satisfied.
+
+		// Renew energy derivatives and m value
+		m_new = 0;
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < 3; j++) {
+				d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
+				m_new += p[i * 3 + j] * d_H_new[i * 3 + j];
+			}
+		}
+		
+		if (!USE_LINE_SEARCH || abs(m_new) <= -c2 * m) { // Curvature condition satisfied. Good.
+			return alpha;
+		} // Curvature condition not satisfied
+
+		if (m_new >= 0) { // Minimum is inside
+			std::cout << "Minimum is inside!\talpha: " << alpha << "\talphap: " << alphap << std::endl;
+			alpha = zoom(vertices, N, H, H_new, p, d_H_new, m, m_new, alpha, alphap);
+			return alpha;
+		}
+
+		// Increase alpha and try again
+		accepted = false;
+		Hp = H_new;
+		alphap = alpha;
+		alpha += (alpha0 - alpha) * tau;
+
+		std::cout << "alphap: " << alphap << "\talpha: " << alpha << std::endl;
+
+	}
+}
+
+double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alphal, double alphah) {
+	double alpha = 0.5 * (alphal + alphah);
+	bool accepted = false;
+	while (!accepted) {
+
+		accepted = true;
+
+		for (int i = 0; i < N; i++) {
+			vertices[i]->point->x = vertices[i]->point_last->x + alpha*p[i * 3];
+			vertices[i]->point->y = vertices[i]->point_last->y + alpha*p[i * 3 + 1];
+			vertices[i]->point->z = vertices[i]->point_last->z + alpha*p[i * 3 + 2];
+		}
+		for (int i = 0; i < N; i++) {
+			vertices[i]->update_geo();
+			if (vertices[i]->area <= 0) {
+				accepted = false;
+			}
+		}
+		if (!accepted) {
+			double alpha_small = ((alphal < alphah) ? alphal : alphah);
+			alpha = alpha_small + (alpha - alpha_small) * tau;
+			continue;
+		}
+		accepted = false;
+
+		// Renew energy
+		H_new = 0;
+		for (int i = 0; i < N; i++) {
+			H_new += MS::h_all(vertices[i]);
+		}
+
+		if (H_new - H > c1*alpha*m) { // Armijo condition not satisfied.
+			alphah = alpha;
+		}
+		else {
+
+			// Renew energy derivatives and m value
+			m_new = 0;
+			for (int i = 0; i < N; i++) {
+				for (int j = 0; j < 3; j++) {
+					d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
+					m_new += p[i * 3 + j] * d_H_new[i * 3 + j];
+				}
+			}
+
+			if (abs(m_new) <= -c2*m) {
+				std::cout << "m_new: " << m_new << "\tm:" << m << std::endl;
+				return alpha;
+			}
+
+			if (m_new * (alphah - alphal) >= 0) {
+				alphah = alphal;
+			}
+			alphal = alpha;
+		}
+
+		alpha = 0.5 * (alphal + alphah);
+
+		std::cout << "alphal: " << alphal << "\talphah: " << alphah << std::endl;
+	}
 }
 
 void test_derivatives(std::vector<MS::vertex*> &vertices) {
@@ -312,4 +464,14 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	double c1 = (H_new - H) / .000001;
 	std::cout << "dy H:\tactual: " << c1 << "\tsupposed: " << d_H[1] + d_H[300] + d_H[602] << std::endl;
 
+}
+
+void normal_force_profile(std::vector<MS::vertex*> &vertices) {
+	int v_index = 10;
+	int N = vertices.size();
+
+	double H = 0;
+	for (int i = 0; i < N; i++) {
+		H += MS::h_all(vertices[i]);
+	}
 }

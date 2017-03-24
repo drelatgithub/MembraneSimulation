@@ -155,13 +155,12 @@ double MS::update_len(double param) {
 	return polymer_len;
 }
 double MS::h_potential(vertex * v) {
-	if (v->point->x < polymer_len - 0.6)return exp(10) - 1;
-	else if (v->point->x < polymer_len)return exp((polymer_len - v->point->x) / 0.06) - 1;
-	else return 0;
+	if (v->point->x < -15 || v->point->x > 15)return exp(10) + exp(-10) - 2;
+	else return exp((-v->point->x) / 1.5) + exp((v->point->x) / 1.5) - 2;
 }
 
 double MS::d_h_potential(vertex * v, int c_index) {
 	if (c_index == 1 || c_index == 2)return 0;
-	if (v->point->x >= polymer_len - 0.6 && v->point->x < polymer_len)return -exp((polymer_len - v->point->x) / 0.06) / 0.06;
+	if (v->point->x >=  - 15 && v->point->x <= 15)return -exp(( - v->point->x) / 1.5) / 1.5 + exp((v->point->x) / 1.5) / 1.5;
 	else return 0;
 }
