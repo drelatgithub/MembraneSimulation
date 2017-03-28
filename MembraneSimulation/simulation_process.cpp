@@ -14,9 +14,9 @@
 /* RUN_MODE
 	0: Normal simulation
 	1: Derivative test
-	2: Normal direction force profile
+	2: Direction force profile of one vertex
 */
-#define RUN_MODE 2
+#define RUN_MODE 1
 
 // Wolfe conditions
 // Armijo Rule
@@ -33,7 +33,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alphal, double alphah);
 
 void test_derivatives(std::vector<MS::vertex*> &vertices);
-void normal_force_profile(std::vector<MS::vertex*> &vertices);
+void force_profile(std::vector<MS::vertex*> &vertices);
 
 int MS::simulation_start(std::vector<vertex*> &vertices) {
 	int len = vertices.size();
@@ -90,7 +90,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 		break;
 
 	case 2:
-		normal_force_profile(vertices);
+		force_profile(vertices);
 		break;
 	}
 	
@@ -112,9 +112,10 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 	double alpha;
 	double beta;
 
-	std::ofstream p_min_out, f_min_out;
+	std::ofstream p_min_out, f_min_out, sd_min_out;
 	p_min_out.open("F:\\p_min_out.txt");
 	f_min_out.open("F:\\f_min_out.txt");
+	sd_min_out.open("F:\\sd_min_out.txt");
 	
 	// Initializing
 	for (int i = 0; i < N; i++) {
@@ -167,6 +168,14 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
 		// H_new and d_H_new are updated.
 
+		double aaa = MS::d_h_all(vertices[1078], 0);
+		aaa = MS::d_h_all(vertices[1078], 1);
+		aaa = MS::d_h_all(vertices[1078], 2);
+		MS::vertex* nnn = vertices[1078]->n[0];
+		aaa = MS::d_h_all(nnn, 0);
+		aaa = MS::d_h_all(nnn, 1);
+		aaa = MS::d_h_all(nnn, 2);
+
 		if (!USE_STEEPEST_DESCENT) {
 			// Find beta (Fletcher-Reeves)
 			double a = 0, b = 0;
@@ -216,14 +225,17 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			p_min_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
 				f_min_out << d_H[i * 3 + j] << '\t';
+				sd_min_out << p[i * 3 + j] << '\t';
 			}
 		}
 		p_min_out << std::endl;
 		f_min_out << std::endl;
+		sd_min_out << std::endl;
 	}
 
 	f_min_out.close();
 	p_min_out.close();
+	sd_min_out.close();
 
 	delete[]d_H;
 	delete[]d_H_new;
@@ -299,7 +311,6 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 
 	}
 }
-
 double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alphal, double alphah) {
 	double alpha = 0.5 * (alphal + alphah);
 	bool accepted = false;
@@ -365,42 +376,47 @@ double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, 
 void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	// Test local properties (main)
 	/*
-	double l1 = vertices[0].curv_h, l2 = vertices[0].curv_g, l3 = vertices[0].cot_theta2[0];
-	double d1 = vertices[0].dz_curv_h, d2 = vertices[0].dz_curv_g, d3 = vertices[0].dz_cot_theta2[0];
+	int vind = 1078;
+	double increment = 0.0001;
 
-	vertices[0].point->z += 0.0001;
-	vertices[0].update_geo();
+	double l1 = vertices[vind]->curv_h, l2 = vertices[vind]->area, l3 = vertices[vind]->cot_theta2[0];
+	double d1 = vertices[vind]->dx_curv_h, d2 = vertices[vind]->dx_area, d3 = vertices[vind]->dx_cot_theta2[0];
 
-	double c1 = (vertices[0].curv_h - l1) / .0001,
-		c2 = (vertices[0].curv_g - l2) / .0001,
-		c3 = (vertices[0].cot_theta2[0] - l3) / .0001;
+	vertices[vind]->point->x += increment;
+	vertices[vind]->update_geo();
+
+	double c1 = (vertices[vind]->curv_h - l1) / increment,
+		c2 = (vertices[vind]->area - l2) / increment,
+		c3 = (vertices[vind]->cot_theta2[0] - l3) / increment;
 	std::cout << "dx h:\tactual: " << c1 << "\tsupposed: " << d1 << std::endl;
-	std::cout << "dx g:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
+	std::cout << "dx a:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
 	std::cout << "dx t2:\tactual: " << c3 << "\tsupposed: " << d3 << std::endl;
+
 	*/
 
 	// Test local properties (neighbours)
-	/*
-	MS::vertex *n = vertices[0].n[0], *nn = vertices[0].n_next[0], *np = vertices[0].n_prev[0];
+	int vind = 1078;
+	double increment = 0.0001;
+
+	MS::vertex *n = vertices[vind]->n[0], *nn = vertices[vind]->n_next[0], *np = vertices[vind]->n_prev[0];
 	//double l1 = vertices[0].curv_h, l2 = vertices[0].curv_g, l3 = vertices[0].area, l4 = vertices[0].cot_theta3[0];
-	double l1 = vertices[0].cot_theta3[0], l2 = vertices[0].theta3[0];
+	double l1 = vertices[vind]->cot_theta3[0], l2 = vertices[vind]->theta3[0];
 	//double d1 = vertices[0].dyn_curv_h[0], d2 = vertices[0].dyn_curv_g[0], d3 = vertices[0].dyn_area[0], d4=vertices[0].dyn_cot_theta3[0];
-	double d1 = vertices[0].dznn_cot_theta3[0], d2 = vertices[0].dznn_theta3[0];
+	double d1 = vertices[vind]->dznn_cot_theta3[0], d2 = vertices[vind]->dznn_theta3[0];
 
-	//n->point->y += 0.0001;
-	nn->point->z += 0.0001;
-	vertices[0].update_geo();
+	//n->point->y += increment;
+	nn->point->z += increment;
+	vertices[vind]->update_geo();
 
-	//double c1 = (vertices[0].curv_h - l1) / .0001,
-		//c2 = (vertices[0].curv_g - l2) / .0001,
-		//c3 = (vertices[0].area - l3) / .0001,
-		//c4 = (vertices[0].cot_theta3[0] - l4) / .0001;
-	double c1 = (vertices[0].cot_theta3[0] - l1) / .0001, c2 = (vertices[0].theta3[0] - l2) / .0001;
+	//double c1 = (vertices[0].curv_h - l1) / increment,
+		//c2 = (vertices[0].curv_g - l2) / increment,
+		//c3 = (vertices[0].area - l3) / increment,
+		//c4 = (vertices[0].cot_theta3[0] - l4) / increment;
+	double c1 = (vertices[vind]->cot_theta3[0] - l1) / increment, c2 = (vertices[vind]->theta3[0] - l2) / increment;
 	std::cout << "dz:\tactual: " << c1 << "\tsupposed: " << d1 << std::endl;
 	std::cout << "dz:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
 	//std::cout << "dy a:\tactual: " << c3 << "\tsupposed: " << d3 << std::endl;
 	//std::cout << "dy r:\tactual: " << c4 << "\tsupposed: " << d4 << std::endl;
-	*/
 
 	// Test local free energies with neighbours
 	/*
@@ -435,6 +451,7 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	*/
 
 	// Test Overall free energy
+	/*
 	int N = vertices.size();
 	double H = 0, H_new = 0;
 	double *d_H = new double[3 * N];
@@ -463,15 +480,66 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 
 	double c1 = (H_new - H) / .000001;
 	std::cout << "dy H:\tactual: " << c1 << "\tsupposed: " << d_H[1] + d_H[300] + d_H[602] << std::endl;
+	*/
 
 }
 
-void normal_force_profile(std::vector<MS::vertex*> &vertices) {
+void force_profile(std::vector<MS::vertex*> &vertices) {
 	int v_index = 10;
 	int N = vertices.size();
+	int len = vertices[v_index]->n.size();
 
-	double H = 0;
-	for (int i = 0; i < N; i++) {
-		H += MS::h_all(vertices[i]);
+	std::ofstream nfp, lfp1;
+	nfp.open("F:\\nfp.txt");
+	lfp1.open("F:\\lfp1.txt");
+
+	vertices[v_index]->update_geo();
+	double H = MS::h_all(vertices[v_index]);
+	for (int j = 0; j < len; j++) {
+		vertices[v_index]->n[j]->update_geo();
+		H += MS::h_all(vertices[v_index]->n[j]);
 	}
+
+	vertices[v_index]->make_last();
+	double n_x = vertices[v_index]->n_x;
+	double n_y = vertices[v_index]->n_y;
+	double n_z = vertices[v_index]->n_z;
+	double l1_x = -n_y;
+	double l1_y = n_x;
+	double l1_z = 0;
+
+	double H_new;
+
+	for (double move = -0.02; move < 0.02; move += 0.001) {
+		vertices[v_index]->point->x = vertices[v_index]->point_last->x + n_x*move;
+		vertices[v_index]->point->y = vertices[v_index]->point_last->y + n_y*move;
+		vertices[v_index]->point->z = vertices[v_index]->point_last->z + n_z*move;
+		vertices[v_index]->update_geo();
+		H_new = 0;
+		H_new = MS::h_all(vertices[v_index]);
+		for (int j = 0; j < len; j++) {
+			vertices[v_index]->n[j]->update_geo();
+			H_new += MS::h_all(vertices[v_index]->n[j]);
+		}
+		//std::cout << "move: " << move << "\tdH: " << H_new - H << std::endl;
+		nfp << move << '\t' << H_new - H << std::endl;
+	}
+
+	for (double move = -0.08; move < 0.04; move += 0.001) {
+		vertices[v_index]->point->x = vertices[v_index]->point_last->x + l1_x*move;
+		vertices[v_index]->point->y = vertices[v_index]->point_last->y + l1_y*move;
+		vertices[v_index]->point->z = vertices[v_index]->point_last->z + l1_z*move;
+		vertices[v_index]->update_geo();
+		H_new = 0;
+		H_new = MS::h_all(vertices[v_index]);
+		for (int j = 0; j < len; j++) {
+			vertices[v_index]->n[j]->update_geo();
+			H_new += MS::h_all(vertices[v_index]->n[j]);
+		}
+		//std::cout << "move: " << move << "\tdH: " << H_new - H << std::endl;
+		lfp1 << move << '\t' << H_new - H << std::endl;
+	}
+
+	nfp.close();
+	lfp1.close();
 }
