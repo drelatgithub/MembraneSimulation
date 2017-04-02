@@ -10,13 +10,15 @@
 
 #define USE_STEEPEST_DESCENT true
 #define USE_LINE_SEARCH true
+#define CONTROL_MAX_STEP true // Max step size for each vertex
+#define IMPOSE_MOVE_LIMIT true
 
 /* RUN_MODE
 	0: Normal simulation
 	1: Derivative test
 	2: Direction force profile of one vertex
 */
-#define RUN_MODE 1
+#define RUN_MODE 0
 
 // Wolfe conditions
 // Armijo Rule
@@ -26,6 +28,9 @@ const double tau = 0.5; // Shrink size of alpha after each iteration
 const double c2 = 0.1;
 
 const double eps = 5e-3; // Maximum deviation for each coordinate
+const double max_move = 0.001; // Maximum displacement for each step in any direction
+
+double move_limit(double dx);
 
 int minimization(std::vector<MS::vertex*> &vertices);
 
@@ -164,17 +169,37 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			}
 		}
 
+		if (true) { // Data verification
+			int vinds[] = { 0,100,200,1078 };
+			for (int i = 0; i < 4; i++) {
+				MS::vertex* v = vertices[vinds[i]];
+				std::cout << vinds[i] << "\tch: " << v->curv_h << "\thch: " << MS::h_curv_h(v) << "\tdxhch: " << MS::d_h_curv_h(v, 0)
+					<< "\tr2: " << v->point->x*v->point->x + v->point->y*v->point->y + v->point->z*v->point->z
+					<< std::endl;
+				for (int j = 0, len = v->n.size(); j < len; j++) {
+					std::cout << v->r_p_n[j] << '\t';
+				}
+				std::cout << std::endl;
+			}
+			double aaa = MS::d_h_all(vertices[1078], 0);
+			aaa = MS::d_h_all(vertices[1078], 1);
+			aaa = MS::d_h_all(vertices[1078], 2);
+			MS::vertex* nnn = vertices[1078]->n[0];
+			aaa = MS::d_h_all(nnn, 0);
+			aaa = MS::d_h_all(nnn, 1);
+			aaa = MS::d_h_all(nnn, 2);
+		}
+
 		alpha = line_search(vertices, N, H, H_new, p, d_H_new, m, m_new, alpha0);
+		std::ofstream t1;
+		t1.open("F:\\t1.txt");
+		for (int i = 0; i < 3 * N; i++) {
+			t1 << p[i] << '\t' << d_H[i] << '\t' << d_H_new[i] << std::endl;
+		}
+		std::cout << "t1 complete." << std::endl;
+		t1.close();
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
 		// H_new and d_H_new are updated.
-
-		double aaa = MS::d_h_all(vertices[1078], 0);
-		aaa = MS::d_h_all(vertices[1078], 1);
-		aaa = MS::d_h_all(vertices[1078], 2);
-		MS::vertex* nnn = vertices[1078]->n[0];
-		aaa = MS::d_h_all(nnn, 0);
-		aaa = MS::d_h_all(nnn, 1);
-		aaa = MS::d_h_all(nnn, 2);
 
 		if (!USE_STEEPEST_DESCENT) {
 			// Find beta (Fletcher-Reeves)
@@ -254,9 +279,9 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		accepted = true;
 
 		for (int i = 0; i < N; i++) {
-			vertices[i]->point->x = vertices[i]->point_last->x + alpha*p[i * 3];
-			vertices[i]->point->y = vertices[i]->point_last->y + alpha*p[i * 3 + 1];
-			vertices[i]->point->z = vertices[i]->point_last->z + alpha*p[i * 3 + 2];
+			vertices[i]->point->x = vertices[i]->point_last->x + move_limit(alpha*p[i * 3]);
+			vertices[i]->point->y = vertices[i]->point_last->y + move_limit(alpha*p[i * 3 + 1]);
+			vertices[i]->point->z = vertices[i]->point_last->z + move_limit(alpha*p[i * 3 + 2]);
 		}
 		
 		for (int i = 0; i < N; i++) {
@@ -395,6 +420,7 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	*/
 
 	// Test local properties (neighbours)
+	/*
 	int vind = 1078;
 	double increment = 0.0001;
 
@@ -417,38 +443,38 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	std::cout << "dz:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
 	//std::cout << "dy a:\tactual: " << c3 << "\tsupposed: " << d3 << std::endl;
 	//std::cout << "dy r:\tactual: " << c4 << "\tsupposed: " << d4 << std::endl;
+	*/
 
 	// Test local free energies with neighbours
-	/*
-	double l1 = MS::h_curv_h(&vertices[0]), l2 = MS::h_curv_g(&vertices[0]), l3 = MS::h_tension(&vertices[0]);
-	for (int i = 0; i < vertices[0].neighbours; i++) {
-		l1 += MS::h_curv_h(vertices[0].n[i]);
-		l2 += MS::h_curv_g(vertices[0].n[i]);
-		l3 += MS::h_tension(vertices[0].n[i]);
+	
+	int vind = 1078;
+	double increment = 0.00001;
+
+	double l1 = MS::h_curv_h(vertices[vind]), l2 = MS::h_pressure(vertices[vind]);
+	for (int i = 0; i < vertices[vind]->neighbours; i++) {
+		l1 += MS::h_curv_h(vertices[vind]->n[i]);
+		l2 += MS::h_pressure(vertices[vind]->n[i]);
 	}
-	double d1 = MS::d_h_curv_h(&vertices[0], 1), d2 = MS::d_h_curv_g(&vertices[0], 1), d3 = MS::d_h_tension(&vertices[0], 1);
+	double d1 = MS::d_h_curv_h(vertices[vind], 1), d2 = MS::d_h_pressure(vertices[vind], 1);
 
 
-	vertices[0].point->y += 0.00001;
-	vertices[0].update_geo();
-	for (int i = 0; i < vertices[0].neighbours; i++) {
-		vertices[0].n[i]->update_geo();
+	vertices[vind]->point->y += increment;
+	vertices[vind]->update_geo();
+	for (int i = 0; i < vertices[vind]->neighbours; i++) {
+		vertices[vind]->n[i]->update_geo();
 	}
 
-	double n1 = MS::h_curv_h(&vertices[0]), n2 = MS::h_curv_g(&vertices[0]), n3 = MS::h_tension(&vertices[0]);
-	for (int i = 0; i < vertices[0].neighbours; i++) {
-		n1 += MS::h_curv_h(vertices[0].n[i]);
-		n2 += MS::h_curv_g(vertices[0].n[i]);
-		n3 += MS::h_tension(vertices[0].n[i]);
+	double n1 = MS::h_curv_h(vertices[vind]), n2 = MS::h_pressure(vertices[vind]);
+	for (int i = 0; i < vertices[vind]->neighbours; i++) {
+		n1 += MS::h_curv_h(vertices[vind]->n[i]);
+		n2 += MS::h_pressure(vertices[vind]->n[i]);
 	}
-	double c1 = (n1 - l1) / .00001,
-		c2 = (n2 - l2) / .00001,
-		c3 = (n3 - l3) / .00001;
+	double c1 = (n1 - l1) / increment,
+		c2 = (n2 - l2) / increment;
 
 	std::cout << "dy h:\tactual: " << c1 << "\tsupposed: " << d1 << std::endl;
-	std::cout << "dy g:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
-	std::cout << "dy t:\tactual: " << c3 << "\tsupposed: " << d3 << std::endl;
-	*/
+	std::cout << "dy p:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
+	
 
 	// Test Overall free energy
 	/*
@@ -542,4 +568,11 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 
 	nfp.close();
 	lfp1.close();
+}
+
+double move_limit(double dx) {
+	if (IMPOSE_MOVE_LIMIT) {
+		return (dx > max_move ? max_move : (dx < -max_move ? -max_move : dx));
+	}
+	return dx;
 }

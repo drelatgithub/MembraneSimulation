@@ -139,11 +139,13 @@ double MS::h_all(vertex * v) {
 		Energy caused by Gaussian curvature could be neglected because for a closed surface
 		it is a constant (Gauss-Bonnet theorem).
 	*/
-	//return h_tension(v);
+	//return h_curv_h(v) + h_tension(v) + h_pressure(v);
 	return h_curv_h(v) + h_tension(v) + h_pressure(v) + h_potential(v);
 }
 double MS::d_h_all(vertex * v, int c_index) {
-	//return d_h_tension(v, c_index);
+	//return d_h_curv_h(v, c_index)
+	//	+ d_h_tension(v, c_index)
+	//	+ d_h_pressure(v, c_index);
 	return d_h_curv_h(v, c_index)
 		+ d_h_tension(v, c_index)
 		+ d_h_pressure(v, c_index)
