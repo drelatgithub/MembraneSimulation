@@ -9,9 +9,9 @@
 #include"surface_free_energy.h"
 
 #define USE_STEEPEST_DESCENT true
-#define USE_LINE_SEARCH true
-#define CONTROL_MAX_STEP true // Max step size for each vertex
+#define USE_LINE_SEARCH false
 #define IMPOSE_MOVE_LIMIT true
+#define FIXED_MOVE_LIMIT true // Using fixed step size regardless of the real movement. Only effective when IMPOSE_MOVE_LIMIT is true.
 
 /* RUN_MODE
 	0: Normal simulation
@@ -28,9 +28,9 @@ const double tau = 0.5; // Shrink size of alpha after each iteration
 const double c2 = 0.1;
 
 const double eps = 5e-3; // Maximum deviation for each coordinate
-const double max_move = 0.001; // Maximum displacement for each step in any direction
+const double max_move = 0.0015; // Maximum displacement for each step in any direction
 
-double move_limit(double dx);
+double move_limit(double alpha, double d);
 
 int minimization(std::vector<MS::vertex*> &vertices);
 
@@ -169,7 +169,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			}
 		}
 
-		if (true) { // Data verification
+		if (false) { // Data verification
 			int vinds[] = { 0,100,200,1078 };
 			for (int i = 0; i < 4; i++) {
 				MS::vertex* v = vertices[vinds[i]];
@@ -279,9 +279,9 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		accepted = true;
 
 		for (int i = 0; i < N; i++) {
-			vertices[i]->point->x = vertices[i]->point_last->x + move_limit(alpha*p[i * 3]);
-			vertices[i]->point->y = vertices[i]->point_last->y + move_limit(alpha*p[i * 3 + 1]);
-			vertices[i]->point->z = vertices[i]->point_last->z + move_limit(alpha*p[i * 3 + 2]);
+			vertices[i]->point->x = vertices[i]->point_last->x + move_limit(alpha, p[i * 3]);
+			vertices[i]->point->y = vertices[i]->point_last->y + move_limit(alpha, p[i * 3 + 1]);
+			vertices[i]->point->z = vertices[i]->point_last->z + move_limit(alpha, p[i * 3 + 2]);
 		}
 		
 		for (int i = 0; i < N; i++) {
@@ -570,9 +570,13 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 	lfp1.close();
 }
 
-double move_limit(double dx) {
+double move_limit(double alpha, double d) {
 	if (IMPOSE_MOVE_LIMIT) {
+		if (FIXED_MOVE_LIMIT) {
+			return (d > eps ? max_move : (d < -eps ? -max_move : 0));
+		}
+		double dx = alpha*d;
 		return (dx > max_move ? max_move : (dx < -max_move ? -max_move : dx));
 	}
-	return dx;
+	return alpha*d;
 }

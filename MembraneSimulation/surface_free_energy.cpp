@@ -4,11 +4,12 @@
 #include"surface_mesh.h"
 
 // TODO: Find experimental results for constants
-const double k_c = 2.0; // Bending modulus
-const double k_g = -4.0; // Saddle-splay modulus
+const double k_c = 0.1; // Bending modulus
+const double k_g = -0.2; // Saddle-splay modulus
 const double c_0 = 0.0; // Spontaneous curvature
 const double gamma = 1.0; // Surface tension
-const double k_ps = 0.02; // Surface pressure constant. For balance around area0, k_ps = area0 * gamma
+const double k_ps = 0.02; // Surface pressure constant. For balance around area0, k_ps ~ area0 * gamma
+const double k_quad = gamma * gamma / 2 / k_ps; // Quadradic coefficient for surface potential
 const double h_max_ps = log(1000)*k_ps;
 
 
@@ -44,7 +45,6 @@ double MS::d_h_curv_h(vertex *v, int c_index) {
 	}
 	return ans;
 }
-
 double MS::h_curv_g(vertex * v) {
 	return k_g * v->curv_g * v->area;
 }
@@ -103,7 +103,6 @@ double MS::d_h_tension(vertex *v, int c_index) {
 	}
 	return ans;
 }
-
 double MS::h_pressure(vertex *v) {
 	if (v->area < 0.001*v->area0)return h_max_ps;
 	return -k_ps*log(v->area / v->area0);
@@ -133,22 +132,48 @@ double MS::d_h_pressure(vertex *v, int c_index) {
 	}
 	return ans;
 }
+double MS::h_surface_quadratic(vertex *v) {
+	return k_quad * (v->area - v->area0) * (v->area - v->area0);
+}
+double MS::d_h_surface_quadratic(vertex *v, int c_index) {
+	double ans = 0;
+	switch (c_index) {
+	case 0:
+		ans += 2 * k_quad * (v->area - v->area0) * v->dx_area;
+		for each(vertex * n in v->n) {
+			ans += 2 * k_quad * (n->area - n->area0) * n->dxn_area[n->neighbour_indices_map[v]];
+		}
+		break;
+	case 1:
+		ans += 2 * k_quad * (v->area - v->area0) * v->dy_area;
+		for each(vertex * n in v->n) {
+			ans += 2 * k_quad * (n->area - n->area0) * n->dyn_area[n->neighbour_indices_map[v]];
+		}
+		break;
+	case 2:
+		ans += 2 * k_quad * (v->area - v->area0) * v->dz_area;
+		for each(vertex * n in v->n) {
+			ans += 2 * k_quad * (n->area - n->area0) * n->dzn_area[n->neighbour_indices_map[v]];
+		}
+		break;
+	}
+	return ans;
+}
 
 double MS::h_all(vertex * v) {
 	/*
 		Energy caused by Gaussian curvature could be neglected because for a closed surface
 		it is a constant (Gauss-Bonnet theorem).
 	*/
-	//return h_curv_h(v) + h_tension(v) + h_pressure(v);
-	return h_curv_h(v) + h_tension(v) + h_pressure(v) + h_potential(v);
+	double h_surf = (QUADRATIC_SURFACE_ENERGY ? h_surface_quadratic(v) : h_tension(v) + h_pressure(v));
+
+	return h_curv_h(v) + h_surf + h_potential(v);
 }
 double MS::d_h_all(vertex * v, int c_index) {
-	//return d_h_curv_h(v, c_index)
-	//	+ d_h_tension(v, c_index)
-	//	+ d_h_pressure(v, c_index);
+	double d_h_surf = (QUADRATIC_SURFACE_ENERGY ? d_h_surface_quadratic(v, c_index) : d_h_tension(v, c_index) + d_h_pressure(v, c_index));
+
 	return d_h_curv_h(v, c_index)
-		+ d_h_tension(v, c_index)
-		+ d_h_pressure(v, c_index)
+		+ d_h_surf
 		+ d_h_potential(v, c_index);
 }
 
@@ -157,12 +182,12 @@ double MS::update_len(double param) {
 	return polymer_len;
 }
 double MS::h_potential(vertex * v) {
-	if (v->point->x < -15 || v->point->x > 15)return exp(10) + exp(-10) - 2;
-	else return exp((-v->point->x) / 1.5) + exp((v->point->x) / 1.5) - 2;
+	if (v->point->x < -20 || v->point->x > 20)return exp(10) + exp(-10) - 2;
+	else return exp((-v->point->x) / 2) + exp((v->point->x) / 2) - 2;
 }
 
 double MS::d_h_potential(vertex * v, int c_index) {
 	if (c_index == 1 || c_index == 2)return 0;
-	if (v->point->x >=  - 15 && v->point->x <= 15)return -exp(( - v->point->x) / 1.5) / 1.5 + exp((v->point->x) / 1.5) / 1.5;
+	if (v->point->x >=  - 20 && v->point->x <= 20)return -exp(( - v->point->x) / 2) / 2 + exp((v->point->x) / 2) / 2;
 	else return 0;
 }
