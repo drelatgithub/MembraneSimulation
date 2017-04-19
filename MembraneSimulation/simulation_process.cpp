@@ -27,7 +27,8 @@ const double tau = 0.5; // Shrink size of alpha after each iteration
 // Curvature condition
 const double c2 = 0.1;
 
-const double eps = 5e-10; // Maximum deviation for each coordinate
+const double h_eps = 5e-10; // Maximum tolerance for forces
+const double d_eps = 5e-10; // Maximum tolerance for coordinates
 const double max_move = 1.5e-8; // Maximum displacement for each step in any direction
 
 double move_limit(double alpha, double d);
@@ -143,8 +144,14 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 	while (!finished) {
 		// Find alpha and update coordinates
-		alpha0 = 10; // TODO initial alpha?
+		double d_H_max = 0.0;
+		for (int i=0; i<3*N; i++){
+			if(d_H_max < abs(d_H[i])) d_H_max = abs(d_H[i]);
+		}
+		if(d_H_max < h_eps) break; // Force is almost zero
+		alpha0 = max_move / d_H_max;
 
+		// m is the inner product of the gradient and the search direcion, and must be non-negative.
 		double m = 0, m_new = 0;
 		if (USE_STEEPEST_DESCENT) {
 			for (int i = 0; i < 3 * N; i++) {
@@ -168,6 +175,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 				}
 			}
 		}
+
 
 		if (false) { // Data verification
 			int vinds[] = { 0,100,200,1078 };
@@ -227,10 +235,10 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 		finished = true;
 		for (int i = 0; i < N; i++) {
 			if (finished && (
-				abs(d_H_new[i * 3 + 0]) > eps || abs(d_H_new[i * 3 + 1]) > eps || abs(d_H_new[i * 3 + 2]) > eps
-				//vertices[i]->point->x - vertices[i]->point_last->x > eps || vertices[i]->point_last->x - vertices[i]->point->x > eps ||
-				//vertices[i]->point->y - vertices[i]->point_last->y > eps || vertices[i]->point_last->y - vertices[i]->point->y > eps ||
-				//vertices[i]->point->z - vertices[i]->point_last->z > eps || vertices[i]->point_last->z - vertices[i]->point->z > eps
+				abs(d_H_new[i * 3 + 0]) > h_eps || abs(d_H_new[i * 3 + 1]) > h_eps || abs(d_H_new[i * 3 + 2]) > h_eps
+				//vertices[i]->point->x - vertices[i]->point_last->x > h_eps || vertices[i]->point_last->x - vertices[i]->point->x > h_eps ||
+				//vertices[i]->point->y - vertices[i]->point_last->y > h_eps || vertices[i]->point_last->y - vertices[i]->point->y > h_eps ||
+				//vertices[i]->point->z - vertices[i]->point_last->z > h_eps || vertices[i]->point_last->z - vertices[i]->point->z > h_eps
 				)) {
 				finished = false;
 			}
@@ -270,13 +278,21 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 }
 double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alpha0) {
 
-	double alpha = alpha0 * tau;
+	double alpha_init = -0.1 * abs(H) / m;
+	double alpha = 0;
+	double d_alpha = min(alpha_init, alpha0 * tau); // To ensure that 1st alpha is not larger than alpha0
 	double alphap = 0;
 	double Hp = H;
 	bool accepted = false;
 
 	while (!accepted) {
 		accepted = true;
+
+		alpha += d_alpha;
+		if(alpha > alpha0){
+			alpha -= d_alpha;
+			return alpha;
+		}
 
 		for (int i = 0; i < N; i++) {
 			vertices[i]->point->x = vertices[i]->point_last->x + move_limit(alpha, p[i * 3]);
@@ -287,10 +303,10 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		for (int i = 0; i < N; i++) {
 			vertices[i]->update_geo();
 			if (vertices[i]->area <= 0) {
-				accepted = false;
+				accepted = false; // define H = infty, also need to backtrack
 			}
 		}
-		if (!accepted) {
+		if (!accepted) { // backtrack
 			alpha = alphap + (alpha - alphap) * tau;
 			continue;
 		}
@@ -573,7 +589,7 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 double move_limit(double alpha, double d) {
 	if (IMPOSE_MOVE_LIMIT) {
 		if (FIXED_MOVE_LIMIT) {
-			return (d > eps ? max_move : (d < -eps ? -max_move : 0));
+			return (d > d_eps ? max_move : (d < -d_eps ? -max_move : 0));
 		}
 		double dx = alpha*d;
 		return (dx > max_move ? max_move : (dx < -max_move ? -max_move : dx));
