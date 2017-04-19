@@ -23,7 +23,7 @@
 // Wolfe conditions
 // Armijo Rule
 const double c1 = 0.0001; // Inequality relaxation
-const double tau = 0.5; // Shrink size of alpha after each iteration
+const double tau = 0.1; // Shrink size of alpha after each iteration
 // Curvature condition
 const double c2 = 0.1;
 
@@ -149,7 +149,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			if(d_H_max < abs(d_H[i])) d_H_max = abs(d_H[i]);
 		}
 		if(d_H_max < h_eps) break; // Force is almost zero
-		alpha0 = max_move / d_H_max;
+		alpha0 = max_move / d_H_max; // This ensures that no vertex would have greater step than max_move
 
 		// m is the inner product of the gradient and the search direcion, and must be non-negative.
 		double m = 0, m_new = 0;
@@ -280,24 +280,25 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 
 	double alpha_init = -0.1 * abs(H) / m;
 	double alpha = 0;
-	double d_alpha = min(alpha_init, alpha0 * tau); // To ensure that 1st alpha is not larger than alpha0
-	double alphap = 0;
-	double Hp = H;
+	double d_alpha = min(alpha_init, alpha0 * 0.5); // To ensure that 1st alpha is not larger than alpha0
+	double H_p = H, m_p = m;
 	bool accepted = false;
+	bool backtrack = true;
 
-	while (!accepted) {
+	while (true) {
 		accepted = true;
+		backtrack = false;
 
 		alpha += d_alpha;
 		if(alpha > alpha0){
 			alpha -= d_alpha;
-			return alpha;
+			return alpha; // Ensure this won't happen for the 1st iteration.
 		}
 
 		for (int i = 0; i < N; i++) {
-			vertices[i]->point->x = vertices[i]->point_last->x + move_limit(alpha, p[i * 3]);
-			vertices[i]->point->y = vertices[i]->point_last->y + move_limit(alpha, p[i * 3 + 1]);
-			vertices[i]->point->z = vertices[i]->point_last->z + move_limit(alpha, p[i * 3 + 2]);
+			vertices[i]->point->x = vertices[i]->point_last->x + alpha * p[i * 3];
+			vertices[i]->point->y = vertices[i]->point_last->y + alpha * p[i * 3 + 1];
+			vertices[i]->point->z = vertices[i]->point_last->z + alpha * p[i * 3 + 2];
 		}
 		
 		for (int i = 0; i < N; i++) {
@@ -306,9 +307,8 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				accepted = false; // define H = infty, also need to backtrack
 			}
 		}
-		if (!accepted) { // backtrack
-			alpha = alphap + (alpha - alphap) * tau;
-			continue;
+		if (!accepted) {
+			backtrack = true;
 		}
 
 		// Renew energy
@@ -317,10 +317,8 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 			H_new += MS::h_all(vertices[i]);
 		}
 
-		if (USE_LINE_SEARCH && (H_new >= Hp || H_new - H > c1*alpha*m)) { // Armijo condition not satisfied.
-			std::cout << "Too far!\talphap: " << alphap << "\talpha: " << alpha << std::endl;
-			alpha = zoom(vertices, N, H, H_new, p, d_H_new, m, m_new, alphap, alpha);
-			return alpha;
+		if (USE_LINE_SEARCH && (H_new >= H_p)) { // Armijo condition not satisfied. simply taking c1=0
+			backtrack = true;
 		} // Armijo condition satisfied.
 
 		// Renew energy derivatives and m value
@@ -331,24 +329,42 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				m_new += p[i * 3 + j] * d_H_new[i * 3 + j];
 			}
 		}
+		if(m_new > 0) backtrack = true;
+
+		if(backtrack){
+			alpha -= d_alpha;
+
+			if(m_new > 0){ // The force has changed sign
+				d_alpha *= m_p / (m_p - m_new); // Linearized force profile
+			}else{
+				d_alpha *= tau; // Just to make it small
+			}
+
+			// Probably need to consider cases where moves are simply too small
+
+			continue;
+
+			// H_p and m_p not updated, because we moved back.
+
+		}
+
+		// No backtracking case
 		
 		if (!USE_LINE_SEARCH || abs(m_new) <= -c2 * m) { // Curvature condition satisfied. Good.
 			return alpha;
 		} // Curvature condition not satisfied
 
-		if (m_new >= 0) { // Minimum is inside
-			std::cout << "Minimum is inside!\talpha: " << alpha << "\talphap: " << alphap << std::endl;
-			alpha = zoom(vertices, N, H, H_new, p, d_H_new, m, m_new, alpha, alphap);
-			return alpha;
-		}
+		// Getting a new alpha using linearized force
+		double boostFactor = 4;
+		if (m_p < m_new) boostFactor = m_new / (m_p - m_new);
+		if (boostFactor > 4) boostFactor = 4;
+		d_alpha *= boostFactor;
 
-		// Increase alpha and try again
-		accepted = false;
-		Hp = H_new;
-		alphap = alpha;
-		alpha += (alpha0 - alpha) * tau;
+		std::cout << "alpha: " << alpha << "\td_alpha: " << d_alpha << std::endl;
 
-		std::cout << "alphap: " << alphap << "\talpha: " << alpha << std::endl;
+		// start over
+		m_p = m_new;
+		H_p = H_new;
 
 	}
 }
