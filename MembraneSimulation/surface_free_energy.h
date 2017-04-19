@@ -2,7 +2,7 @@
 
 #include"surface_mesh.h"
 
-#define QUADRATIC_SURFACE_ENERGY true
+#define QUADRATIC_SURFACE_ENERGY false
 
 namespace MS {
 	/********************************************
@@ -10,7 +10,7 @@ namespace MS {
 	********************************************/
 	double h_curv_h(vertex * v); // Free energy - Curvature - Mean
 	double h_curv_g(vertex * v); // Free energy - Curvature - Gaussian
-	// surface energies use either quadradic potential or tension + pressure depending on QUADRADIC_SURFACE_ENERGY
+	// surface energies use either quadratic potential or tension + pressure depending on QUADRATIC_SURFACE_ENERGY
 	double h_tension(vertex * v); // Free energy - Surface tension
 	double h_pressure(vertex *v); // Free energy - Surface pressure
 	double h_surface_quadratic(vertex *v); // Free energy - Surface tension and pressure near the lowest energy

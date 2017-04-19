@@ -4,11 +4,11 @@
 #include"surface_mesh.h"
 
 // TODO: Find experimental results for constants
-const double k_c = 0.1; // Bending modulus
-const double k_g = -0.2; // Saddle-splay modulus
+const double k_c = 1e-19; // Bending modulus
+const double k_g = -2*k_c; // Saddle-splay modulus
 const double c_0 = 0.0; // Spontaneous curvature
-const double gamma = 1.0; // Surface tension
-const double k_ps = 0.02; // Surface pressure constant. For balance around area0, k_ps ~ area0 * gamma
+const double gamma = 0.4; // Surface tension
+const double k_ps = 4e-15; // Surface pressure constant. For balance around area0, k_ps ~ area0 * gamma
 const double k_quad = gamma * gamma / 2 / k_ps; // Quadradic coefficient for surface potential
 const double h_max_ps = log(1000)*k_ps;
 
@@ -167,14 +167,14 @@ double MS::h_all(vertex * v) {
 	*/
 	double h_surf = (QUADRATIC_SURFACE_ENERGY ? h_surface_quadratic(v) : h_tension(v) + h_pressure(v));
 
-	return h_curv_h(v) + h_surf + h_potential(v);
+	return h_curv_h(v) + h_surf + 0*h_potential(v);
 }
 double MS::d_h_all(vertex * v, int c_index) {
 	double d_h_surf = (QUADRATIC_SURFACE_ENERGY ? d_h_surface_quadratic(v, c_index) : d_h_tension(v, c_index) + d_h_pressure(v, c_index));
 
 	return d_h_curv_h(v, c_index)
 		+ d_h_surf
-		+ d_h_potential(v, c_index);
+		+ 0*d_h_potential(v, c_index);
 }
 
 double MS::update_len(double param) {

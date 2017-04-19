@@ -35,9 +35,12 @@ typedef CGAL::Implicit_surface_3<GT, Function> Surface_3;
 
 typedef CGAL::Polyhedron_3<GT> Polyhedron;
 
+const FT CELL_RADIUS = 1e-6; // 1 micron
+const FT CELL_RADIUS_2 = CELL_RADIUS * CELL_RADIUS;
+
 FT sphere_function(Point_3 p) {
 	const FT x2 = p.x()*p.x(), y2 = p.y()*p.y(), z2 = p.z()*p.z();
-	return x2 + y2 + z2 - 2;
+	return x2 + y2 + z2 - CELL_RADIUS_2;
 }
 
 int mesh_init(std::vector<MS::vertex*> &vertices) {
@@ -89,13 +92,13 @@ int mesh_init(std::vector<MS::vertex*> &vertices) {
 
 	// defining the surface
 	Surface_3 surface(sphere_function,             // pointer to function
-		Sphere_3(CGAL::ORIGIN, 4.)); // bounding sphere
+		Sphere_3(CGAL::ORIGIN, CELL_RADIUS_2 * 1.5)); // bounding sphere
 									 // Note that "2." above is the *squared* radius of the bounding sphere!
 
 									 // defining meshing criteria
 	CGAL::Surface_mesh_default_criteria_3<Tr> criteria(30.,  // angular bound
-		0.1,  // radius bound
-		0.1); // distance bound
+		CELL_RADIUS / 20,  // radius bound
+		CELL_RADIUS / 20); // distance bound
 
 			  // meshing surface
 	std::cout << "Meshing surface using CGAL...\n";
@@ -135,7 +138,7 @@ int mesh_init(std::vector<MS::vertex*> &vertices) {
 		vertices[this_index]->dump_data_vectors();
 	}
 	for (int i = 0; i < num; i++) {
-		v_file_out << std::fixed << vertices[i]->point->x << '\t' << std::fixed << vertices[i]->point->y << '\t' << std::fixed << vertices[i]->point->z << '\t';
+		v_file_out << std::scientific << vertices[i]->point->x << '\t' << std::scientific << vertices[i]->point->y << '\t' << std::scientific << vertices[i]->point->z << '\t';
 		vertices[i]->count_neighbours();
 		for (int j = 0; j < vertices[i]->neighbours; j++) {
 			v_file_out << vertices_index_map_new[vertices[i]->n[j]] << '\t' << vertices_index_map_new[vertices[i]->n_prev[j]] << '\t' << vertices_index_map_new[vertices[i]->n_next[j]] << '\t';

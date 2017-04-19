@@ -9,9 +9,9 @@
 #include"surface_free_energy.h"
 
 #define USE_STEEPEST_DESCENT true
-#define USE_LINE_SEARCH false
+#define USE_LINE_SEARCH true
 #define IMPOSE_MOVE_LIMIT true
-#define FIXED_MOVE_LIMIT true // Using fixed step size regardless of the real movement. Only effective when IMPOSE_MOVE_LIMIT is true.
+#define FIXED_MOVE_LIMIT false // Using fixed step size regardless of the real movement. Only effective when IMPOSE_MOVE_LIMIT is true.
 
 /* RUN_MODE
 	0: Normal simulation
@@ -27,8 +27,8 @@ const double tau = 0.5; // Shrink size of alpha after each iteration
 // Curvature condition
 const double c2 = 0.1;
 
-const double eps = 5e-3; // Maximum deviation for each coordinate
-const double max_move = 0.0015; // Maximum displacement for each step in any direction
+const double eps = 5e-10; // Maximum deviation for each coordinate
+const double max_move = 1.5e-8; // Maximum displacement for each step in any direction
 
 double move_limit(double alpha, double d);
 
@@ -143,7 +143,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 	while (!finished) {
 		// Find alpha and update coordinates
-		alpha0 = 0.001; // TODO initial alpha?
+		alpha0 = 10; // TODO initial alpha?
 
 		double m = 0, m_new = 0;
 		if (USE_STEEPEST_DESCENT) {
