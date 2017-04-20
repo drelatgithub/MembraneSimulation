@@ -10,8 +10,7 @@
 
 #define USE_STEEPEST_DESCENT true
 #define USE_LINE_SEARCH true
-#define IMPOSE_MOVE_LIMIT true
-#define FIXED_MOVE_LIMIT false // Using fixed step size regardless of the real movement. Only effective when IMPOSE_MOVE_LIMIT is true.
+
 
 /* RUN_MODE
 	0: Normal simulation
@@ -31,7 +30,6 @@ const double h_eps = 1e-8; // Maximum tolerance for forces
 const double d_eps = 1e-8; // Maximum tolerance for coordinates
 const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
-double move_limit(double alpha, double d);
 
 int minimization(std::vector<MS::vertex*> &vertices);
 
@@ -568,15 +566,4 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 
 	nfp.close();
 	lfp1.close();
-}
-
-double move_limit(double alpha, double d) {
-	if (IMPOSE_MOVE_LIMIT) {
-		if (FIXED_MOVE_LIMIT) {
-			return (d > d_eps ? max_move : (d < -d_eps ? -max_move : 0));
-		}
-		double dx = alpha*d;
-		return (dx > max_move ? max_move : (dx < -max_move ? -max_move : dx));
-	}
-	return alpha*d;
 }
