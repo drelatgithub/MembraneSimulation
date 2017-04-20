@@ -27,16 +27,15 @@ const double tau = 0.1; // Shrink size of alpha after each iteration
 // Curvature condition
 const double c2 = 0.1;
 
-const double h_eps = 5e-10; // Maximum tolerance for forces
-const double d_eps = 5e-10; // Maximum tolerance for coordinates
-const double max_move = 1.5e-8; // Maximum displacement for each step in any direction
+const double h_eps = 1e-8; // Maximum tolerance for forces
+const double d_eps = 1e-8; // Maximum tolerance for coordinates
+const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
 double move_limit(double alpha, double d);
 
 int minimization(std::vector<MS::vertex*> &vertices);
 
-double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alpha0);
-double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alphal, double alphah);
+double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0);
 
 void test_derivatives(std::vector<MS::vertex*> &vertices);
 void force_profile(std::vector<MS::vertex*> &vertices);
@@ -142,7 +141,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 	int k = 0; // Iteration counter. Only for debug use.
 
-	while (!finished) {
+	while (true) {
 		// Find alpha and update coordinates
 		double d_H_max = 0.0;
 		for (int i=0; i<3*N; i++){
@@ -150,6 +149,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 		}
 		if(d_H_max < h_eps) break; // Force is almost zero
 		alpha0 = max_move / d_H_max; // This ensures that no vertex would have greater step than max_move
+		std::cout << "[MIN] Max gradient: " << d_H_max <<"\talpha0: "<<alpha0<< std::endl;
 
 		// m is the inner product of the gradient and the search direcion, and must be non-negative.
 		double m = 0, m_new = 0;
@@ -164,7 +164,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 				m += p[i] * d_H[i];
 			}
 			if (m > 0) {
-				std::cout << "Warning: along search direction is increasing energy. Reassigning search direction.\n";
+				std::cout << "[MIN] Warning: along search direction is increasing energy. Reassigning search direction.\n";
 				m = 0;
 				for (int i = 0; i < N; i++) {
 					for (int j = 0; j < 3; j++) {
@@ -176,35 +176,25 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			}
 		}
 
+		std::cout << "[MIN] H: " << H << "\tm: " << m << std::endl;
+
 
 		if (false) { // Data verification
 			int vinds[] = { 0,100,200,1078 };
 			for (int i = 0; i < 4; i++) {
 				MS::vertex* v = vertices[vinds[i]];
-				std::cout << vinds[i] << "\tch: " << v->curv_h << "\thch: " << MS::h_curv_h(v) << "\tdxhch: " << MS::d_h_curv_h(v, 0)
-					<< "\tr2: " << v->point->x*v->point->x + v->point->y*v->point->y + v->point->z*v->point->z
-					<< std::endl;
-				for (int j = 0, len = v->n.size(); j < len; j++) {
-					std::cout << v->r_p_n[j] << '\t';
-				}
+				std::cout << vinds[i] << "\tarea: " << v->area<< std::endl;
 				std::cout << std::endl;
 			}
-			double aaa = MS::d_h_all(vertices[1078], 0);
-			aaa = MS::d_h_all(vertices[1078], 1);
-			aaa = MS::d_h_all(vertices[1078], 2);
-			MS::vertex* nnn = vertices[1078]->n[0];
-			aaa = MS::d_h_all(nnn, 0);
-			aaa = MS::d_h_all(nnn, 1);
-			aaa = MS::d_h_all(nnn, 2);
 		}
 
-		alpha = line_search(vertices, N, H, H_new, p, d_H_new, m, m_new, alpha0);
+		alpha = line_search(vertices, N, H, H_new, p, d_H_max, d_H_new, m, m_new, alpha0);
 		std::ofstream t1;
 		t1.open("F:\\t1.txt");
 		for (int i = 0; i < 3 * N; i++) {
 			t1 << p[i] << '\t' << d_H[i] << '\t' << d_H_new[i] << std::endl;
 		}
-		std::cout << "t1 complete." << std::endl;
+		std::cout << "[MIN] t1 complete." << std::endl;
 		t1.close();
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
 		// H_new and d_H_new are updated.
@@ -231,17 +221,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			}
 		}
 
-		// Judge when we should exit loop
-		finished = true;
 		for (int i = 0; i < N; i++) {
-			if (finished && (
-				abs(d_H_new[i * 3 + 0]) > h_eps || abs(d_H_new[i * 3 + 1]) > h_eps || abs(d_H_new[i * 3 + 2]) > h_eps
-				//vertices[i]->point->x - vertices[i]->point_last->x > h_eps || vertices[i]->point_last->x - vertices[i]->point->x > h_eps ||
-				//vertices[i]->point->y - vertices[i]->point_last->y > h_eps || vertices[i]->point_last->y - vertices[i]->point->y > h_eps ||
-				//vertices[i]->point->z - vertices[i]->point_last->z > h_eps || vertices[i]->point_last->z - vertices[i]->point->z > h_eps
-				)) {
-				finished = false;
-			}
 			// Record coordinates as last-time coordinates
 			vertices[i]->make_last();
 		}
@@ -276,11 +256,13 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 	return 0;
 }
-double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alpha0) {
+double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0) {
+
+	double MIN_D_ALPHA_FAC = 1e-15; // Minimum delta
 
 	double alpha_init = -0.1 * abs(H) / m;
 	double alpha = 0;
-	double d_alpha = min(alpha_init, alpha0 * 0.5); // To ensure that 1st alpha is not larger than alpha0
+	double d_alpha = std::fmin(alpha_init, alpha0 * 0.5); // To ensure that 1st alpha is not larger than alpha0
 	double H_p = H, m_p = m;
 	bool accepted = false;
 	bool backtrack = true;
@@ -309,6 +291,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		}
 		if (!accepted) {
 			backtrack = true;
+			std::cout << "[LINE] [BACK] area" << std::endl;
 		}
 
 		// Renew energy
@@ -318,6 +301,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		}
 
 		if (USE_LINE_SEARCH && (H_new >= H_p)) { // Armijo condition not satisfied. simply taking c1=0
+			std::cout << "[LINE] [BACK] energy" << std::endl;
 			backtrack = true;
 		} // Armijo condition satisfied.
 
@@ -329,7 +313,12 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				m_new += p[i * 3 + j] * d_H_new[i * 3 + j];
 			}
 		}
-		if(m_new > 0) backtrack = true;
+		if (m_new > 0) {
+			std::cout << "[LINE] [BACK] force" << std::endl;
+			backtrack = true;
+		}
+		
+		std::cout << "[LINE] H_new: " << H_new << "\tm_new: " << m_new << std::endl;
 
 		if(backtrack){
 			alpha -= d_alpha;
@@ -340,7 +329,11 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				d_alpha *= tau; // Just to make it small
 			}
 
-			// Probably need to consider cases where moves are simply too small
+			// Consider cases where moves are simply too small
+			if (d_H_max * d_alpha <= MIN_D_ALPHA_FAC) {
+				std::cout << "[LINE] d_alpha too small" << std::endl;
+				return alpha;
+			}
 
 			continue;
 
@@ -349,6 +342,42 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		}
 
 		// No backtracking case
+
+		if (false && abs(H_new - 1.06455e-13) < 0.0001e-13) {
+			//test derivative
+
+			for (int ind = 0; ind < N; ind++) {
+				
+				vertices[ind]->point->x = vertices[ind]->point_last->x + (alpha+2e-2) * p[ind * 3];
+				vertices[ind]->point->y = vertices[ind]->point_last->y + (alpha + 2e-2) * p[ind * 3 + 1];
+				vertices[ind]->point->z = vertices[ind]->point_last->z + (alpha + 2e-2) * p[ind * 3 + 2];
+
+				vertices[ind]->update_geo();
+
+				for (int i = 0; i < vertices[ind]->neighbours; i++) {
+					vertices[ind]->n[i]->update_geo();
+				}
+
+				// Renew energy
+				double H_new_n = 0;
+				for (int i = 0; i < N; i++) {
+					H_new_n += MS::h_all(vertices[i]);
+				}
+
+				// Renew energy derivatives and m value
+				double m_new_n = 0;
+				for (int i = 0; i < N; i++) {
+					for (int j = 0; j < 3; j++) {
+						d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
+						m_new_n += p[i * 3 + j] * d_H_new[i * 3 + j];
+					}
+				}
+				double a = 2e-2 * (p[ind * 3] * d_H_new[ind * 3]+ p[ind * 3+1] * d_H_new[ind * 3+1]+ p[ind * 3+2] * d_H_new[ind * 3+2]);
+
+				std::cout << ind << "\tDE: " << H_new_n - H_new << "\ta: " << a << std::endl;
+				H_new = H_new_n;
+			}
+		}
 		
 		if (!USE_LINE_SEARCH || abs(m_new) <= -c2 * m) { // Curvature condition satisfied. Good.
 			return alpha;
@@ -360,73 +389,12 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		if (boostFactor > 4) boostFactor = 4;
 		d_alpha *= boostFactor;
 
-		std::cout << "alpha: " << alpha << "\td_alpha: " << d_alpha << std::endl;
+		std::cout << "[LINE] alpha: " << alpha << "\td_alpha: " << d_alpha << std::endl;
 
 		// start over
 		m_p = m_new;
 		H_p = H_new;
 
-	}
-}
-double zoom(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double *d_H_new, double m, double &m_new, double alphal, double alphah) {
-	double alpha = 0.5 * (alphal + alphah);
-	bool accepted = false;
-	while (!accepted) {
-
-		accepted = true;
-
-		for (int i = 0; i < N; i++) {
-			vertices[i]->point->x = vertices[i]->point_last->x + alpha*p[i * 3];
-			vertices[i]->point->y = vertices[i]->point_last->y + alpha*p[i * 3 + 1];
-			vertices[i]->point->z = vertices[i]->point_last->z + alpha*p[i * 3 + 2];
-		}
-		for (int i = 0; i < N; i++) {
-			vertices[i]->update_geo();
-			if (vertices[i]->area <= 0) {
-				accepted = false;
-			}
-		}
-		if (!accepted) {
-			double alpha_small = ((alphal < alphah) ? alphal : alphah);
-			alpha = alpha_small + (alpha - alpha_small) * tau;
-			continue;
-		}
-		accepted = false;
-
-		// Renew energy
-		H_new = 0;
-		for (int i = 0; i < N; i++) {
-			H_new += MS::h_all(vertices[i]);
-		}
-
-		if (H_new - H > c1*alpha*m) { // Armijo condition not satisfied.
-			alphah = alpha;
-		}
-		else {
-
-			// Renew energy derivatives and m value
-			m_new = 0;
-			for (int i = 0; i < N; i++) {
-				for (int j = 0; j < 3; j++) {
-					d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
-					m_new += p[i * 3 + j] * d_H_new[i * 3 + j];
-				}
-			}
-
-			if (abs(m_new) <= -c2*m) {
-				std::cout << "m_new: " << m_new << "\tm:" << m << std::endl;
-				return alpha;
-			}
-
-			if (m_new * (alphah - alphal) >= 0) {
-				alphah = alphal;
-			}
-			alphal = alpha;
-		}
-
-		alpha = 0.5 * (alphal + alphah);
-
-		std::cout << "alphal: " << alphal << "\talphah: " << alphah << std::endl;
 	}
 }
 

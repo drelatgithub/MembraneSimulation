@@ -82,6 +82,7 @@ int mesh_init(std::vector<MS::vertex*> &vertices) {
 			num++;
 		}
 
+		std::cout << "Number of vertices: " << num << std::endl;
 		v_file_in.close();
 
 		return 0;
