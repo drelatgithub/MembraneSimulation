@@ -1,5 +1,11 @@
 #pragma once
 
+/**********************************************************
+
+Definition of point and vertex structure, and some common functions associated.
+
+**********************************************************/
+
 #include<vector>
 #include<map>
 
@@ -9,6 +15,9 @@ namespace MS {
 		double x, y, z;
 		point_3(double nx, double ny, double nz);
 	};
+
+	double distance2(const point_3 *p, const point_3 *np);
+	double distance(const point_3 *p, const point_3 *np);
 
 
 	class vertex {

@@ -4,22 +4,24 @@
 
 #include"surface_mesh.h"
 
+using namespace MS;
+
 #define USE_VONOROI_CELL true
 
-MS::point_3::point_3(double nx, double ny, double nz) {
+point_3::point_3(double nx, double ny, double nz) {
 	x = nx, y = ny, z = nz;
 }
 
-MS::vertex::vertex(MS::point_3 *npoint) {
+vertex::vertex(point_3 *npoint) {
 	point = npoint;
 	point_last = new point_3(0,0,0);
 }
 
-MS::vertex::~vertex() {
+vertex::~vertex() {
 	delete point_last;
 }
 
-int MS::vertex::count_neighbours() {
+int vertex::count_neighbours() {
 	neighbours = n.size();
 	for (int i = 0; i < neighbours; i++) {
 		neighbour_indices_map[n[i]] = i;
@@ -27,7 +29,7 @@ int MS::vertex::count_neighbours() {
 	return neighbours;
 }
 
-int MS::vertex::dump_data_vectors() {
+int vertex::dump_data_vectors() {
 	// theta
 	theta.push_back(0), dx_theta.push_back(0), dy_theta.push_back(0), dz_theta.push_back(0);
 	dxn_theta.push_back(0), dyn_theta.push_back(0), dzn_theta.push_back(0);
@@ -79,16 +81,15 @@ int MS::vertex::fill_vectors_with_zeroes() {
 }
 */
 
-
-double distance2(const MS::point_3 *p, const MS::point_3 *np) {
+double MS::distance2(const point_3 *p, const point_3 *np) {
 	return (p->x - np->x)*(p->x - np->x) + (p->y - np->y)*(p->y - np->y) + (p->z - np->z)*(p->z - np->z);
 }
-double distance(const MS::point_3 *p, const MS::point_3 *np) {
+double MS::distance(const point_3 *p, const point_3 *np) {
 	return sqrt(distance2(p, np));
 }
 
 
-void MS::vertex::calc_angle() {
+void vertex::calc_angle() {
 	for (int i = 0; i < neighbours; i++) {
 		// Distances
 		r_p_n[i] = distance(point, n[i]->point);
@@ -259,7 +260,7 @@ void MS::vertex::calc_angle() {
 	}
 }
 
-double MS::vertex::calc_area() {
+double vertex::calc_area() {
 	/*****************************************************************************
 	Must be used after angles are calculated.
 
@@ -302,7 +303,7 @@ double MS::vertex::calc_area() {
 	}
 }
 
-double MS::vertex::calc_curv_h() {
+double vertex::calc_curv_h() {
 	/*****************************************************************************
 	Must be used after the angles and the area is calculated.
 	This function could also calculate the normalized normal vector.
@@ -401,7 +402,7 @@ double MS::vertex::calc_curv_h() {
 	}
 }
 
-double MS::vertex::calc_curv_g() {
+double vertex::calc_curv_g() {
 	/*****************************************************************************
 	Must be used after the angles and the area is calculated.
 
@@ -441,18 +442,18 @@ double MS::vertex::calc_curv_g() {
 	}
 }
 
-void MS::vertex::update_geo() {
+void vertex::update_geo() {
 	calc_angle();
 	calc_area();
 	calc_curv_h();
 	//calc_curv_g();
 }
 
-void MS::vertex::make_initial() {
+void vertex::make_initial() {
 	area0 = area;
 }
 
-void MS::vertex::make_last() {
+void vertex::make_last() {
 	point_last->x = point->x;
 	point_last->y = point->y;
 	point_last->z = point->z;

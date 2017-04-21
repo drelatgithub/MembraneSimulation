@@ -10,8 +10,6 @@ const double c_0 = 0.0; // Spontaneous curvature
 const double gamma = 0.4; // Surface tension
 
 
-double polymer_len = 0.6;
-
 double MS::h_curv_h(vertex * v) {
 	return 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*v->area;
 }
@@ -174,17 +172,40 @@ double MS::d_h_all(vertex * v, int c_index) {
 		+ d_h_potential(v, c_index);
 }
 
+double polymer_len = 0;
+MS::point_3 *po = new MS::point_3(polymer_len, 0, 0);
+
 double MS::update_len(double param) {
 	polymer_len = param;
+	po->x = polymer_len;
 	return polymer_len;
 }
 double MS::h_potential(vertex * v) {
-	if (v->point->x < -50 || v->point->x > 50)return exp(10) + exp(-10) - 2;
-	else return exp((-v->point->x) / 5) + exp((v->point->x) / 5) - 2;
+	double r = distance(v->point, po);
+	double R = 1e-7;
+	double ep = 1e-15;
+	if (r > R)return -ep;
+	return 4 * ep*(pow(R / r, 12) - pow(R / r, 6));
+
 }
 
 double MS::d_h_potential(vertex * v, int c_index) {
-	if (c_index == 1 || c_index == 2)return 0;
-	if (v->point->x >=  - 50 && v->point->x <= 50)return -exp(( - v->point->x) / 5) / 5 + exp((v->point->x) / 5) / 5;
-	else return 0;
+	double r = distance(v->point, po);
+	double R = 1e-7;
+	double ep = 1e-15;
+	if (r > R)return -ep;
+
+	double dr;
+	switch (c_index) {
+	case 0:
+		dr = (v->point->x - po->x) / r;
+		break;
+	case 1:
+		dr = (v->point->y - po->y) / r;
+		break;
+	case 2:
+		dr = (v->point->z - po->z) / r;
+
+	}
+	return 4 * ep*(-12 * pow(R / r, 12) + 6 * pow(R / r, 6)) / r;
 }
