@@ -50,14 +50,15 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 		vertices[i]->make_initial();
 	}
 
-	std::ofstream p_out, f_out;
+	std::ofstream p_out, f_out, a_out;
 	p_out.open("F:\\p_out.txt");
 	f_out.open("F:\\f_out.txt");
+	a_out.open("F:\\a_out.txt");
 
 
 	switch (RUN_MODE) {
 	case 0:
-		for (double a = -1.3; a < 1.5; a += 0.05) {
+		for (double a = 0.9e-6; a < 1.2e-6; a += 0.02e-6) {
 			std::cout << update_len(a) << std::endl;
 
 			minimization(vertices);
@@ -67,11 +68,12 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 				for (int j = 0; j < 3; j++) {
 					f_out << MS::d_h_all(vertices[i], j) << '\t';
 				}
+				a_out << vertices[i]->area << '\t' << vertices[i]->area0<<'\t';
 			}
 			p_out << std::endl;
 			f_out << std::endl;
+			a_out << std::endl;
 
-			break;
 		}
 
 		std::cout << update_len(-3) << std::endl;
@@ -100,6 +102,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 
 	p_out.close();
 	f_out.close();
+	a_out.close();
 
 	return 0;
 }
@@ -321,7 +324,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		if(backtrack){
 			alpha -= d_alpha;
 
-			if(m_new > 0){ // The force has changed sign
+			if(false && m_new > 0){ // The force has changed sign
 				d_alpha *= m_p / (m_p - m_new); // Linearized force profile
 			}else{
 				d_alpha *= tau; // Just to make it small

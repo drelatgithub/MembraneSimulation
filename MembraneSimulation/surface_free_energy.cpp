@@ -184,7 +184,7 @@ double MS::h_potential(vertex * v) {
 	double r = distance(v->point, po);
 	double R = 1e-7;
 	double ep = 1e-15;
-	if (r > R)return -ep;
+	if (r > R*pow(2, 1.0 / 6))return -ep;
 	return 4 * ep*(pow(R / r, 12) - pow(R / r, 6));
 
 }
@@ -193,7 +193,7 @@ double MS::d_h_potential(vertex * v, int c_index) {
 	double r = distance(v->point, po);
 	double R = 1e-7;
 	double ep = 1e-15;
-	if (r > R)return -ep;
+	if (r > R*pow(2, 1.0 / 6))return -ep;
 
 	double dr;
 	switch (c_index) {
@@ -207,5 +207,5 @@ double MS::d_h_potential(vertex * v, int c_index) {
 		dr = (v->point->z - po->z) / r;
 
 	}
-	return 4 * ep*(-12 * pow(R / r, 12) + 6 * pow(R / r, 6)) / r;
+	return 4 * ep*(-12 * pow(R / r, 12) + 6 * pow(R / r, 6)) / r * dr;
 }
