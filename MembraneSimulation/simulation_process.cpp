@@ -537,7 +537,7 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 
 	double H_new;
 
-	for (double move = -0.02; move < 0.02; move += 0.001) {
+	for (double move = -0.02e-6; move < 0.02e-6; move += 0.001e-6) {
 		vertices[v_index]->point->x = vertices[v_index]->point_last->x + n_x*move;
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + n_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + n_z*move;
@@ -552,7 +552,7 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 		nfp << move << '\t' << H_new - H << std::endl;
 	}
 
-	for (double move = -0.08; move < 0.04; move += 0.001) {
+	for (double move = -0.02e-6; move < 0.02e-6; move += 0.001e-6) {
 		vertices[v_index]->point->x = vertices[v_index]->point_last->x + l1_x*move;
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + l1_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + l1_z*move;

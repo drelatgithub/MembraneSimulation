@@ -6,14 +6,6 @@
 #include<string>
 #include<sys/stat.h>
 
-#include "CGAL/Surface_mesh_default_triangulation_3.h"
-#include "CGAL/Complex_2_in_triangulation_3.h"
-#include "CGAL/make_surface_mesh.h"
-#include "CGAL/Implicit_surface_3.h"
-
-#include "CGAL/Polyhedron_3.h"
-#include "CGAL/IO/output_surface_facets_to_polyhedron.h"
-
 #include"surface_mesh.h"
 #include"simulation_process.h"
 

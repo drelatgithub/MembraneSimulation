@@ -2,7 +2,7 @@
 
 #include"surface_mesh.h"
 
-#define QUADRATIC_SURFACE_ENERGY true
+#define QUADRATIC_SURFACE_ENERGY false
 
 namespace MS {
 	/********************************************

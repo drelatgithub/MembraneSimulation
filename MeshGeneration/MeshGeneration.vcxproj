@@ -18,9 +18,12 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mesh_generation.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{72C66CD5-43CB-46FD-9A4B-774992EBDD22}</ProjectGuid>
-    <RootNamespace>MembraneSimulation</RootNamespace>
+    <ProjectGuid>{B114D6A2-BBC4-4D72-8489-96A1A831CC3F}</ProjectGuid>
+    <RootNamespace>MeshGeneration</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,13 +77,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\local\boost_1_63_0\;D:\dev\CGAL-4.9\include;D:\dev\CGAL-4.9\build\include;D:\dev\CGAL-4.9\auxiliary\gmp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\dev\CGAL-4.9\build\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>D:\dev\CGAL-4.9\auxiliary\gmp\lib\libgmp-10.lib;D:\dev\CGAL-4.9\auxiliary\gmp\lib\libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -116,19 +119,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="mesh_initialization.cpp" />
-    <ClCompile Include="simulation_process.cpp" />
-    <ClCompile Include="surface_free_energy.cpp" />
-    <ClCompile Include="surface_mesh.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="mesh_initialization.h" />
-    <ClInclude Include="simulation_process.h" />
-    <ClInclude Include="surface_free_energy.h" />
-    <ClInclude Include="surface_mesh.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
