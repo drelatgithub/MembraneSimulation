@@ -2,4 +2,4 @@
 
 #include"surface_mesh.h"
 
-int mesh_init(std::vector<MS::vertex*> &vertices);
+bool mesh_init(std::vector<MS::vertex*> &vertices);

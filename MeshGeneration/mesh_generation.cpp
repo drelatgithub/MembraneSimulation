@@ -98,7 +98,7 @@ int mesh_init() {
 		}
 	}
 	for (int i = 0; i < num; i++) {
-		for (int j = 0; j < vertices_neighbors[i].size(); j++) {
+		for (unsigned int j = 0; j < vertices_neighbors[i].size(); j++) {
 			neighbors_out << vertices_neighbors[i][j] << '\t';
 		}
 		neighbors_out << std::endl;

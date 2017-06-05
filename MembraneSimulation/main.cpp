@@ -9,12 +9,13 @@
 int main() {
 	std::vector<MS::vertex*> vertices;
 
-	mesh_init(vertices);
+	if (mesh_init(vertices)) {
 
-	// starting simulation
-	std::cout << "Simulation starting...\n";
-	MS::simulation_start(vertices);
-	
+		// starting simulation
+		std::cout << "Simulation starting...\n";
+		MS::simulation_start(vertices);
+
+	}
 
 
 	system("pause");

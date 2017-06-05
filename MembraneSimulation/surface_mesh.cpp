@@ -21,12 +21,21 @@ vertex::~vertex() {
 	delete point_last;
 }
 
-int vertex::count_neighbours() {
-	neighbours = n.size();
-	for (int i = 0; i < neighbours; i++) {
-		neighbour_indices_map[n[i]] = i;
+int vertex::count_neighbors() {
+	neighbors = n.size();
+	for (int i = 0; i < neighbors; i++) {
+		neighbor_indices_map[n[i]] = i;
 	}
-	return neighbours;
+	return neighbors;
+}
+
+int vertex::gen_next_prev_n() {
+	count_neighbors();
+	for (int i = 0; i < neighbors; i++) {
+		n_next.push_back(n[i < neighbors - 1 ? i + 1 : 0]);
+		n_prev.push_back(n[i > 0 ? i - 1 : neighbors - 1]);
+	}
+	return 0;
 }
 
 int vertex::dump_data_vectors() {
@@ -90,7 +99,7 @@ double MS::distance(const point_3 *p, const point_3 *np) {
 
 
 void vertex::calc_angle() {
-	for (int i = 0; i < neighbours; i++) {
+	for (int i = 0; i < neighbors; i++) {
 		// Distances
 		r_p_n[i] = distance(point, n[i]->point);
 		dx_r_p_n[i] = (point->x - n[i]->point->x) / r_p_n[i];
@@ -272,10 +281,10 @@ double vertex::calc_area() {
 	if (USE_VONOROI_CELL) {
 		area = 0;
 		dx_area = dy_area = dz_area = 0;
-		for (int i = 0; i < neighbours; i++) {
+		for (int i = 0; i < neighbors; i++) {
 			dxn_area[i] = dyn_area[i] = dzn_area[i] = 0;
 		}
-		for (int i = 0; i < neighbours; i++) {
+		for (int i = 0; i < neighbors; i++) {
 			double dis2 = r_p_n[i] * r_p_n[i];
 			area += (cot_theta2[i] + cot_theta3[i])*dis2;
 			dx_area += (dx_cot_theta2[i] + dx_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dx_r_p_n[i];
@@ -284,7 +293,7 @@ double vertex::calc_area() {
 			dxn_area[i] += (dxn_cot_theta2[i] + dxn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dxn_r_p_n[i];
 			dyn_area[i] += (dyn_cot_theta2[i] + dyn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dyn_r_p_n[i];
 			dzn_area[i] += (dzn_cot_theta2[i] + dzn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dzn_r_p_n[i];
-			int i_n = neighbour_indices_map.at(n_next[i]), i_p = neighbour_indices_map.at(n_prev[i]);
+			int i_n = neighbor_indices_map.at(n_next[i]), i_p = neighbor_indices_map.at(n_prev[i]);
 			dxn_area[i_n] += (dxnn_cot_theta3[i])*dis2;
 			dyn_area[i_n] += (dynn_cot_theta3[i])*dis2;
 			dzn_area[i_n] += (dznn_cot_theta3[i])*dis2;
@@ -293,7 +302,7 @@ double vertex::calc_area() {
 			dzn_area[i_p] += (dznp_cot_theta2[i])*dis2;
 		}
 		area /= 8; dx_area /= 8; dy_area /= 8; dz_area /= 8;
-		for (int i = 0; i < neighbours; i++) {
+		for (int i = 0; i < neighbors; i++) {
 			dxn_area[i] /= 8; dyn_area[i] /= 8; dzn_area[i] /= 8;
 		}
 		return area;
@@ -316,10 +325,10 @@ double vertex::calc_curv_h() {
 	if (USE_VONOROI_CELL) {
 		double K_x = 0, K_y = 0, K_z = 0; // x, y, z component of K
 		double dx_K_x = 0, dy_K_x = 0, dz_K_x = 0, dx_K_y = 0, dy_K_y = 0, dz_K_y = 0, dx_K_z = 0, dy_K_z = 0, dz_K_z = 0;
-		std::vector<double> dxn_K_x(neighbours), dyn_K_x(neighbours), dzn_K_x(neighbours);
-		std::vector<double> dxn_K_y(neighbours), dyn_K_y(neighbours), dzn_K_y(neighbours);
-		std::vector<double> dxn_K_z(neighbours), dyn_K_z(neighbours), dzn_K_z(neighbours);
-		for (int i = 0; i < neighbours; i++) {
+		std::vector<double> dxn_K_x(neighbors), dyn_K_x(neighbors), dzn_K_x(neighbors);
+		std::vector<double> dxn_K_y(neighbors), dyn_K_y(neighbors), dzn_K_y(neighbors);
+		std::vector<double> dxn_K_z(neighbors), dyn_K_z(neighbors), dzn_K_z(neighbors);
+		for (int i = 0; i < neighbors; i++) {
 			double diff_x = point->x - n[i]->point->x, diff_y = point->y - n[i]->point->y, diff_z = point->z - n[i]->point->z;
 			K_x += (cot_theta2[i] + cot_theta3[i])*diff_x;
 			K_y += (cot_theta2[i] + cot_theta3[i])*diff_y;
@@ -342,7 +351,7 @@ double vertex::calc_curv_h() {
 			dxn_K_z[i] += (dxn_cot_theta2[i] + dxn_cot_theta3[i])*diff_z;
 			dyn_K_z[i] += (dyn_cot_theta2[i] + dyn_cot_theta3[i])*diff_z;
 			dzn_K_z[i] += (dzn_cot_theta2[i] + dzn_cot_theta3[i])*diff_z - (cot_theta2[i] + cot_theta3[i]);
-			int i_n = neighbour_indices_map[n_next[i]], i_p = neighbour_indices_map[n_prev[i]];
+			int i_n = neighbor_indices_map[n_next[i]], i_p = neighbor_indices_map[n_prev[i]];
 			dxn_K_x[i_n] += dxnn_cot_theta3[i] * diff_x;
 			dyn_K_x[i_n] += dynn_cot_theta3[i] * diff_x;
 			dzn_K_x[i_n] += dznn_cot_theta3[i] * diff_x;
@@ -371,7 +380,7 @@ double vertex::calc_curv_h() {
 		dx_K_z = (area*dx_K_z - K_z*dx_area) / (2 * area*area);
 		dy_K_z = (area*dy_K_z - K_z*dy_area) / (2 * area*area);
 		dz_K_z = (area*dz_K_z - K_z*dz_area) / (2 * area*area);
-		for (int i = 0; i < neighbours; i++) {
+		for (int i = 0; i < neighbors; i++) {
 			dxn_K_x[i] = (area*dxn_K_x[i] - K_x*dxn_area[i]) / (2 * area*area);
 			dyn_K_x[i] = (area*dyn_K_x[i] - K_x*dyn_area[i]) / (2 * area*area);
 			dzn_K_x[i] = (area*dzn_K_x[i] - K_x*dzn_area[i]) / (2 * area*area);
@@ -387,7 +396,7 @@ double vertex::calc_curv_h() {
 		dx_curv_h = (K_x*dx_K_x + K_y*dx_K_y + K_z*dx_K_z) / (4 * curv_h);
 		dy_curv_h = (K_x*dy_K_x + K_y*dy_K_y + K_z*dy_K_z) / (4 * curv_h);
 		dz_curv_h = (K_x*dz_K_x + K_y*dz_K_y + K_z*dz_K_z) / (4 * curv_h);
-		for (int i = 0; i < neighbours; i++) {
+		for (int i = 0; i < neighbors; i++) {
 			dxn_curv_h[i] = (K_x*dxn_K_x[i] + K_y*dxn_K_y[i] + K_z*dxn_K_z[i]) / (4 * curv_h);
 			dyn_curv_h[i] = (K_x*dyn_K_x[i] + K_y*dyn_K_y[i] + K_z*dyn_K_z[i]) / (4 * curv_h);
 			dzn_curv_h[i] = (K_x*dzn_K_x[i] + K_y*dzn_K_y[i] + K_z*dzn_K_z[i]) / (4 * curv_h);
@@ -412,8 +421,8 @@ double vertex::calc_curv_g() {
 	*****************************************************************************/
 	if (USE_VONOROI_CELL) {
 		double a = 2 * M_PI, dx_a = 0, dy_a = 0, dz_a = 0;
-		std::vector<double> dxn_a(neighbours), dyn_a(neighbours), dzn_a(neighbours);
-		for (int i = 0; i < neighbours; i++) {
+		std::vector<double> dxn_a(neighbors), dyn_a(neighbors), dzn_a(neighbors);
+		for (int i = 0; i < neighbors; i++) {
 			a -= theta[i];
 			dx_a -= dx_theta[i];
 			dy_a -= dy_theta[i];
@@ -421,7 +430,7 @@ double vertex::calc_curv_g() {
 			dxn_a[i] -= dxn_theta[i];
 			dyn_a[i] -= dyn_theta[i];
 			dzn_a[i] -= dzn_theta[i];
-			int i_n = neighbour_indices_map[n_next[i]];
+			int i_n = neighbor_indices_map[n_next[i]];
 			dxn_a[i_n] -= dxnn_theta[i];
 			dyn_a[i_n] -= dynn_theta[i];
 			dzn_a[i_n] -= dznn_theta[i];
@@ -429,7 +438,7 @@ double vertex::calc_curv_g() {
 		dx_curv_g = (area*dx_a - a*dx_area) / (area*area);
 		dy_curv_g = (area*dy_a - a*dy_area) / (area*area);
 		dz_curv_g = (area*dz_a - a*dz_area) / (area*area);
-		for (int i = 0; i < neighbours; i++) {
+		for (int i = 0; i < neighbors; i++) {
 			dxn_curv_g[i] = (area*dxn_a[i] - a*dxn_area[i]) / (area*area);
 			dyn_curv_g[i] = (area*dyn_a[i] - a*dyn_area[i]) / (area*area);
 			dzn_curv_g[i] = (area*dzn_a[i] - a*dzn_area[i]) / (area*area);

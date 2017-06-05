@@ -28,9 +28,10 @@ namespace MS {
 		vertex(point_3 *npoint);
 		~vertex();
 
-		int neighbours;
-		std::map<vertex*, int> neighbour_indices_map;
-		int count_neighbours();
+		int neighbors;
+		std::map<vertex*, int> neighbor_indices_map;
+		int count_neighbors();
+		int gen_next_prev_n();
 
 		// Geometry
 		// Local properties other than coordinates may also depend on neighbouring points.

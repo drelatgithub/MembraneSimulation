@@ -42,7 +42,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices) {
 	int len = vertices.size();
 
 	for (int i = 0; i < len; i++) {
-		vertices[i]->count_neighbours();
+		vertices[i]->count_neighbors();
 		if (i == 0) {
 			int a = 1;
 		}
@@ -355,7 +355,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 
 				vertices[ind]->update_geo();
 
-				for (int i = 0; i < vertices[ind]->neighbours; i++) {
+				for (int i = 0; i < vertices[ind]->neighbors; i++) {
 					vertices[ind]->n[i]->update_geo();
 				}
 
@@ -452,7 +452,7 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	double increment = 0.00001;
 
 	double l1 = MS::h_curv_h(vertices[vind]), l2 = MS::h_pressure(vertices[vind]);
-	for (int i = 0; i < vertices[vind]->neighbours; i++) {
+	for (int i = 0; i < vertices[vind]->neighbors; i++) {
 		l1 += MS::h_curv_h(vertices[vind]->n[i]);
 		l2 += MS::h_pressure(vertices[vind]->n[i]);
 	}
@@ -461,12 +461,12 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 
 	vertices[vind]->point->y += increment;
 	vertices[vind]->update_geo();
-	for (int i = 0; i < vertices[vind]->neighbours; i++) {
+	for (int i = 0; i < vertices[vind]->neighbors; i++) {
 		vertices[vind]->n[i]->update_geo();
 	}
 
 	double n1 = MS::h_curv_h(vertices[vind]), n2 = MS::h_pressure(vertices[vind]);
-	for (int i = 0; i < vertices[vind]->neighbours; i++) {
+	for (int i = 0; i < vertices[vind]->neighbors; i++) {
 		n1 += MS::h_curv_h(vertices[vind]->n[i]);
 		n2 += MS::h_pressure(vertices[vind]->n[i]);
 	}
