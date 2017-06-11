@@ -38,7 +38,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 void test_derivatives(std::vector<MS::vertex*> &vertices);
 void force_profile(std::vector<MS::vertex*> &vertices);
 
-int MS::simulation_start(std::vector<vertex*> &vertices) {
+int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &facets) {
 	int len = vertices.size();
 
 	for (int i = 0; i < len; i++) {

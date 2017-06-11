@@ -11,15 +11,15 @@ Loading an already defined mesh file into the data structure.
 #include"surface_mesh.h"
 #include"simulation_process.h"
 
-bool mesh_init(std::vector<MS::vertex*> &vertices) {
+bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
 	bool success = false;
 
 	char *position_file = "position.txt";
 	char *neighbors_file = "neighbors.txt";
 
 	struct stat buffer;
-	if (stat(position_file,&buffer)==0 && stat(neighbors_file, &buffer) == 0) { // File exists
-		std::cout << "Saved mesh file found. Trying to build from file...\n";
+	if (stat(position_file, &buffer) == 0 && stat(neighbors_file, &buffer) == 0) { // File exists
+		std::cout << "Saved mesh file found. Trying to generate from file...\n";
 
 		std::ifstream position_in;
 		position_in.open(position_file);
@@ -27,6 +27,8 @@ bool mesh_init(std::vector<MS::vertex*> &vertices) {
 		neighbors_in.open(neighbors_file);
 
 		std::string line;
+
+		int num_vertices, num_edges, num_facets;
 
 		// getting positions
 		while (std::getline(position_in, line)) {
@@ -40,19 +42,48 @@ bool mesh_init(std::vector<MS::vertex*> &vertices) {
 		}
 
 		// getting neighbors (and count vertices)
-		int num = 0;
+		num_vertices = 0;
+		num_edges = 0;
 		while (std::getline(neighbors_in, line)) {
 			std::stringstream ss(line);
 			int n;
 			while (ss >> n) {
-				vertices[num]->n.push_back(vertices[n]);
-				vertices[num]->dump_data_vectors();
+				vertices[num_vertices]->n.push_back(vertices[n]);
+				vertices[num_vertices]->dump_data_vectors();
+				num_edges++;
 			}
-			vertices[num]->gen_next_prev_n();
-			num++;
+			vertices[num_vertices]->gen_next_prev_n();
+			num_vertices++;
 		}
+		num_edges /= 2;
 
-		std::cout << "Number of vertices: " << num << std::endl;
+		std::cout << "Number of vertices: " << num_vertices << "; Number of edges: " << num_edges << std::endl;
+		int predicted_num_facets = num_edges - num_vertices + 2; // Euler characteristic is 2
+
+		std::cout << "Registering facets..." << std::endl;
+		facets.reserve(predicted_num_facets);
+		num_facets = 0;
+		for (int i = 0; i < num_vertices; i++) {
+			for (int j = 0; j < vertices[i]->neighbors; j++) {
+				// Propose a facet
+				MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->n_next[j]);
+
+				// Check whether this facet has already existed
+				bool exist = false;
+				for (int k = 0; k < facets.size(); k++) {
+					if (*facets[k] == *f) {
+						exist = true;
+						break;
+					}
+				}
+				if (!exist) {
+					facets.push_back(f);
+					num_facets++;
+				}
+			}
+		}
+		std::cout << "Predicted number of facets: " << predicted_num_facets << "; Number of facets: " << num_facets << std::endl;
+
 
 		position_in.close();
 		neighbors_in.close();

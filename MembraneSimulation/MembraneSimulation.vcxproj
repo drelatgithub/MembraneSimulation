@@ -124,6 +124,7 @@
     <ClCompile Include="surface_mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="math_public.h" />
     <ClInclude Include="mesh_initialization.h" />
     <ClInclude Include="simulation_process.h" />
     <ClInclude Include="surface_free_energy.h" />

@@ -75,4 +75,13 @@ namespace MS {
 		void make_last(); // Recording some of the geometry as the last time geometry
 	};
 
+	// A facet stores pointers to 3 vertices which form a triangle in the counter-clockwise direction
+	class facet {
+	public:
+		vertex *v[3];
+
+		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
+		bool operator==(const facet& operand);
+	};
+
 }

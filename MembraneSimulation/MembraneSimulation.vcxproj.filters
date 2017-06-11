@@ -44,5 +44,8 @@
     <ClInclude Include="mesh_initialization.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="math_public.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

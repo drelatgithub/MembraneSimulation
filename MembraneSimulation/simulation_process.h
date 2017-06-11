@@ -5,5 +5,5 @@
 #include"surface_mesh.h"
 
 namespace MS{
-	int simulation_start(std::vector<vertex*> &vertices);
+	int simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &facets);
 }

@@ -3,6 +3,7 @@
 #include<iostream>
 
 #include"surface_mesh.h"
+#include"math_public.h"
 
 using namespace MS;
 
@@ -466,4 +467,21 @@ void vertex::make_last() {
 	point_last->x = point->x;
 	point_last->y = point->y;
 	point_last->z = point->z;
+}
+
+
+bool facet::operator==(const facet& operand) {
+	int first_index = 0;
+	while (first_index < 3) {
+		if (v[0] == operand.v[first_index]) { // found a common vertex
+			for (int i = 1; i < 3; i++) {
+				if (v[i] != operand.v[math_public::loop_add(first_index, i, 3)])
+					return false;
+			}
+			return true;
+		}
+		++first_index;
+	}
+
+	return false;
 }

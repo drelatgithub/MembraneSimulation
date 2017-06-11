@@ -8,12 +8,13 @@
 
 int main() {
 	std::vector<MS::vertex*> vertices;
+	std::vector<MS::facet*> facets;
 
-	if (mesh_init(vertices)) {
+	if (mesh_init(vertices, facets)) {
 
 		// starting simulation
 		std::cout << "Simulation starting...\n";
-		MS::simulation_start(vertices);
+		MS::simulation_start(vertices, facets);
 
 	}
 
