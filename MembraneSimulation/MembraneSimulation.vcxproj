@@ -117,6 +117,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mesh_initialization.cpp" />
     <ClCompile Include="simulation_process.cpp" />
@@ -124,6 +125,7 @@
     <ClCompile Include="surface_mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="log.h" />
     <ClInclude Include="math_public.h" />
     <ClInclude Include="mesh_initialization.h" />
     <ClInclude Include="simulation_process.h" />

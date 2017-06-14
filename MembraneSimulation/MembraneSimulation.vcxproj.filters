@@ -30,6 +30,9 @@
     <ClCompile Include="mesh_initialization.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="log.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="surface_mesh.h">
@@ -45,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="math_public.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>
