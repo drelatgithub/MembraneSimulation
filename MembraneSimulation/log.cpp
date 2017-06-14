@@ -8,7 +8,7 @@ using namespace logger;
 
 Writer::Writer(const char* run_file, const int run_line, const char* run_func, Level new_level) :
 	log_buffer(), level(new_level),
-	run_file_name(run_file),run_line_name(run_line),run_func_name(run_func){
+	run_file_name(run_file), run_line_name(run_line), run_func_name(run_func) {
 
 	Logger::build_writer(*this, new_level);
 }
@@ -16,8 +16,10 @@ Writer::~Writer() {
 	log_dispatch();
 }
 void Writer::log_dispatch() {
-	if (FILE_OUT)
+	if (FILE_OUT) {
 		(*file_o) << file_prefix << log_buffer.str() << file_suffix;
+		file_o->flush();
+	}
 	if (SCN_OUT)
 		std::cout << scn_prefix << log_buffer.str() << scn_suffix;
 }
@@ -37,6 +39,7 @@ void Logger::uni_init() {
 void Logger::default_init(const char *file_name) {
 	file_o.open(file_name);
 
+	// The default settings are as follows
 	int	all = Debug | Info | Warning | Error;
 	int min_warning = Warning | Error,
 		min_info = Info | Warning | Error,
@@ -51,7 +54,7 @@ void Logger::default_init(const char *file_name) {
 	file_lv[Function_lv] = all;
 	scn_lv[Date_lv] = all;
 	scn_lv[File_lv] = not_info;
-	scn_lv[Line_lv] = all;
+	scn_lv[Line_lv] = min_warning;
 	scn_lv[Function_lv] = all;
 
 	uni_init();

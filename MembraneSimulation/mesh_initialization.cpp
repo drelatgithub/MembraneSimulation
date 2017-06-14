@@ -2,12 +2,12 @@
 Loading an already defined mesh file into the data structure.
 */
 
-#include<iostream>
 #include<fstream>
 #include<sstream>
 #include<string>
 #include<sys/stat.h>
 
+#include"common.h"
 #include"surface_mesh.h"
 #include"simulation_process.h"
 
@@ -19,7 +19,7 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 
 	struct stat buffer;
 	if (stat(position_file, &buffer) == 0 && stat(neighbors_file, &buffer) == 0) { // File exists
-		std::cout << "Saved mesh file found. Trying to generate from file...\n";
+		LOG(INFO) << "Saved mesh file found. Trying to generate from file...";
 
 		std::ifstream position_in;
 		position_in.open(position_file);
@@ -57,10 +57,10 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 		}
 		num_edges /= 2;
 
-		std::cout << "Number of vertices: " << num_vertices << "; Number of edges: " << num_edges << std::endl;
+		LOG(INFO) << "Number of vertices: " << num_vertices << "; Number of edges: " << num_edges;
 		int predicted_num_facets = num_edges - num_vertices + 2; // Euler characteristic is 2
 
-		std::cout << "Registering facets..." << std::endl;
+		LOG(INFO) << "Registering facets...";
 		facets.reserve(predicted_num_facets);
 		num_facets = 0;
 		for (int i = 0; i < num_vertices; i++) {
@@ -82,8 +82,9 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 				}
 			}
 		}
-		std::cout << "Predicted number of facets: " << predicted_num_facets << "; Number of facets: " << num_facets << std::endl;
-
+		LOG(DEBUG) << "Predicted number of facets: " << predicted_num_facets << "; Number of facets: " << num_facets;
+		if (predicted_num_facets != num_facets)
+			LOG(WARNING) << "The number of facets (" << num_facets << ") is not as expected (" << predicted_num_facets << ").";
 
 		position_in.close();
 		neighbors_in.close();
@@ -92,7 +93,7 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 
 	}
 	else {
-		std::cout << "At least one file needed for mesh data is not found." << std::endl;
+		LOG(ERROR) << "At least one file needed for mesh data is not found.";
 	}
 
 	return success;
