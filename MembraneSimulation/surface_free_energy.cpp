@@ -162,7 +162,7 @@ double MS::h_all(vertex * v) {
 	*/
 	double h_surf = (QUADRATIC_SURFACE_ENERGY ? h_surface_quadratic(v) : h_tension(v) + h_pressure(v));
 
-	return h_curv_h(v) + h_surf + h_potential(v);
+	return h_curv_h(v) + h_surf + h_point_interact_v(NULL, v);
 }
 double MS::d_h_all(vertex * v, int c_index) {
 	double d_h_surf = (QUADRATIC_SURFACE_ENERGY ? d_h_surface_quadratic(v, c_index) : d_h_tension(v, c_index) + d_h_pressure(v, c_index));
@@ -180,7 +180,7 @@ double MS::update_len(double param) {
 	po->x = polymer_len;
 	return polymer_len;
 }
-double MS::h_potential(vertex * v) {
+double MS::h_point_interact_v(point_3 *p, vertex * v) {
 	double r = distance(v->point, po);
 	double R = 1e-7;
 	double ep = 1e-15;
