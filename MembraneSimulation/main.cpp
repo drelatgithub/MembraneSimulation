@@ -4,9 +4,12 @@
 #include"mesh_initialization.h"
 #include"surface_mesh.h"
 #include"simulation_process.h"
+#include"test.h"
 
 int main() {
 	logger::Logger::default_init("simulation.log");
+
+	test::run_all_tests();
 
 	std::vector<MS::vertex*> vertices;
 	std::vector<MS::facet*> facets;

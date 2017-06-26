@@ -24,7 +24,12 @@ namespace logger {
 		Debug = 1 << 0,
 		Info = 1 << 1,
 		Warning = 1 << 2,
-		Error = 1 << 3
+		Error = 1 << 3,
+		TestDebug = 1 << 4,
+		TestInfo = 1 << 5,
+		TestStep = 1 << 6,
+		TestWarning = 1 << 7,
+		TestError = 1 << 8
 	};
 
 	enum Disp_lv {
@@ -87,5 +92,10 @@ namespace logger {
 #define INFO logger::Info
 #define WARNING logger::Warning
 #define ERROR logger::Error
+#define TEST_DEBUG logger::TestDebug
+#define TEST_INFO logger::TestInfo
+#define TEST_STEP logger::TestStep
+#define TEST_WARNING logger::TestWarning
+#define TEST_ERROR logger::TestError
 
 #define LOG(LEVEL) logger::Writer(__FILE__, __LINE__, LOG_FUNC, LEVEL)

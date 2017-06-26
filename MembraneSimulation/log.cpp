@@ -34,25 +34,32 @@ void Logger::uni_init() {
 	level_literal[Info] = std::string("INFO");
 	level_literal[Warning] = std::string("WARNING");
 	level_literal[Error] = std::string("ERROR");
+	level_literal[TestDebug] = std::string("TEST DEBUG");
+	level_literal[TestInfo] = std::string("TEST INFO");
+	level_literal[TestStep] = std::string("TEST STEP");
+	level_literal[TestWarning] = std::string("TEST WARNING");
+	level_literal[TestError] = std::string("TEST ERROR");
 }
 
 void Logger::default_init(const char *file_name) {
 	file_o.open(file_name);
 
 	// The default settings are as follows
-	int	all = Debug | Info | Warning | Error;
+	int	all = Debug | Info | Warning | Error,
+		test_all = TestDebug | TestInfo | TestStep | TestWarning | TestError;
 	int min_warning = Warning | Error,
 		min_info = Info | Warning | Error,
+		test_min_info = TestInfo | TestStep | TestWarning | TestError,
 		not_info = Info ^ all;
 
-	file_lv[On_lv] = all;
-	scn_lv[On_lv] = min_info;
+	file_lv[On_lv] = all | test_all;
+	scn_lv[On_lv] = min_info | test_min_info;
 
-	file_lv[Date_lv] = all;
-	file_lv[File_lv] = all;
-	file_lv[Line_lv] = all;
+	file_lv[Date_lv] = all | test_all;
+	file_lv[File_lv] = all | test_all;
+	file_lv[Line_lv] = all | test_all;
 	file_lv[Function_lv] = all;
-	scn_lv[Date_lv] = all;
+	scn_lv[Date_lv] = all | test_all;
 	scn_lv[File_lv] = not_info;
 	scn_lv[Line_lv] = min_warning;
 	scn_lv[Function_lv] = all;

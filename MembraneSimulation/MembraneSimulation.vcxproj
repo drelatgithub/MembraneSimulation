@@ -119,10 +119,12 @@
   <ItemGroup>
     <ClCompile Include="log.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="math_public.cpp" />
     <ClCompile Include="mesh_initialization.cpp" />
     <ClCompile Include="simulation_process.cpp" />
     <ClCompile Include="surface_free_energy.cpp" />
     <ClCompile Include="surface_mesh.cpp" />
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -132,6 +134,7 @@
     <ClInclude Include="simulation_process.h" />
     <ClInclude Include="surface_free_energy.h" />
     <ClInclude Include="surface_mesh.h" />
+    <ClInclude Include="test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

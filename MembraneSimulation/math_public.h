@@ -2,6 +2,8 @@
 
 #include<math.h>
 
+#include"test.h"
+
 namespace math_public {
 
 	inline int loop_add(const int lhs, const int rhs, const int loop_size) {
@@ -13,6 +15,10 @@ namespace math_public {
 		return raw;
 	}
 
+	inline bool equal(double op1, double op2, double eps = 1e-6) {
+		return fabs(op1 - op2) < eps;
+	}
+
 	// define class for 3d vector
 	class Vec3 {
 	public:
@@ -20,6 +26,16 @@ namespace math_public {
 		Vec3() :x(0), y(0), z(0) { update(); }
 		Vec3(double nx, double ny, double nz) :x(nx), y(ny), z(nz) { update(); }
 		Vec3(const Vec3 &another) :x(another.x), y(another.y), z(another.z) { update(); }
+
+		// comparisons
+		inline bool equal_to(const Vec3& operand, double eps_ratio=1e-10)const {
+			double eps = eps_ratio * norm;
+			return equal(x, operand.x, eps) && equal(y, operand.y, eps) && equal(z, operand.z, eps);
+		}
+		inline bool equal_to_in_norm(const Vec3& operand, double eps_ratio=1e-10)const {
+			double eps = eps_ratio * norm;
+			return equal(norm, operand.norm, eps);
+		}
 
 		// vector plus, minus and multiplication
 		inline Vec3 operator+(const Vec3 &operand)const {
@@ -82,6 +98,9 @@ namespace math_public {
 		inline void update() {
 			get_norm();
 		}
+
+		// test
+		static test::TestCase test_case;
 
 	};
 	inline Vec3 operator*(const double op1, const Vec3 &op2) {
