@@ -33,14 +33,10 @@ namespace MS {
 		std::vector<double> theta, sin_theta;
 		std::vector<math_public::Vec3>d_theta, d_sin_theta, dn_theta, dn_sin_theta, dnn_theta, dnn_sin_theta;
 		// Theta2 is the angle between np->p and np->n
-		std::vector<double> theta2, dx_theta2, dy_theta2, dz_theta2, cot_theta2, dx_cot_theta2, dy_cot_theta2, dz_cot_theta2,
-			dxn_theta2, dyn_theta2, dzn_theta2, dxn_cot_theta2, dyn_cot_theta2, dzn_cot_theta2,
-			dxnp_theta2, dynp_theta2, dznp_theta2, dxnp_cot_theta2, dynp_cot_theta2, dznp_cot_theta2;
+		std::vector<double> theta2, cot_theta2;
 		std::vector<math_public::Vec3>d_theta2, d_cot_theta2, dn_theta2, dn_cot_theta2, dnp_theta2, dnp_cot_theta2;
 		// Theta3 is the angle between nn->p and nn->n
-		std::vector<double> theta3, dx_theta3, dy_theta3, dz_theta3, cot_theta3, dx_cot_theta3, dy_cot_theta3, dz_cot_theta3,
-			dxn_theta3, dyn_theta3, dzn_theta3, dxn_cot_theta3, dyn_cot_theta3, dzn_cot_theta3,
-			dxnn_theta3, dynn_theta3, dznn_theta3, dxnn_cot_theta3, dynn_cot_theta3, dznn_cot_theta3;
+		std::vector<double> theta3, cot_theta3;
 		std::vector<math_public::Vec3>d_theta3, d_cot_theta3, dn_theta3, dn_cot_theta3, dnn_theta3, dnn_cot_theta3;
 		// Distances
 		std::vector<double> r_p_n;
