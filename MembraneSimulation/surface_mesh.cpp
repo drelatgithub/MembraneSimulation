@@ -29,38 +29,29 @@ int vertex::count_neighbors() {
 int vertex::gen_next_prev_n() {
 	count_neighbors();
 	for (int i = 0; i < neighbors; i++) {
-		n_next.push_back(n[i < neighbors - 1 ? i + 1 : 0]);
-		n_prev.push_back(n[i > 0 ? i - 1 : neighbors - 1]);
+		nn.push_back(n[i < neighbors - 1 ? i + 1 : 0]);
+		np.push_back(n[i > 0 ? i - 1 : neighbors - 1]);
 	}
 	return 0;
 }
 
 int vertex::dump_data_vectors() {
 	// theta
-	theta.push_back(0), dx_theta.push_back(0), dy_theta.push_back(0), dz_theta.push_back(0);
-	dxn_theta.push_back(0), dyn_theta.push_back(0), dzn_theta.push_back(0);
-	dxnn_theta.push_back(0), dynn_theta.push_back(0), dznn_theta.push_back(0);
-	sin_theta.push_back(0), dx_sin_theta.push_back(0), dy_sin_theta.push_back(0), dz_sin_theta.push_back(0);
-	dxn_sin_theta.push_back(0), dyn_sin_theta.push_back(0), dzn_sin_theta.push_back(0);
-	dxnn_sin_theta.push_back(0), dynn_sin_theta.push_back(0), dznn_sin_theta.push_back(0);
+	theta.push_back(0), sin_theta.push_back(0);
+	d_theta.push_back(Vec3()), dn_theta.push_back(Vec3()), dnn_theta.push_back(Vec3());
+	d_sin_theta.push_back(Vec3()), dn_sin_theta.push_back(Vec3()), dnn_sin_theta.push_back(Vec3());
 	// theta2
-	theta2.push_back(0), dx_theta2.push_back(0), dy_theta2.push_back(0), dz_theta2.push_back(0);
-	dxn_theta2.push_back(0), dyn_theta2.push_back(0), dzn_theta2.push_back(0);
-	dxnp_theta2.push_back(0), dynp_theta2.push_back(0), dznp_theta2.push_back(0);
-	cot_theta2.push_back(0), dx_cot_theta2.push_back(0), dy_cot_theta2.push_back(0), dz_cot_theta2.push_back(0);
-	dxn_cot_theta2.push_back(0), dyn_cot_theta2.push_back(0), dzn_cot_theta2.push_back(0);
-	dxnp_cot_theta2.push_back(0), dynp_cot_theta2.push_back(0), dznp_cot_theta2.push_back(0);
+	theta2.push_back(0), cot_theta2.push_back(0);
+	d_theta2.push_back(Vec3()), dn_theta2.push_back(Vec3()), dnp_theta2.push_back(Vec3());
+	d_cot_theta2.push_back(Vec3()), dn_cot_theta2.push_back(Vec3()), dnp_cot_theta2.push_back(Vec3());
 	// theta3
-	theta3.push_back(0), dx_theta3.push_back(0), dy_theta3.push_back(0), dz_theta3.push_back(0);
-	dxn_theta3.push_back(0), dyn_theta3.push_back(0), dzn_theta3.push_back(0);
-	dxnn_theta3.push_back(0), dynn_theta3.push_back(0), dznn_theta3.push_back(0);
-	cot_theta3.push_back(0), dx_cot_theta3.push_back(0), dy_cot_theta3.push_back(0), dz_cot_theta3.push_back(0);
-	dxn_cot_theta3.push_back(0), dyn_cot_theta3.push_back(0), dzn_cot_theta3.push_back(0);
-	dxnn_cot_theta3.push_back(0), dynn_cot_theta3.push_back(0), dznn_cot_theta3.push_back(0);
+	theta3.push_back(0), cot_theta3.push_back(0);
+	d_theta3.push_back(Vec3()), dn_theta3.push_back(Vec3()), dnn_theta3.push_back(Vec3());
+	d_cot_theta3.push_back(Vec3()), dn_cot_theta3.push_back(Vec3()), dnn_cot_theta3.push_back(Vec3());
 	// distances
-	r_p_n.push_back(0), dx_r_p_n.push_back(0), dy_r_p_n.push_back(0), dz_r_p_n.push_back(0), dxn_r_p_n.push_back(0), dyn_r_p_n.push_back(0), dzn_r_p_n.push_back(0);
-	r_p_n_prev.push_back(0), dx_r_p_n_prev.push_back(0), dy_r_p_n_prev.push_back(0), dz_r_p_n_prev.push_back(0), dxnp_r_p_n_prev.push_back(0), dynp_r_p_n_prev.push_back(0), dznp_r_p_n_prev.push_back(0);
-	r_p_n_next.push_back(0), dx_r_p_n_next.push_back(0), dy_r_p_n_next.push_back(0), dz_r_p_n_next.push_back(0), dxnn_r_p_n_next.push_back(0), dynn_r_p_n_next.push_back(0), dznn_r_p_n_next.push_back(0);
+	r_p_n.push_back(0), d_r_p_n.push_back(Vec3()), dn_r_p_n.push_back(Vec3());
+	r_p_np.push_back(0), d_r_p_np.push_back(Vec3()), dnp_r_p_np.push_back(Vec3());
+	r_p_nn.push_back(0), d_r_p_nn.push_back(Vec3()), dnn_r_p_nn.push_back(Vec3());
 
 	// Derivatives around a vertex
 	dxn_area.push_back(0), dyn_area.push_back(0), dzn_area.push_back(0);
@@ -92,170 +83,87 @@ void vertex::calc_angle() {
 	for (int i = 0; i < neighbors; i++) {
 		// Distances
 		r_p_n[i] = dist(*point, *(n[i]->point));
-		dx_r_p_n[i] = (point->x - n[i]->point->x) / r_p_n[i];
-		dy_r_p_n[i] = (point->y - n[i]->point->y) / r_p_n[i];
-		dz_r_p_n[i] = (point->z - n[i]->point->z) / r_p_n[i];
-		dxn_r_p_n[i] = (n[i]->point->x - point->x) / r_p_n[i];
-		dyn_r_p_n[i] = (n[i]->point->y - point->y) / r_p_n[i];
-		dzn_r_p_n[i] = (n[i]->point->z - point->z) / r_p_n[i];
-		r_p_n_prev[i] = dist(*point, *(n_prev[i]->point));
-		dx_r_p_n_prev[i] = (point->x - n_prev[i]->point->x) / r_p_n_prev[i];
-		dy_r_p_n_prev[i] = (point->y - n_prev[i]->point->y) / r_p_n_prev[i];
-		dz_r_p_n_prev[i] = (point->z - n_prev[i]->point->z) / r_p_n_prev[i];
-		dxnp_r_p_n_prev[i] = (n_prev[i]->point->x - point->x) / r_p_n_prev[i];
-		dynp_r_p_n_prev[i] = (n_prev[i]->point->y - point->y) / r_p_n_prev[i];
-		dznp_r_p_n_prev[i] = (n_prev[i]->point->z - point->z) / r_p_n_prev[i];
-		r_p_n_next[i] = dist(*point, *(n_next[i]->point));
-		dx_r_p_n_next[i] = (point->x - n_next[i]->point->x) / r_p_n_next[i];
-		dy_r_p_n_next[i] = (point->y - n_next[i]->point->y) / r_p_n_next[i];
-		dz_r_p_n_next[i] = (point->z - n_next[i]->point->z) / r_p_n_next[i];
-		dxnn_r_p_n_next[i] = (n_next[i]->point->x - point->x) / r_p_n_next[i];
-		dynn_r_p_n_next[i] = (n_next[i]->point->y - point->y) / r_p_n_next[i];
-		dznn_r_p_n_next[i] = (n_next[i]->point->z - point->z) / r_p_n_next[i];
-		//std::cout << r_p_n[i];
+		d_r_p_n[i] = (*point - *(n[i]->point)) / r_p_n[i];
+		dn_r_p_n[i] = (*(n[i]->point) - *point) / r_p_n[i];
+
+		r_p_np[i] = dist(*point, *(np[i]->point));
+		d_r_p_np[i] = (*point - *(np[i]->point)) / r_p_np[i];
+		dnp_r_p_np[i] = (*(np[i]->point) - *point) / r_p_np[i];
+
+		r_p_nn[i] = dist(*point, *(nn[i]->point));
+		d_r_p_nn[i]= (*point - *(nn[i]->point)) / r_p_nn[i];
+		dnn_r_p_nn[i] = (*(nn[i]->point) - *point) / r_p_nn[i];
 
 		// Find theta
-		double inner_product = (n_next[i]->point->x - point->x)*(n[i]->point->x - point->x) + (n_next[i]->point->y - point->y)*(n[i]->point->y - point->y) + (n_next[i]->point->z - point->z)*(n[i]->point->z - point->z);
-		double dx_inner_product = 2 * point->x - n_next[i]->point->x - n[i]->point->x;
-		double dy_inner_product = 2 * point->y - n_next[i]->point->y - n[i]->point->y;
-		double dz_inner_product = 2 * point->z - n_next[i]->point->z - n[i]->point->z;
-		double dxn_inner_product = n_next[i]->point->x - point->x;
-		double dyn_inner_product = n_next[i]->point->y - point->y;
-		double dzn_inner_product = n_next[i]->point->z - point->z;
-		double dxnn_inner_product = n[i]->point->x - point->x;
-		double dynn_inner_product = n[i]->point->y - point->y;
-		double dznn_inner_product = n[i]->point->z - point->z;
-		double cos_theta = inner_product / (r_p_n[i] * r_p_n_next[i]);
-		double dx_cos_theta = (r_p_n[i] * r_p_n_next[i] * dx_inner_product - inner_product*(r_p_n[i] * dx_r_p_n_next[i] + dx_r_p_n[i] * r_p_n_next[i])) / (r_p_n[i] * r_p_n[i] * r_p_n_next[i] * r_p_n_next[i]);
-		double dy_cos_theta = (r_p_n[i] * r_p_n_next[i] * dy_inner_product - inner_product*(r_p_n[i] * dy_r_p_n_next[i] + dy_r_p_n[i] * r_p_n_next[i])) / (r_p_n[i] * r_p_n[i] * r_p_n_next[i] * r_p_n_next[i]);
-		double dz_cos_theta = (r_p_n[i] * r_p_n_next[i] * dz_inner_product - inner_product*(r_p_n[i] * dz_r_p_n_next[i] + dz_r_p_n[i] * r_p_n_next[i])) / (r_p_n[i] * r_p_n[i] * r_p_n_next[i] * r_p_n_next[i]);
-		double dxn_cos_theta = (r_p_n[i] * dxn_inner_product - inner_product*dxn_r_p_n[i]) / (r_p_n[i] * r_p_n[i] * r_p_n_next[i]);
-		double dyn_cos_theta = (r_p_n[i] * dyn_inner_product - inner_product*dyn_r_p_n[i]) / (r_p_n[i] * r_p_n[i] * r_p_n_next[i]);
-		double dzn_cos_theta = (r_p_n[i] * dzn_inner_product - inner_product*dzn_r_p_n[i]) / (r_p_n[i] * r_p_n[i] * r_p_n_next[i]);
-		double dxnn_cos_theta = (r_p_n_next[i] * dxnn_inner_product - inner_product*dxnn_r_p_n_next[i]) / (r_p_n_next[i] * r_p_n_next[i] * r_p_n[i]);
-		double dynn_cos_theta = (r_p_n_next[i] * dynn_inner_product - inner_product*dynn_r_p_n_next[i]) / (r_p_n_next[i] * r_p_n_next[i] * r_p_n[i]);
-		double dznn_cos_theta = (r_p_n_next[i] * dznn_inner_product - inner_product*dznn_r_p_n_next[i]) / (r_p_n_next[i] * r_p_n_next[i] * r_p_n[i]);
+		double inner_product = dot(*(nn[i]->point) - *point, *(n[i]->point) - *point);
+		Vec3 d_inner_product = 2 * (*point) - *(nn[i]->point) - *(n[i]->point);
+		Vec3 dn_inner_product = *(nn[i]->point) - *point;
+		Vec3 dnn_inner_product = *(n[i]->point) - *point;
+
+		double cos_theta = inner_product / (r_p_n[i] * r_p_nn[i]);
+		Vec3 d_cos_theta = (r_p_n[i] * r_p_nn[i] * d_inner_product - inner_product*(r_p_n[i] * d_r_p_nn[i] + d_r_p_n[i] * r_p_nn[i])) / (r_p_n[i] * r_p_n[i] * r_p_nn[i] * r_p_nn[i]);
+		Vec3 dn_cos_theta = (r_p_n[i] * dn_inner_product - inner_product*dn_r_p_n[i]) / (r_p_n[i] * r_p_n[i] * r_p_nn[i]);
+		Vec3 dnn_cos_theta = (r_p_nn[i] * dnn_inner_product - inner_product*dnn_r_p_nn[i]) / (r_p_nn[i] * r_p_nn[i] * r_p_n[i]);
+
 		sin_theta[i] = sqrt(1 - cos_theta*cos_theta);
 		theta[i] = acos(cos_theta);
-		dx_theta[i] = -dx_cos_theta / sin_theta[i];
-		dy_theta[i] = -dy_cos_theta / sin_theta[i];
-		dz_theta[i] = -dz_cos_theta / sin_theta[i];
-		dxn_theta[i] = -dxn_cos_theta / sin_theta[i];
-		dyn_theta[i] = -dyn_cos_theta / sin_theta[i];
-		dzn_theta[i] = -dzn_cos_theta / sin_theta[i];
-		dxnn_theta[i] = -dxnn_cos_theta / sin_theta[i];
-		dynn_theta[i] = -dynn_cos_theta / sin_theta[i];
-		dznn_theta[i] = -dznn_cos_theta / sin_theta[i];
-		dx_sin_theta[i] = cos_theta*dx_theta[i];
-		dy_sin_theta[i] = cos_theta*dy_theta[i];
-		dz_sin_theta[i] = cos_theta*dz_theta[i];
-		dxn_sin_theta[i] = cos_theta*dxn_theta[i];
-		dyn_sin_theta[i] = cos_theta*dyn_theta[i];
-		dzn_sin_theta[i] = cos_theta*dzn_theta[i];
-		dxnn_sin_theta[i] = cos_theta*dxnn_theta[i];
-		dynn_sin_theta[i] = cos_theta*dynn_theta[i];
-		dznn_sin_theta[i] = cos_theta*dznn_theta[i];
-		//std::cout << theta[i] << '\t';
+		d_theta[i] = -d_cos_theta / sin_theta[i];
+		dn_theta[i] = -dn_cos_theta / sin_theta[i];
+		dnn_theta[i] = -dnn_cos_theta / sin_theta[i];
+		d_sin_theta[i] = cos_theta*d_theta[i];
+		dn_sin_theta[i] = cos_theta*dn_theta[i];
+		dnn_sin_theta[i] = cos_theta*dnn_theta[i];
 
 		// Find theta2
-		double r_n_n_prev = dist(*(n[i]->point), *(n_prev[i]->point)); // derivative with regard to p is 0
-		double dxn_r_n_n_prev = (n[i]->point->x - n_prev[i]->point->x) / r_n_n_prev;
-		double dyn_r_n_n_prev = (n[i]->point->y - n_prev[i]->point->y) / r_n_n_prev;
-		double dzn_r_n_n_prev = (n[i]->point->z - n_prev[i]->point->z) / r_n_n_prev;
-		double dxnp_r_n_n_prev = (n_prev[i]->point->x - n[i]->point->x) / r_n_n_prev;
-		double dynp_r_n_n_prev = (n_prev[i]->point->y - n[i]->point->y) / r_n_n_prev;
-		double dznp_r_n_n_prev = (n_prev[i]->point->z - n[i]->point->z) / r_n_n_prev;
-		double inner_product2 = (n[i]->point->x - n_prev[i]->point->x)*(point->x - n_prev[i]->point->x) + (n[i]->point->y - n_prev[i]->point->y)*(point->y - n_prev[i]->point->y) + (n[i]->point->z - n_prev[i]->point->z)*(point->z - n_prev[i]->point->z);
-		double dx_inner_product2 = n[i]->point->x - n_prev[i]->point->x;
-		double dy_inner_product2 = n[i]->point->y - n_prev[i]->point->y;
-		double dz_inner_product2 = n[i]->point->z - n_prev[i]->point->z;
-		double dxn_inner_product2 = point->x - n_prev[i]->point->x;
-		double dyn_inner_product2 = point->y - n_prev[i]->point->y;
-		double dzn_inner_product2 = point->z - n_prev[i]->point->z;
-		double dxnp_inner_product2 = 2 * n_prev[i]->point->x - point->x - n[i]->point->x;
-		double dynp_inner_product2 = 2 * n_prev[i]->point->y - point->y - n[i]->point->y;
-		double dznp_inner_product2 = 2 * n_prev[i]->point->z - point->z - n[i]->point->z;
-		double cos_theta2 = inner_product2 / (r_p_n_prev[i] * r_n_n_prev);
-		double dx_cos_theta2 = (r_p_n_prev[i] * dx_inner_product2 - inner_product2*(dx_r_p_n_prev[i])) / (r_p_n_prev[i] * r_p_n_prev[i] * r_n_n_prev);
-		double dy_cos_theta2 = (r_p_n_prev[i] * dy_inner_product2 - inner_product2*(dy_r_p_n_prev[i])) / (r_p_n_prev[i] * r_p_n_prev[i] * r_n_n_prev);
-		double dz_cos_theta2 = (r_p_n_prev[i] * dz_inner_product2 - inner_product2*(dz_r_p_n_prev[i])) / (r_p_n_prev[i] * r_p_n_prev[i] * r_n_n_prev);
-		double dxn_cos_theta2 = (r_n_n_prev*dxn_inner_product2 - inner_product2*dxn_r_n_n_prev) / (r_n_n_prev*r_n_n_prev*r_p_n_prev[i]);
-		double dyn_cos_theta2 = (r_n_n_prev*dyn_inner_product2 - inner_product2*dyn_r_n_n_prev) / (r_n_n_prev*r_n_n_prev*r_p_n_prev[i]);
-		double dzn_cos_theta2 = (r_n_n_prev*dzn_inner_product2 - inner_product2*dzn_r_n_n_prev) / (r_n_n_prev*r_n_n_prev*r_p_n_prev[i]);
-		double dxnp_cos_theta2 = (r_p_n_prev[i] * r_n_n_prev*dxnp_inner_product2 - inner_product2*(dxnp_r_p_n_prev[i] * r_n_n_prev + r_p_n_prev[i] * dxnp_r_n_n_prev)) / (r_p_n_prev[i] * r_p_n_prev[i] * r_n_n_prev*r_n_n_prev);
-		double dynp_cos_theta2 = (r_p_n_prev[i] * r_n_n_prev*dynp_inner_product2 - inner_product2*(dynp_r_p_n_prev[i] * r_n_n_prev + r_p_n_prev[i] * dynp_r_n_n_prev)) / (r_p_n_prev[i] * r_p_n_prev[i] * r_n_n_prev*r_n_n_prev);
-		double dznp_cos_theta2 = (r_p_n_prev[i] * r_n_n_prev*dznp_inner_product2 - inner_product2*(dznp_r_p_n_prev[i] * r_n_n_prev + r_p_n_prev[i] * dznp_r_n_n_prev)) / (r_p_n_prev[i] * r_p_n_prev[i] * r_n_n_prev*r_n_n_prev);
+		double r_n_np = dist(*(n[i]->point), *(np[i]->point)); // derivative with regard to p is 0
+		Vec3 dn_r_n_np = (*(n[i]->point) - *(np[i]->point)) / r_n_np;
+		Vec3 dnp_r_n_np = (*(np[i]->point) - *(n[i]->point)) / r_n_np;
+		double inner_product2 = dot(*(n[i]->point) - *(np[i]->point), *point - *(np[i]->point));
+		Vec3 d_inner_product2 = *(n[i]->point) - *(np[i]->point);
+		Vec3 dn_inner_product2 = *point - *(np[i]->point);
+		Vec3 dnp_inner_product2 = 2 * *(np[i]->point) - *point - *(n[i]->point);
+
+		double cos_theta2 = inner_product2 / (r_p_np[i] * r_n_np);
+		Vec3 d_cos_theta2 = (r_p_np[i] * d_inner_product2 - inner_product2*d_r_p_np[i]) / (r_p_np[i] * r_p_np[i] * r_n_np);
+		Vec3 dn_cos_theta2 = (r_n_np * dn_inner_product2 - inner_product2*dn_r_n_np) / (r_n_np * r_n_np * r_p_np[i]);
+		Vec3 dnp_cos_theta2= (r_p_np[i] * r_n_np * dnp_inner_product2 - inner_product2*(dnp_r_p_np[i] * r_n_np + r_p_np[i] * dnp_r_n_np)) / (r_p_np[i] * r_p_np[i] * r_n_np*r_n_np);
+
 		double sin_theta2 = sqrt(1 - cos_theta2*cos_theta2);
 		theta2[i] = acos(cos_theta2);
-		dx_theta2[i] = -dx_cos_theta2 / sin_theta2;
-		dy_theta2[i] = -dy_cos_theta2 / sin_theta2;
-		dz_theta2[i] = -dz_cos_theta2 / sin_theta2;
-		dxn_theta2[i] = -dxn_cos_theta2 / sin_theta2;
-		dyn_theta2[i] = -dyn_cos_theta2 / sin_theta2;
-		dzn_theta2[i] = -dzn_cos_theta2 / sin_theta2;
-		dxnp_theta2[i] = -dxnp_cos_theta2 / sin_theta2;
-		dynp_theta2[i] = -dynp_cos_theta2 / sin_theta2;
-		dznp_theta2[i] = -dznp_cos_theta2 / sin_theta2;
+		d_theta2[i] = -d_cos_theta2 / sin_theta2;
+		dn_theta2[i] = -dn_cos_theta2 / sin_theta2;
+		dnp_theta2[i] = -dnp_cos_theta2 / sin_theta2;
+
 		cot_theta2[i] = cos_theta2 / sin_theta2;
-		dx_cot_theta2[i] = -dx_theta2[i] / (sin_theta2*sin_theta2);
-		dy_cot_theta2[i] = -dy_theta2[i] / (sin_theta2*sin_theta2);
-		dz_cot_theta2[i] = -dz_theta2[i] / (sin_theta2*sin_theta2);
-		dxn_cot_theta2[i] = -dxn_theta2[i] / (sin_theta2*sin_theta2);
-		dyn_cot_theta2[i] = -dyn_theta2[i] / (sin_theta2*sin_theta2);
-		dzn_cot_theta2[i] = -dzn_theta2[i] / (sin_theta2*sin_theta2);
-		dxnp_cot_theta2[i] = -dxnp_theta2[i] / (sin_theta2*sin_theta2);
-		dynp_cot_theta2[i] = -dynp_theta2[i] / (sin_theta2*sin_theta2);
-		dznp_cot_theta2[i] = -dznp_theta2[i] / (sin_theta2*sin_theta2);
+		d_cot_theta2[i] = -d_theta2[i] / (sin_theta2*sin_theta2);
+		dn_cot_theta2[i] = -dn_theta2[i] / (sin_theta2*sin_theta2);
+		dnp_cot_theta2[i] = -dnp_theta2[i] / (sin_theta2*sin_theta2);
 
 		// Find theta3
-		double r_n_n_next = dist(*(n[i]->point), *(n_next[i]->point)); // derivative with regard to p is 0
-		double dxn_r_n_n_next = (n[i]->point->x - n_next[i]->point->x) / r_n_n_next;
-		double dyn_r_n_n_next = (n[i]->point->y - n_next[i]->point->y) / r_n_n_next;
-		double dzn_r_n_n_next = (n[i]->point->z - n_next[i]->point->z) / r_n_n_next;
-		double dxnn_r_n_n_next = (n_next[i]->point->x - n[i]->point->x) / r_n_n_next;
-		double dynn_r_n_n_next = (n_next[i]->point->y - n[i]->point->y) / r_n_n_next;
-		double dznn_r_n_n_next = (n_next[i]->point->z - n[i]->point->z) / r_n_n_next;
-		double inner_product3 = (n[i]->point->x - n_next[i]->point->x)*(point->x - n_next[i]->point->x) + (n[i]->point->y - n_next[i]->point->y)*(point->y - n_next[i]->point->y) + (n[i]->point->z - n_next[i]->point->z)*(point->z - n_next[i]->point->z);
-		double dx_inner_product3 = n[i]->point->x - n_next[i]->point->x;
-		double dy_inner_product3 = n[i]->point->y - n_next[i]->point->y;
-		double dz_inner_product3 = n[i]->point->z - n_next[i]->point->z;
-		double dxn_inner_product3 = point->x - n_next[i]->point->x;
-		double dyn_inner_product3 = point->y - n_next[i]->point->y;
-		double dzn_inner_product3 = point->z - n_next[i]->point->z;
-		double dxnn_inner_product3 = 2 * n_next[i]->point->x - point->x - n[i]->point->x;
-		double dynn_inner_product3 = 2 * n_next[i]->point->y - point->y - n[i]->point->y;
-		double dznn_inner_product3 = 2 * n_next[i]->point->z - point->z - n[i]->point->z;
-		double cos_theta3 = inner_product3 / (r_p_n_next[i] * r_n_n_next);
-		double dx_cos_theta3 = (r_p_n_next[i] * dx_inner_product3 - inner_product3*(dx_r_p_n_next[i])) / (r_p_n_next[i] * r_p_n_next[i] * r_n_n_next);
-		double dy_cos_theta3 = (r_p_n_next[i] * dy_inner_product3 - inner_product3*(dy_r_p_n_next[i])) / (r_p_n_next[i] * r_p_n_next[i] * r_n_n_next);
-		double dz_cos_theta3 = (r_p_n_next[i] * dz_inner_product3 - inner_product3*(dz_r_p_n_next[i])) / (r_p_n_next[i] * r_p_n_next[i] * r_n_n_next);
-		double dxn_cos_theta3 = (r_n_n_next*dxn_inner_product3 - inner_product3*dxn_r_n_n_next) / (r_n_n_next*r_n_n_next*r_p_n_next[i]);
-		double dyn_cos_theta3 = (r_n_n_next*dyn_inner_product3 - inner_product3*dyn_r_n_n_next) / (r_n_n_next*r_n_n_next*r_p_n_next[i]);
-		double dzn_cos_theta3 = (r_n_n_next*dzn_inner_product3 - inner_product3*dzn_r_n_n_next) / (r_n_n_next*r_n_n_next*r_p_n_next[i]);
-		double dxnn_cos_theta3 = (r_p_n_next[i] * r_n_n_next*dxnn_inner_product3 - inner_product3*(dxnn_r_p_n_next[i] * r_n_n_next + r_p_n_next[i] * dxnn_r_n_n_next)) / (r_p_n_next[i] * r_p_n_next[i] * r_n_n_next*r_n_n_next);
-		double dynn_cos_theta3 = (r_p_n_next[i] * r_n_n_next*dynn_inner_product3 - inner_product3*(dynn_r_p_n_next[i] * r_n_n_next + r_p_n_next[i] * dynn_r_n_n_next)) / (r_p_n_next[i] * r_p_n_next[i] * r_n_n_next*r_n_n_next);
-		double dznn_cos_theta3 = (r_p_n_next[i] * r_n_n_next*dznn_inner_product3 - inner_product3*(dznn_r_p_n_next[i] * r_n_n_next + r_p_n_next[i] * dznn_r_n_n_next)) / (r_p_n_next[i] * r_p_n_next[i] * r_n_n_next*r_n_n_next);
+		double r_n_nn = dist(*(n[i]->point), *(nn[i]->point)); // derivative with regard to p is 0
+		Vec3 dn_r_n_nn = (*(n[i]->point) - *(nn[i]->point)) / r_n_nn;
+		Vec3 dnn_r_n_nn = (*(nn[i]->point) - *(n[i]->point)) / r_n_nn;
+		double inner_product3 = dot(*(n[i]->point) - *(nn[i]->point), *point - *(nn[i]->point));
+		Vec3 d_inner_product3 = *(n[i]->point) - *(nn[i]->point);
+		Vec3 dn_inner_product3 = *point - *(nn[i]->point);
+		Vec3 dnn_inner_product3 = 2 * *(nn[i]->point) - *point - *(n[i]->point);
+
+		double cos_theta3 = inner_product3 / (r_p_nn[i] * r_n_nn);
+		Vec3 d_cos_theta3 = (r_p_nn[i] * d_inner_product3 - inner_product3*d_r_p_nn[i]) / (r_p_nn[i] * r_p_nn[i] * r_n_nn);
+		Vec3 dn_cos_theta3 = (r_n_nn * dn_inner_product3 - inner_product3*dn_r_n_nn) / (r_n_nn * r_n_nn * r_p_nn[i]);
+		Vec3 dnn_cos_theta3 = (r_p_nn[i] * r_n_nn * dnn_inner_product3 - inner_product3*(dnn_r_p_nn[i] * r_n_nn + r_p_nn[i] * dnn_r_n_nn)) / (r_p_nn[i] * r_p_nn[i] * r_n_nn*r_n_nn);
+
 		double sin_theta3 = sqrt(1 - cos_theta3*cos_theta3);
 		theta3[i] = acos(cos_theta3);
-		dx_theta3[i] = -dx_cos_theta3 / sin_theta3;
-		dy_theta3[i] = -dy_cos_theta3 / sin_theta3;
-		dz_theta3[i] = -dz_cos_theta3 / sin_theta3;
-		dxn_theta3[i] = -dxn_cos_theta3 / sin_theta3;
-		dyn_theta3[i] = -dyn_cos_theta3 / sin_theta3;
-		dzn_theta3[i] = -dzn_cos_theta3 / sin_theta3;
-		dxnn_theta3[i] = -dxnn_cos_theta3 / sin_theta3;
-		dynn_theta3[i] = -dynn_cos_theta3 / sin_theta3;
-		dznn_theta3[i] = -dznn_cos_theta3 / sin_theta3;
+		d_theta3[i] = -d_cos_theta3 / sin_theta3;
+		dn_theta3[i] = -dn_cos_theta3 / sin_theta3;
+		dnn_theta3[i] = -dnn_cos_theta3 / sin_theta3;
+
 		cot_theta3[i] = cos_theta3 / sin_theta3;
-		dx_cot_theta3[i] = -dx_theta3[i] / (sin_theta3*sin_theta3);
-		dy_cot_theta3[i] = -dy_theta3[i] / (sin_theta3*sin_theta3);
-		dz_cot_theta3[i] = -dz_theta3[i] / (sin_theta3*sin_theta3);
-		dxn_cot_theta3[i] = -dxn_theta3[i] / (sin_theta3*sin_theta3);
-		dyn_cot_theta3[i] = -dyn_theta3[i] / (sin_theta3*sin_theta3);
-		dzn_cot_theta3[i] = -dzn_theta3[i] / (sin_theta3*sin_theta3);
-		dxnn_cot_theta3[i] = -dxnn_theta3[i] / (sin_theta3*sin_theta3);
-		dynn_cot_theta3[i] = -dynn_theta3[i] / (sin_theta3*sin_theta3);
-		dznn_cot_theta3[i] = -dznn_theta3[i] / (sin_theta3*sin_theta3);
+		d_cot_theta3[i] = -d_theta3[i] / (sin_theta3*sin_theta3);
+		dn_cot_theta3[i] = -dn_theta3[i] / (sin_theta3*sin_theta3);
+		dnn_cot_theta3[i] = -dnn_theta3[i] / (sin_theta3*sin_theta3);
+
 	}
 }
 

@@ -17,7 +17,7 @@ namespace MS {
 	class vertex {
 	public:
 		math_public::Vec3 *point;
-		std::vector<vertex*> n, n_prev, n_next;
+		std::vector<vertex*> n, np, nn; // neighbor, previous neighbor, next neighbor
 
 		vertex(math_public::Vec3 *npoint);
 		~vertex();
@@ -29,22 +29,26 @@ namespace MS {
 
 		// Geometry
 		// Local properties other than coordinates may also depend on neighbouring points.
-		// Theta is the angle between p->n and p->n_next
-		std::vector<double> theta, dx_theta, dy_theta, dz_theta, sin_theta, dx_sin_theta, dy_sin_theta, dz_sin_theta,
-			dxn_theta, dyn_theta, dzn_theta, dxn_sin_theta, dyn_sin_theta, dzn_sin_theta,
-			dxnn_theta, dynn_theta, dznn_theta, dxnn_sin_theta, dynn_sin_theta, dznn_sin_theta;
-		// Theta2 is the angle between n_prev->p and n_prev->n
+		// Theta is the angle between p->n and p->nn
+		std::vector<double> theta, sin_theta;
+		std::vector<math_public::Vec3>d_theta, d_sin_theta, dn_theta, dn_sin_theta, dnn_theta, dnn_sin_theta;
+		// Theta2 is the angle between np->p and np->n
 		std::vector<double> theta2, dx_theta2, dy_theta2, dz_theta2, cot_theta2, dx_cot_theta2, dy_cot_theta2, dz_cot_theta2,
 			dxn_theta2, dyn_theta2, dzn_theta2, dxn_cot_theta2, dyn_cot_theta2, dzn_cot_theta2,
 			dxnp_theta2, dynp_theta2, dznp_theta2, dxnp_cot_theta2, dynp_cot_theta2, dznp_cot_theta2;
-		// Theta3 is the angle between n_next->p and n_next->n
+		std::vector<math_public::Vec3>d_theta2, d_cot_theta2, dn_theta2, dn_cot_theta2, dnp_theta2, dnp_cot_theta2;
+		// Theta3 is the angle between nn->p and nn->n
 		std::vector<double> theta3, dx_theta3, dy_theta3, dz_theta3, cot_theta3, dx_cot_theta3, dy_cot_theta3, dz_cot_theta3,
 			dxn_theta3, dyn_theta3, dzn_theta3, dxn_cot_theta3, dyn_cot_theta3, dzn_cot_theta3,
 			dxnn_theta3, dynn_theta3, dznn_theta3, dxnn_cot_theta3, dynn_cot_theta3, dznn_cot_theta3;
+		std::vector<math_public::Vec3>d_theta3, d_cot_theta3, dn_theta3, dn_cot_theta3, dnn_theta3, dnn_cot_theta3;
 		// Distances
-		std::vector<double> r_p_n, dx_r_p_n, dy_r_p_n, dz_r_p_n, dxn_r_p_n, dyn_r_p_n, dzn_r_p_n;
-		std::vector<double> r_p_n_prev, dx_r_p_n_prev, dy_r_p_n_prev, dz_r_p_n_prev, dxnp_r_p_n_prev, dynp_r_p_n_prev, dznp_r_p_n_prev;
-		std::vector<double> r_p_n_next, dx_r_p_n_next, dy_r_p_n_next, dz_r_p_n_next, dxnn_r_p_n_next, dynn_r_p_n_next, dznn_r_p_n_next;
+		std::vector<double> r_p_n;
+		std::vector<math_public::Vec3> d_r_p_n, dn_r_p_n;
+		std::vector<double> r_p_np;
+		std::vector<math_public::Vec3> d_r_p_np, dnp_r_p_np;
+		std::vector<double> r_p_nn;
+		std::vector<math_public::Vec3> d_r_p_nn, dnn_r_p_nn;
 
 		double area, dx_area, dy_area, dz_area;
 		std::vector<double> dxn_area, dyn_area, dzn_area;

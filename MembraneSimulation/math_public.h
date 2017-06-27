@@ -106,6 +106,12 @@ namespace math_public {
 	inline Vec3 operator*(const double op1, const Vec3 &op2) {
 		return op2 * op1;
 	}
+	inline double dot(const Vec3 &op1, const Vec3 &op2) {
+		return op1.dot(op2);
+	}
+	inline Vec3 cross(const Vec3 &op1, const Vec3 &op2) {
+		return op1.cross(op2);
+	}
 
 	inline double dist2(const Vec3 &op1, const Vec3 &op2) {
 		return (op1 - op2).norm2;
