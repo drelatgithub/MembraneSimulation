@@ -4,6 +4,7 @@
 #include"surface_mesh.h"
 
 using namespace MS;
+using namespace math_public;
 
 #define USE_VONOROI_CELL true
 
