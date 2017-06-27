@@ -173,7 +173,7 @@ double MS::d_h_all(vertex * v, int c_index) {
 }
 
 double polymer_len = 0;
-MS::point_3 *po = new MS::point_3(polymer_len, 0, 0);
+math_public::Vec3 *po = new math_public::Vec3(polymer_len, 0, 0);
 
 double MS::update_len(double param) {
 	polymer_len = param;
@@ -181,7 +181,7 @@ double MS::update_len(double param) {
 	return polymer_len;
 }
 double MS::h_point_interact_v(point_3 *p, vertex * v) {
-	double r = distance(v->point, po);
+	double r = dist(*(v->point), *po);
 	double R = 1e-7;
 	double ep = 1e-15;
 	if (r > R*pow(2, 1.0 / 6))return -ep;
@@ -190,7 +190,7 @@ double MS::h_point_interact_v(point_3 *p, vertex * v) {
 }
 
 double MS::d_h_potential(vertex * v, int c_index) {
-	double r = distance(v->point, po);
+	double r = dist(*(v->point), *po);
 	double R = 1e-7;
 	double ep = 1e-15;
 	if (r > R*pow(2, 1.0 / 6))return -ep;

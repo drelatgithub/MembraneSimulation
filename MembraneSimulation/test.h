@@ -2,8 +2,7 @@
 
 #include<string>
 #include<vector>
-
-#include"common.h"
+#include<map>
 
 namespace test {
 

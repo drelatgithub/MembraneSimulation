@@ -9,6 +9,11 @@ Definition of point and vertex structure, and some common functions associated.
 #include<vector>
 #include<map>
 
+#include"common.h"
+#include"math_public.h"
+
+using namespace math_public;
+
 namespace MS {
 	class point_3 {
 	public:
@@ -22,10 +27,10 @@ namespace MS {
 
 	class vertex {
 	public:
-		point_3 *point;
+		Vec3 *point;
 		std::vector<vertex*> n, n_prev, n_next;
 
-		vertex(point_3 *npoint);
+		vertex(Vec3 *npoint);
 		~vertex();
 
 		int neighbors;
@@ -70,7 +75,7 @@ namespace MS {
 		void update_geo();
 
 		double area0;
-		point_3 *point_last;
+		Vec3 *point_last;
 		void make_initial(); // Making the current geometry the initial geometry
 		void make_last(); // Recording some of the geometry as the last time geometry
 	};

@@ -1,9 +1,7 @@
 #define _USE_MATH_DEFINES
-#include<math.h>
-#include<iostream>
 
+#include"common.h"
 #include"surface_mesh.h"
-#include"math_public.h"
 
 using namespace MS;
 
@@ -13,9 +11,9 @@ point_3::point_3(double nx, double ny, double nz) {
 	x = nx, y = ny, z = nz;
 }
 
-vertex::vertex(point_3 *npoint) {
+vertex::vertex(Vec3 *npoint) {
 	point = npoint;
-	point_last = new point_3(0,0,0);
+	point_last = new Vec3(0,0,0);
 }
 
 vertex::~vertex() {
@@ -102,21 +100,21 @@ double MS::distance(const point_3 *p, const point_3 *np) {
 void vertex::calc_angle() {
 	for (int i = 0; i < neighbors; i++) {
 		// Distances
-		r_p_n[i] = distance(point, n[i]->point);
+		r_p_n[i] = dist(*point, *(n[i]->point));
 		dx_r_p_n[i] = (point->x - n[i]->point->x) / r_p_n[i];
 		dy_r_p_n[i] = (point->y - n[i]->point->y) / r_p_n[i];
 		dz_r_p_n[i] = (point->z - n[i]->point->z) / r_p_n[i];
 		dxn_r_p_n[i] = (n[i]->point->x - point->x) / r_p_n[i];
 		dyn_r_p_n[i] = (n[i]->point->y - point->y) / r_p_n[i];
 		dzn_r_p_n[i] = (n[i]->point->z - point->z) / r_p_n[i];
-		r_p_n_prev[i] = distance(point, n_prev[i]->point);
+		r_p_n_prev[i] = dist(*point, *(n_prev[i]->point));
 		dx_r_p_n_prev[i] = (point->x - n_prev[i]->point->x) / r_p_n_prev[i];
 		dy_r_p_n_prev[i] = (point->y - n_prev[i]->point->y) / r_p_n_prev[i];
 		dz_r_p_n_prev[i] = (point->z - n_prev[i]->point->z) / r_p_n_prev[i];
 		dxnp_r_p_n_prev[i] = (n_prev[i]->point->x - point->x) / r_p_n_prev[i];
 		dynp_r_p_n_prev[i] = (n_prev[i]->point->y - point->y) / r_p_n_prev[i];
 		dznp_r_p_n_prev[i] = (n_prev[i]->point->z - point->z) / r_p_n_prev[i];
-		r_p_n_next[i] = distance(point, n_next[i]->point);
+		r_p_n_next[i] = dist(*point, *(n_next[i]->point));
 		dx_r_p_n_next[i] = (point->x - n_next[i]->point->x) / r_p_n_next[i];
 		dy_r_p_n_next[i] = (point->y - n_next[i]->point->y) / r_p_n_next[i];
 		dz_r_p_n_next[i] = (point->z - n_next[i]->point->z) / r_p_n_next[i];
@@ -169,7 +167,7 @@ void vertex::calc_angle() {
 		//std::cout << theta[i] << '\t';
 
 		// Find theta2
-		double r_n_n_prev = distance(n[i]->point, n_prev[i]->point); // derivative with regard to p is 0
+		double r_n_n_prev = dist(*(n[i]->point), *(n_prev[i]->point)); // derivative with regard to p is 0
 		double dxn_r_n_n_prev = (n[i]->point->x - n_prev[i]->point->x) / r_n_n_prev;
 		double dyn_r_n_n_prev = (n[i]->point->y - n_prev[i]->point->y) / r_n_n_prev;
 		double dzn_r_n_n_prev = (n[i]->point->z - n_prev[i]->point->z) / r_n_n_prev;
@@ -219,7 +217,7 @@ void vertex::calc_angle() {
 		dznp_cot_theta2[i] = -dznp_theta2[i] / (sin_theta2*sin_theta2);
 
 		// Find theta3
-		double r_n_n_next = distance(n[i]->point, n_next[i]->point); // derivative with regard to p is 0
+		double r_n_n_next = dist(*(n[i]->point), *(n_next[i]->point)); // derivative with regard to p is 0
 		double dxn_r_n_n_next = (n[i]->point->x - n_next[i]->point->x) / r_n_n_next;
 		double dyn_r_n_n_next = (n[i]->point->y - n_next[i]->point->y) / r_n_n_next;
 		double dzn_r_n_n_next = (n[i]->point->z - n_next[i]->point->z) / r_n_n_next;

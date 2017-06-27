@@ -8,6 +8,7 @@ Loading an already defined mesh file into the data structure.
 #include<sys/stat.h>
 
 #include"common.h"
+#include"math_public.h"
 #include"surface_mesh.h"
 #include"simulation_process.h"
 
@@ -35,7 +36,7 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 			std::stringstream ss(line);
 			double x, y, z;
 			if (ss >> x >> y >> z) {
-				MS::point_3 *pt = new MS::point_3(x, y, z);
+				math_public::Vec3 *pt = new math_public::Vec3(x, y, z);
 				MS::vertex *new_vertex = new MS::vertex(pt);
 				vertices.push_back(new_vertex);
 			}
