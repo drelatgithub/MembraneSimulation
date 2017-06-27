@@ -7,9 +7,6 @@ using namespace MS;
 
 #define USE_VONOROI_CELL true
 
-point_3::point_3(double nx, double ny, double nz) {
-	x = nx, y = ny, z = nz;
-}
 
 vertex::vertex(Vec3 *npoint) {
 	point = npoint;
@@ -88,13 +85,6 @@ int MS::vertex::fill_vectors_with_zeroes() {
 	}
 }
 */
-
-double MS::distance2(const point_3 *p, const point_3 *np) {
-	return (p->x - np->x)*(p->x - np->x) + (p->y - np->y)*(p->y - np->y) + (p->z - np->z)*(p->z - np->z);
-}
-double MS::distance(const point_3 *p, const point_3 *np) {
-	return sqrt(distance2(p, np));
-}
 
 
 void vertex::calc_angle() {

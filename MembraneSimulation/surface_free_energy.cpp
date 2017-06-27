@@ -180,7 +180,7 @@ double MS::update_len(double param) {
 	po->x = polymer_len;
 	return polymer_len;
 }
-double MS::h_point_interact_v(point_3 *p, vertex * v) {
+double MS::h_point_interact_v(math_public::Vec3 *p, vertex * v) {
 	double r = dist(*(v->point), *po);
 	double R = 1e-7;
 	double ep = 1e-15;

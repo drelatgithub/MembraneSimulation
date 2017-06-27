@@ -15,7 +15,7 @@ namespace MS {
 	double h_pressure(vertex *v); // Free energy - Surface pressure
 	double h_surface_quadratic(vertex *v); // Free energy - Surface tension and pressure near the lowest energy
 	//double h_osmotic(vertex * v); // Free energy - Osmotic pressure
-	double h_point_interact_v(point_3 *p, vertex * v); // Free energy - Potential energy
+	double h_point_interact_v(math_public::Vec3 *p, vertex * v); // Free energy - Potential energy
 
 	/********************************************
 		Partial derivatives of free energies

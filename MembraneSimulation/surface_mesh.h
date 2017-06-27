@@ -15,15 +15,6 @@ Definition of point and vertex structure, and some common functions associated.
 using namespace math_public;
 
 namespace MS {
-	class point_3 {
-	public:
-		double x, y, z;
-		point_3(double nx, double ny, double nz);
-	};
-
-	double distance2(const point_3 *p, const point_3 *np);
-	double distance(const point_3 *p, const point_3 *np);
-
 
 	class vertex {
 	public:
