@@ -27,6 +27,8 @@ namespace math_public {
 		Vec3(double nx, double ny, double nz) :x(nx), y(ny), z(nz) { update(); }
 		Vec3(const Vec3 &another) :x(another.x), y(another.y), z(another.z) { update(); }
 
+		inline Vec3& set(double nx, double ny, double nz) { x = nx; y = ny; z = nz; return *this; }
+
 		// comparisons
 		inline bool equal_to(const Vec3& operand, double eps_ratio=1e-10)const {
 			double eps = eps_ratio * norm;
@@ -41,7 +43,7 @@ namespace math_public {
 		inline Vec3 operator+(const Vec3 &operand)const {
 			return Vec3(x + operand.x, y + operand.y, z + operand.z);
 		}
-		inline const Vec3& operator+=(const Vec3 &operand) {
+		inline Vec3& operator+=(const Vec3 &operand) {
 			x += operand.x; y += operand.y; z += operand.z;
 			update();
 			return *this;
@@ -52,7 +54,7 @@ namespace math_public {
 		inline Vec3 operator-(const Vec3 &operand)const {
 			return Vec3(x - operand.x, y - operand.y, z - operand.z);
 		}
-		inline const Vec3& operator-=(const Vec3 &operand) {
+		inline Vec3& operator-=(const Vec3 &operand) {
 			x -= operand.x; y -= operand.y; z -= operand.z;
 			update();
 			return *this;
@@ -60,7 +62,7 @@ namespace math_public {
 		inline Vec3 operator*(const double operand)const {
 			return Vec3(x*operand, y*operand, z*operand);
 		}
-		inline const Vec3& operator*=(const double operand) {
+		inline Vec3& operator*=(const double operand) {
 			x *= operand; y *= operand; z *= operand;
 			update();
 			return *this;
@@ -69,7 +71,7 @@ namespace math_public {
 		inline Vec3 operator/(const double operand)const {
 			return Vec3(x / operand, y / operand, z / operand);
 		}
-		inline const Vec3& operator/=(const double operand) {
+		inline Vec3& operator/=(const double operand) {
 			x /= operand; y /= operand; z /= operand;
 			update();
 			return *this;

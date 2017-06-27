@@ -46,8 +46,9 @@ namespace MS {
 		std::vector<double> r_p_nn;
 		std::vector<math_public::Vec3> d_r_p_nn, dnn_r_p_nn;
 
-		double area, dx_area, dy_area, dz_area;
-		std::vector<double> dxn_area, dyn_area, dzn_area;
+		double area;
+		math_public::Vec3 d_area;
+		std::vector<math_public::Vec3> dn_area;
 		double curv_h, dx_curv_h, dy_curv_h, dz_curv_h;
 		std::vector<double> dxn_curv_h, dyn_curv_h, dzn_curv_h;
 		double curv_g, dx_curv_g, dy_curv_g, dz_curv_g;

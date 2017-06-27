@@ -54,7 +54,7 @@ int vertex::dump_data_vectors() {
 	r_p_nn.push_back(0), d_r_p_nn.push_back(Vec3()), dnn_r_p_nn.push_back(Vec3());
 
 	// Derivatives around a vertex
-	dxn_area.push_back(0), dyn_area.push_back(0), dzn_area.push_back(0);
+	dn_area.push_back(Vec3());
 	dxn_curv_h.push_back(0), dyn_curv_h.push_back(0), dzn_curv_h.push_back(0);
 	dxn_curv_g.push_back(0), dyn_curv_g.push_back(0), dzn_curv_g.push_back(0);
 
@@ -178,30 +178,22 @@ double vertex::calc_area() {
 	*****************************************************************************/
 	if (USE_VONOROI_CELL) {
 		area = 0;
-		dx_area = dy_area = dz_area = 0;
+		d_area.set(0, 0, 0);
 		for (int i = 0; i < neighbors; i++) {
-			dxn_area[i] = dyn_area[i] = dzn_area[i] = 0;
+			dn_area[i].set(0, 0, 0);
 		}
 		for (int i = 0; i < neighbors; i++) {
 			double dis2 = r_p_n[i] * r_p_n[i];
 			area += (cot_theta2[i] + cot_theta3[i])*dis2;
-			dx_area += (dx_cot_theta2[i] + dx_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dx_r_p_n[i];
-			dy_area += (dy_cot_theta2[i] + dy_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dy_r_p_n[i];
-			dz_area += (dz_cot_theta2[i] + dz_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dz_r_p_n[i];
-			dxn_area[i] += (dxn_cot_theta2[i] + dxn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dxn_r_p_n[i];
-			dyn_area[i] += (dyn_cot_theta2[i] + dyn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dyn_r_p_n[i];
-			dzn_area[i] += (dzn_cot_theta2[i] + dzn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dzn_r_p_n[i];
-			int i_n = neighbor_indices_map.at(n_next[i]), i_p = neighbor_indices_map.at(n_prev[i]);
-			dxn_area[i_n] += (dxnn_cot_theta3[i])*dis2;
-			dyn_area[i_n] += (dynn_cot_theta3[i])*dis2;
-			dzn_area[i_n] += (dznn_cot_theta3[i])*dis2;
-			dxn_area[i_p] += (dxnp_cot_theta2[i])*dis2;
-			dyn_area[i_p] += (dynp_cot_theta2[i])*dis2;
-			dzn_area[i_p] += (dznp_cot_theta2[i])*dis2;
+			d_area += (d_cot_theta2[i] + d_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * d_r_p_n[i];
+			dn_area[i] += (dn_cot_theta2[i] + dn_cot_theta3[i])*dis2 + (cot_theta2[i] + cot_theta3[i]) * 2 * r_p_n[i] * dn_r_p_n[i];
+			int i_n = neighbor_indices_map.at(nn[i]), i_p = neighbor_indices_map.at(np[i]);
+			dn_area[i_n] += (dnn_cot_theta3[i])*dis2;
+			dn_area[i_p] += (dnp_cot_theta2[i])*dis2;
 		}
-		area /= 8; dx_area /= 8; dy_area /= 8; dz_area /= 8;
+		area /= 8; d_area /= 8;
 		for (int i = 0; i < neighbors; i++) {
-			dxn_area[i] /= 8; dyn_area[i] /= 8; dzn_area[i] /= 8;
+			dn_area[i] /= 8;
 		}
 		return area;
 	}
