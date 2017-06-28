@@ -242,6 +242,10 @@ double vertex::calc_curv_h() {
 		}
 		n_vec = K / K.norm;
 		d_n_vec = d_K / K.norm - (d_K*K).tensor(K) / (K.norm*K.norm2);
+		for (int i = 0; i < neighbors; i++) {
+			dn_n_vec[i] = dn_K[i] / K.norm - (dn_K[i] * K).tensor(K) / (K.norm*K.norm2);
+		}
+
 		return curv_h;
 	}
 	else {

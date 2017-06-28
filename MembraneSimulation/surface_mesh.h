@@ -58,6 +58,7 @@ namespace MS {
 		
 		math_public::Vec3 n_vec; // Normal vector
 		math_public::Mat3 d_n_vec;
+		std::vector<math_public::Mat3> dn_n_vec;
 		double n_x, n_y, n_z; // Components of normalized normal vector
 
 		int dump_data_vectors();
