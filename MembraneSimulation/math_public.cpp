@@ -89,6 +89,22 @@ test::TestCase math_public::Mat3::test_case("Mat3", []() {
 		test_case.assert_bool((op1 / op2).equal_to(ex2));
 	}
 	{
+		test_case.new_step("Check compound operators");
+		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9), op2(-9, -8, -7, -6, -5, -4, -3, -2, -1); double op3 = -2;
+		Mat3 ex1(-8, -6, -4, -2, 0, 2, 4, 6, 8);
+		Mat3 ex2(op1);
+		Mat3 ex3(-2, -4, -6, -8, -10, -12, -14, -16, -18);
+		Mat3 ex4(op1);
+		op1 += op2;
+		test_case.assert_bool(op1.equal_to(ex1));
+		op1 -= op2;
+		test_case.assert_bool(op1.equal_to(ex2));
+		op1 *= op3;
+		test_case.assert_bool(op1.equal_to(ex3));
+		op1 /= op3;
+		test_case.assert_bool(op1.equal_to(ex4));
+	}
+	{
 		test_case.new_step("Check linear transformation");
 		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9); Vec3 op2(10, 11, 12);
 		Vec3 ex(68, 167, 266);
@@ -100,4 +116,4 @@ test::TestCase math_public::Mat3::test_case("Mat3", []() {
 		Mat3 ex(30, 24, 18, 84, 69, 54, 138, 114, 90);
 		test_case.assert_bool((op1*op2).equal_to(ex));
 	}
-})
+});

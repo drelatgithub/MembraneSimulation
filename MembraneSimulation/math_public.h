@@ -147,18 +147,38 @@ namespace math_public {
 		inline Mat3 operator+(const Mat3& operand)const {
 			return Mat3(x + operand.x, y + operand.y, z + operand.z);
 		}
+		inline Mat3& operator+=(const Mat3 &operand) {
+			x += operand.x; y += operand.y; z += operand.z;
+			update();
+			return *this;
+		}
 		inline Mat3 operator-()const {
 			return Mat3(-x, -y, -z);
 		}
 		inline Mat3 operator-(const Mat3& operand)const {
 			return Mat3(x - operand.x, y - operand.y, z - operand.z);
 		}
+		inline Mat3& operator-=(const Mat3 &operand) {
+			x -= operand.x; y -= operand.y; z -= operand.z;
+			update();
+			return *this;
+		}
 		inline Mat3 operator*(double operand)const {
 			return Mat3(x*operand, y*operand, z*operand);
 		}
 		friend inline Mat3 operator*(double op1, const Mat3& op2);
+		inline Mat3& operator*=(const double operand) {
+			x *= operand; y *= operand; z *= operand;
+			update();
+			return *this;
+		}
 		inline Mat3 operator/(double operand)const {
 			return Mat3(x / operand, y / operand, z / operand);
+		}
+		inline Mat3& operator/=(const double operand) {
+			x /= operand; y /= operand; z /= operand;
+			update();
+			return *this;
 		}
 
 		// vector and matrix multiplication
