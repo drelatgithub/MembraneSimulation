@@ -49,10 +49,15 @@ namespace MS {
 		double area;
 		math_public::Vec3 d_area;
 		std::vector<math_public::Vec3> dn_area;
-		double curv_h, dx_curv_h, dy_curv_h, dz_curv_h;
-		std::vector<double> dxn_curv_h, dyn_curv_h, dzn_curv_h;
-		double curv_g, dx_curv_g, dy_curv_g, dz_curv_g;
-		std::vector<double>dxn_curv_g, dyn_curv_g, dzn_curv_g;
+		double curv_h;
+		math_public::Vec3 d_curv_h;
+		std::vector<math_public::Vec3> dn_curv_h;
+		double curv_g;
+		math_public::Vec3 d_curv_g;
+		std::vector<math_public::Vec3> dn_curv_g;
+		
+		math_public::Vec3 n_vec; // Normal vector
+		math_public::Mat3 d_n_vec;
 		double n_x, n_y, n_z; // Components of normalized normal vector
 
 		int dump_data_vectors();

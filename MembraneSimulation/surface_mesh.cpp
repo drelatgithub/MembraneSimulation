@@ -214,89 +214,34 @@ double vertex::calc_curv_h() {
 	*****************************************************************************/
 	if (USE_VONOROI_CELL) {
 		Vec3 K;
-		double K_x = 0, K_y = 0, K_z = 0; // x, y, z component of K
-		double dx_K_x = 0, dy_K_x = 0, dz_K_x = 0, dx_K_y = 0, dy_K_y = 0, dz_K_y = 0, dx_K_z = 0, dy_K_z = 0, dz_K_z = 0;
-		std::vector<double> dxn_K_x(neighbors), dyn_K_x(neighbors), dzn_K_x(neighbors);
-		std::vector<double> dxn_K_y(neighbors), dyn_K_y(neighbors), dzn_K_y(neighbors);
-		std::vector<double> dxn_K_z(neighbors), dyn_K_z(neighbors), dzn_K_z(neighbors);
+		Mat3 d_diff(Eye3), dn_diff(-Eye3);
+		Mat3 d_K;
+		std::vector<Mat3> dn_K(neighbors);
 		for (int i = 0; i < neighbors; i++) {
 			Vec3 diff = *point - *(n[i]->point);
-			Mat3 d_diff(Eye3), dn_diff(-Eye3);
 			K += (cot_theta2[i] + cot_theta3[i])*diff;
-			K_x += (cot_theta2[i] + cot_theta3[i])*diff_x;
-			K_y += (cot_theta2[i] + cot_theta3[i])*diff_y;
-			K_z += (cot_theta2[i] + cot_theta3[i])*diff_z;
-			dx_K_x += (dx_cot_theta2[i] + dx_cot_theta3[i])*diff_x + (cot_theta2[i] + cot_theta3[i]);
-			dy_K_x += (dy_cot_theta2[i] + dy_cot_theta3[i])*diff_x;
-			dz_K_x += (dz_cot_theta2[i] + dz_cot_theta3[i])*diff_x;
-			dx_K_y += (dx_cot_theta2[i] + dx_cot_theta3[i])*diff_y;
-			dy_K_y += (dy_cot_theta2[i] + dy_cot_theta3[i])*diff_y + (cot_theta2[i] + cot_theta3[i]);
-			dz_K_y += (dz_cot_theta2[i] + dz_cot_theta3[i])*diff_y;
-			dx_K_z += (dx_cot_theta2[i] + dx_cot_theta3[i])*diff_z;
-			dy_K_z += (dy_cot_theta2[i] + dy_cot_theta3[i])*diff_z;
-			dz_K_z += (dz_cot_theta2[i] + dz_cot_theta3[i])*diff_z + (cot_theta2[i] + cot_theta3[i]);
-			dxn_K_x[i] += (dxn_cot_theta2[i] + dxn_cot_theta3[i])*diff_x - (cot_theta2[i] + cot_theta3[i]);
-			dyn_K_x[i] += (dyn_cot_theta2[i] + dyn_cot_theta3[i])*diff_x;
-			dzn_K_x[i] += (dzn_cot_theta2[i] + dzn_cot_theta3[i])*diff_x;
-			dxn_K_y[i] += (dxn_cot_theta2[i] + dxn_cot_theta3[i])*diff_y;
-			dyn_K_y[i] += (dyn_cot_theta2[i] + dyn_cot_theta3[i])*diff_y - (cot_theta2[i] + cot_theta3[i]);
-			dzn_K_y[i] += (dzn_cot_theta2[i] + dzn_cot_theta3[i])*diff_y;
-			dxn_K_z[i] += (dxn_cot_theta2[i] + dxn_cot_theta3[i])*diff_z;
-			dyn_K_z[i] += (dyn_cot_theta2[i] + dyn_cot_theta3[i])*diff_z;
-			dzn_K_z[i] += (dzn_cot_theta2[i] + dzn_cot_theta3[i])*diff_z - (cot_theta2[i] + cot_theta3[i]);
-			int i_n = neighbor_indices_map[n_next[i]], i_p = neighbor_indices_map[n_prev[i]];
-			dxn_K_x[i_n] += dxnn_cot_theta3[i] * diff_x;
-			dyn_K_x[i_n] += dynn_cot_theta3[i] * diff_x;
-			dzn_K_x[i_n] += dznn_cot_theta3[i] * diff_x;
-			dxn_K_y[i_n] += dxnn_cot_theta3[i] * diff_y;
-			dyn_K_y[i_n] += dynn_cot_theta3[i] * diff_y;
-			dzn_K_y[i_n] += dznn_cot_theta3[i] * diff_y;
-			dxn_K_z[i_n] += dxnn_cot_theta3[i] * diff_z;
-			dyn_K_z[i_n] += dynn_cot_theta3[i] * diff_z;
-			dzn_K_z[i_n] += dznn_cot_theta3[i] * diff_z;
-			dxn_K_x[i_p] += dxnp_cot_theta2[i] * diff_x;
-			dyn_K_x[i_p] += dynp_cot_theta2[i] * diff_x;
-			dzn_K_x[i_p] += dznp_cot_theta2[i] * diff_x;
-			dxn_K_y[i_p] += dxnp_cot_theta2[i] * diff_y;
-			dyn_K_y[i_p] += dynp_cot_theta2[i] * diff_y;
-			dzn_K_y[i_p] += dznp_cot_theta2[i] * diff_y;
-			dxn_K_z[i_p] += dxnp_cot_theta2[i] * diff_z;
-			dyn_K_z[i_p] += dynp_cot_theta2[i] * diff_z;
-			dzn_K_z[i_p] += dznp_cot_theta2[i] * diff_z;
+			d_K += (d_cot_theta2[i] + d_cot_theta3[i]).tensor(diff) + (cot_theta2[i] + cot_theta3[i])*d_diff;
+			dn_K[i] += (dn_cot_theta2[i] + dn_cot_theta3[i]).tensor(diff) + (cot_theta2[i] + cot_theta3[i])*dn_diff;
+
+			int i_n = neighbor_indices_map[nn[i]], i_p = neighbor_indices_map[np[i]];
+			dn_K[i_n] += dnn_cot_theta3[i].tensor(diff);
+			dn_K[i_p] += dnp_cot_theta2[i].tensor(diff);
 		}
-		dx_K_x = (area*dx_K_x - K_x*dx_area) / (2 * area*area);
-		dy_K_x = (area*dy_K_x - K_x*dy_area) / (2 * area*area);
-		dz_K_x = (area*dz_K_x - K_x*dz_area) / (2 * area*area);
-		dx_K_y = (area*dx_K_y - K_y*dx_area) / (2 * area*area);
-		dy_K_y = (area*dy_K_y - K_y*dy_area) / (2 * area*area);
-		dz_K_y = (area*dz_K_y - K_y*dz_area) / (2 * area*area);
-		dx_K_z = (area*dx_K_z - K_z*dx_area) / (2 * area*area);
-		dy_K_z = (area*dy_K_z - K_z*dy_area) / (2 * area*area);
-		dz_K_z = (area*dz_K_z - K_z*dz_area) / (2 * area*area);
+
+		// Convert K to K/2A
+		d_K = (area*d_K - d_area.tensor(K)) / (2 * area*area);
 		for (int i = 0; i < neighbors; i++) {
-			dxn_K_x[i] = (area*dxn_K_x[i] - K_x*dxn_area[i]) / (2 * area*area);
-			dyn_K_x[i] = (area*dyn_K_x[i] - K_x*dyn_area[i]) / (2 * area*area);
-			dzn_K_x[i] = (area*dzn_K_x[i] - K_x*dzn_area[i]) / (2 * area*area);
-			dxn_K_y[i] = (area*dxn_K_y[i] - K_y*dxn_area[i]) / (2 * area*area);
-			dyn_K_y[i] = (area*dyn_K_y[i] - K_y*dyn_area[i]) / (2 * area*area);
-			dzn_K_y[i] = (area*dzn_K_y[i] - K_y*dzn_area[i]) / (2 * area*area);
-			dxn_K_z[i] = (area*dxn_K_z[i] - K_z*dxn_area[i]) / (2 * area*area);
-			dyn_K_z[i] = (area*dyn_K_z[i] - K_z*dyn_area[i]) / (2 * area*area);
-			dzn_K_z[i] = (area*dzn_K_z[i] - K_z*dzn_area[i]) / (2 * area*area);
+			dn_K[i] = (area*dn_K[i] - dn_area[i].tensor(K)) / (2 * area*area);
 		}
-		K_x /= 2 * area; K_y /= 2 * area; K_z /= 2 * area;
-		curv_h = sqrt(K_x*K_x + K_y*K_y + K_z*K_z) / 2;
-		dx_curv_h = (K_x*dx_K_x + K_y*dx_K_y + K_z*dx_K_z) / (4 * curv_h);
-		dy_curv_h = (K_x*dy_K_x + K_y*dy_K_y + K_z*dy_K_z) / (4 * curv_h);
-		dz_curv_h = (K_x*dz_K_x + K_y*dz_K_y + K_z*dz_K_z) / (4 * curv_h);
+		K /= 2 * area;
+
+		curv_h = K.norm / 2;
+		d_curv_h = (d_K*K) / (2 * K.norm);
 		for (int i = 0; i < neighbors; i++) {
-			dxn_curv_h[i] = (K_x*dxn_K_x[i] + K_y*dxn_K_y[i] + K_z*dxn_K_z[i]) / (4 * curv_h);
-			dyn_curv_h[i] = (K_x*dyn_K_x[i] + K_y*dyn_K_y[i] + K_z*dyn_K_z[i]) / (4 * curv_h);
-			dzn_curv_h[i] = (K_x*dzn_K_x[i] + K_y*dzn_K_y[i] + K_z*dzn_K_z[i]) / (4 * curv_h);
+			dn_curv_h[i] = (dn_K[i] * K) / (2 * K.norm);
 		}
-		n_x = K_x / (2 * curv_h);
-		n_y = K_y / (2 * curv_h);
-		n_z = K_z / (2 * curv_h);
+		n_vec = K / K.norm;
+		d_n_vec = d_K / K.norm - (d_K*K).tensor(K) / (K.norm*K.norm2);
 		return curv_h;
 	}
 	else {
