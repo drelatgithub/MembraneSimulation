@@ -213,13 +213,15 @@ double vertex::calc_curv_h() {
 	And K = 1/(2A) * \sum_{v_j is neighbour of v_i} (cot \alpha_ij + cot \beta_ij ) * (r_i - r_j)	
 	*****************************************************************************/
 	if (USE_VONOROI_CELL) {
+		Vec3 K;
 		double K_x = 0, K_y = 0, K_z = 0; // x, y, z component of K
 		double dx_K_x = 0, dy_K_x = 0, dz_K_x = 0, dx_K_y = 0, dy_K_y = 0, dz_K_y = 0, dx_K_z = 0, dy_K_z = 0, dz_K_z = 0;
 		std::vector<double> dxn_K_x(neighbors), dyn_K_x(neighbors), dzn_K_x(neighbors);
 		std::vector<double> dxn_K_y(neighbors), dyn_K_y(neighbors), dzn_K_y(neighbors);
 		std::vector<double> dxn_K_z(neighbors), dyn_K_z(neighbors), dzn_K_z(neighbors);
 		for (int i = 0; i < neighbors; i++) {
-			double diff_x = point->x - n[i]->point->x, diff_y = point->y - n[i]->point->y, diff_z = point->z - n[i]->point->z;
+			Vec3 diff = *point - *(n[i]->point);
+			K += (cot_theta2[i] + cot_theta3[i])*diff;
 			K_x += (cot_theta2[i] + cot_theta3[i])*diff_x;
 			K_y += (cot_theta2[i] + cot_theta3[i])*diff_y;
 			K_z += (cot_theta2[i] + cot_theta3[i])*diff_z;
