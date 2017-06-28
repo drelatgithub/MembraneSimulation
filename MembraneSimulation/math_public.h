@@ -87,6 +87,10 @@ namespace math_public {
 		inline Vec3 cross(const Vec3 &operand)const {
 			return Vec3(y*operand.z - z*operand.y, z*operand.x - x*operand.z, x*operand.y - y*operand.x);
 		}
+		// tensor product
+		inline Mat3 tensor(const Vec3& operand)const {
+			return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
+		}
 
 		// norms
 		double norm, norm2;

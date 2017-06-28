@@ -221,6 +221,7 @@ double vertex::calc_curv_h() {
 		std::vector<double> dxn_K_z(neighbors), dyn_K_z(neighbors), dzn_K_z(neighbors);
 		for (int i = 0; i < neighbors; i++) {
 			Vec3 diff = *point - *(n[i]->point);
+			Mat3 d_diff(Eye3), dn_diff(-Eye3);
 			K += (cot_theta2[i] + cot_theta3[i])*diff;
 			K_x += (cot_theta2[i] + cot_theta3[i])*diff_x;
 			K_y += (cot_theta2[i] + cot_theta3[i])*diff_y;

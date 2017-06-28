@@ -64,6 +64,12 @@ test::TestCase math_public::Vec3::test_case("Vec3", []() {
 		test_case.assert_bool(equal(op1*ex, 0));
 		test_case.assert_bool(equal(op2*ex, 0));
 	}
+	{
+		test_case.new_step("Check tensor product");
+		Vec3 op1(1, 2, 3), op2(-3, -2, -1);
+		Mat3 ex(-3, -2, -1, -6, -4, -2, -9, -6, -3);
+		test_case.assert_bool(op1.tensor(op2).equal_to(ex));
+	}
 });
 
 test::TestCase math_public::Mat3::test_case("Mat3", []() {
