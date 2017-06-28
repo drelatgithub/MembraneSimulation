@@ -121,4 +121,45 @@ namespace math_public {
 	inline double dist(const Vec3 &op1, const Vec3 &op2) {
 		return (op1 - op2).norm;
 	}
+
+
+	// define class for 3x3 matrix
+	class Mat3 {
+	public:
+		Vec3 x, y, z;
+		Mat3() :x(), y(), z() { update(); }
+		Mat3(const Vec3& nx, const Vec3& ny, const Vec3& nz) :x(nx), y(ny), z(nz) { update(); }
+		Mat3(double a11, double a12, double a13, double a21, double a22, double a23, double a31, double a32, double a33) :
+			x(a11, a21, a31), y(a12, a22, a32), z(a31, a32, a33) {
+			update();
+		}
+
+		// comparisons
+		inline bool equal_to(const Mat3& operand, double eps_ratio = 1e-10)const {
+			return x.equal_to(operand.x, eps_ratio) && y.equal_to(operand.y, eps_ratio) && z.equal_to(operand.z, eps_ratio);
+		}
+
+		// matrix multiplication
+		inline Vec3 operator*(const Vec3& operand) {
+			return Vec3(x_row.dot(operand), y_row.dot(operand), z_row.dot(operand));
+		}
+		inline Mat3 operator*(const Mat3& operand) {
+			return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
+		}
+
+	private:
+		Vec3 x_row, y_row, z_row;
+		inline void get_row_vec() {
+			x_row.set(x.x, y.x, z.x);
+			y_row.set(x.y, y.y, z.y);
+			z_row.set(x.z, y.z, z.z);
+		}
+
+		inline void update() {
+			get_row_vec();
+		}
+
+		// test
+		static test::TestCase test_case;
+	};
 }

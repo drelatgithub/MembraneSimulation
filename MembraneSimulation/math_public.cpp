@@ -65,3 +65,18 @@ test::TestCase math_public::Vec3::test_case("Vec3", []() {
 		test_case.assert_bool(equal(op2*ex, 0));
 	}
 });
+
+test::TestCase math_public::Mat3::test_case("Mat3", []() {
+	{
+		test_case.new_step("Check linear transformation");
+		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9); Vec3 op2(10, 11, 12);
+		Vec3 ex(68, 167, 266);
+		test_case.assert_bool((op1*op2).equal_to(ex));
+	}
+	{
+		test_case.new_step("Check matrix multiplication");
+		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9), op2(9, 8, 7, 6, 5, 4, 3, 2, 1);
+		Mat3 ex(30, 24, 18, 84, 69, 54, 138, 114, 90);
+		test_case.assert_bool((op1*op2).equal_to(ex));
+	}
+})
