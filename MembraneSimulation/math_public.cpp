@@ -23,7 +23,7 @@ test::TestCase math_public::Vec3::test_case("Vec3", []() {
 		test_case.assert_bool((op1 - op2).equal_to(ex));
 	}
 	{
-		test_case.new_step("Check multiplication");
+		test_case.new_step("Check multiplication and division");
 		Vec3 op1(1, 2, 3); double op2 = -0.5;
 		Vec3 ex1(-0.5, -1, -1.5), ex2(-2, -4, -6);
 		test_case.assert_bool((op1 * op2).equal_to(ex1));
@@ -67,6 +67,21 @@ test::TestCase math_public::Vec3::test_case("Vec3", []() {
 });
 
 test::TestCase math_public::Mat3::test_case("Mat3", []() {
+	{
+		test_case.new_step("Check plus and minus");
+		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		Mat3 ex1(2, 2, 3, 4, 6, 6, 7, 8, 10), ex2(0, 2, 3, 4, 4, 6, 7, 8, 8);
+		test_case.assert_bool((op1 + Eye3).equal_to(ex1));
+		test_case.assert_bool((op1 - Eye3).equal_to(ex2));
+	}
+	{
+		test_case.new_step("Check multiplication and division");
+		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9); double op2 = -0.5;
+		Mat3 ex1(-0.5, -1, -1.5, -2, -2.5, -3, -3.5, -4, -4.5), ex2(-2, -4, -6, -8, -10, -12, -14, -16, -18);
+		test_case.assert_bool((op1 * op2).equal_to(ex1));
+		test_case.assert_bool((op2 * op1).equal_to(ex1));
+		test_case.assert_bool((op1 / op2).equal_to(ex2));
+	}
 	{
 		test_case.new_step("Check linear transformation");
 		Mat3 op1(1, 2, 3, 4, 5, 6, 7, 8, 9); Vec3 op2(10, 11, 12);

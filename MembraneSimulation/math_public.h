@@ -39,7 +39,7 @@ namespace math_public {
 			return equal(norm, operand.norm, eps);
 		}
 
-		// vector plus, minus and multiplication
+		// vector plus, minus, multiplication and division
 		inline Vec3 operator+(const Vec3 &operand)const {
 			return Vec3(x + operand.x, y + operand.y, z + operand.z);
 		}
@@ -139,11 +139,29 @@ namespace math_public {
 			return x.equal_to(operand.x, eps_ratio) && y.equal_to(operand.y, eps_ratio) && z.equal_to(operand.z, eps_ratio);
 		}
 
-		// matrix multiplication
-		inline Vec3 operator*(const Vec3& operand) {
+		// plus, minus, multiplication and division
+		inline Mat3 operator+(const Mat3& operand)const {
+			return Mat3(x + operand.x, y + operand.y, z + operand.z);
+		}
+		inline Mat3 operator-()const {
+			return Mat3(-x, -y, -z);
+		}
+		inline Mat3 operator-(const Mat3& operand)const {
+			return Mat3(x - operand.x, y - operand.y, z - operand.z);
+		}
+		inline Mat3 operator*(double operand)const {
+			return Mat3(x*operand, y*operand, z*operand);
+		}
+		friend inline Mat3 operator*(double op1, const Mat3& op2);
+		inline Mat3 operator/(double operand)const {
+			return Mat3(x / operand, y / operand, z / operand);
+		}
+
+		// vector and matrix multiplication
+		inline Vec3 operator*(const Vec3& operand)const {
 			return Vec3(x_row.dot(operand), y_row.dot(operand), z_row.dot(operand));
 		}
-		inline Mat3 operator*(const Mat3& operand) {
+		inline Mat3 operator*(const Mat3& operand)const {
 			return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
 		}
 
@@ -162,4 +180,9 @@ namespace math_public {
 		// test
 		static test::TestCase test_case;
 	};
+	inline Mat3 operator*(double op1, const Mat3& op2) {
+		return op2*op1;
+	}
+
+	const Mat3 Eye3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 }
