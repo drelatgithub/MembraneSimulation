@@ -67,7 +67,7 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 		for (int i = 0; i < num_vertices; i++) {
 			for (int j = 0; j < vertices[i]->neighbors; j++) {
 				// Propose a facet
-				MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->n_next[j]);
+				MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->nn[j]);
 
 				// Check whether this facet has already existed
 				bool exist = false;
