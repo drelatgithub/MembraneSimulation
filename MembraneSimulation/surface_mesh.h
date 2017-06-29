@@ -58,8 +58,9 @@ namespace MS {
 		std::vector<math_public::Vec3> dn_curv_g;
 		
 		math_public::Vec3 n_vec; // Normal vector
-		math_public::Mat3 d_n_vec;
-		std::vector<math_public::Mat3> dn_n_vec;
+		// we do not calculate derivative of normal vector here, because it would be very inaccurate when curv_h is close to 0.
+		//math_public::Mat3 d_n_vec;
+		//std::vector<math_public::Mat3> dn_n_vec;
 
 		int dump_data_vectors();
 

@@ -59,7 +59,6 @@ int vertex::dump_data_vectors() {
 	dn_area.push_back(Vec3());
 	dn_curv_h.push_back(Vec3());
 	dn_curv_g.push_back(Vec3());
-	dn_n_vec.push_back(Mat3());
 
 	return 0;
 }
@@ -244,11 +243,7 @@ double vertex::calc_curv_h() {
 		for (int i = 0; i < neighbors; i++) {
 			dn_curv_h[i] = (dn_K[i] * K) / (2 * K.norm);
 		}
-		n_vec = K / K.norm;
-		d_n_vec = d_K / K.norm - (d_K*K).tensor(K) / (K.norm*K.norm2);
-		for (int i = 0; i < neighbors; i++) {
-			dn_n_vec[i] = dn_K[i] / K.norm - (dn_K[i] * K).tensor(K) / (K.norm*K.norm2);
-		}
+		n_vec = K / K.norm; // normal vector. would be very inaccurate when |K| is close to 0.
 
 		return curv_h;
 	}
@@ -337,10 +332,6 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 	test_case_geometry.assert_bool(equal(vertices[0]->area, sqrt(3) / 2.0), "Area is incorrect.");
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_h, 0), "Mean curvature is incorrect.");
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
-
-	test_case_geometry.new_step("Check normal vector");
-	test_case_geometry.assert_bool(equal(vertices[0]->n_vec.get_norm(), 1), "Normal vector is not unit vector.");
-	test_case_geometry.assert_bool((vertices[0]->n_vec / (vertices[0]->n_vec.norm)).equal_to(Vec3(0, 0, -1)), vertices[0]->n_vec.str());
 
 	test_case_geometry.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {

@@ -536,9 +536,9 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 	}
 
 	vertices[v_index]->make_last();
-	double n_x = vertices[v_index]->n_x;
-	double n_y = vertices[v_index]->n_y;
-	double n_z = vertices[v_index]->n_z;
+	double n_x = vertices[v_index]->n_vec.x;
+	double n_y = vertices[v_index]->n_vec.y;
+	double n_z = vertices[v_index]->n_vec.z;
 	double l1_x = -n_y;
 	double l1_y = n_x;
 	double l1_z = 0;
