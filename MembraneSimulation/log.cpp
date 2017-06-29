@@ -20,8 +20,11 @@ void Writer::log_dispatch() {
 		(*file_o) << file_prefix << log_buffer.str() << file_suffix;
 		file_o->flush();
 	}
-	if (SCN_OUT)
+	if (SCN_OUT) {
+		change_color(level);
 		std::cout << scn_prefix << log_buffer.str() << scn_suffix;
+		restore_color();
+	}
 }
 
 

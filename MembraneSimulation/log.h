@@ -19,6 +19,10 @@
 #  define LOG_FUNC ""
 #endif
 
+#ifdef _WIN32
+#  include<Windows.h>
+#endif
+
 namespace logger {
 	enum Level {
 		Debug = 1 << 0,
@@ -83,6 +87,31 @@ namespace logger {
 		static void info_gen(const Writer& writer, std::string &prefix, std::string &suffix, std::map<Disp_lv, int> &disp_setting, Level level);
 		static std::string time_gen();
 	};
+
+	inline void change_color(Level level, bool restore=false) {
+#ifdef _WIN32
+		static HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+		if (restore) {
+			SetConsoleTextAttribute(hConsole, 7); // White on Black
+		}
+		else {
+			switch (level) {
+			case Debug: case TestDebug: SetConsoleTextAttribute(hConsole, 8); break; // Gray on Black
+			case Info: SetConsoleTextAttribute(hConsole, 7); break; // White on Black
+			case TestInfo: SetConsoleTextAttribute(hConsole, 10); break; // Light Green on Black
+			case Warning: case TestWarning: SetConsoleTextAttribute(hConsole, 14); break; // Light Yellow on Black
+			case Error: case TestError: SetConsoleTextAttribute(hConsole, 12); break; // Light Red on Black
+			case TestStep: SetConsoleTextAttribute(hConsole, 11); break; // Light Aqua on Black
+			}
+		}
+#else
+		// do nothing
+#endif
+	}
+	inline void restore_color() {
+		change_color(Debug, true);
+	}
 
 }
 
