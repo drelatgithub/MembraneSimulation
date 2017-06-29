@@ -55,8 +55,9 @@ int vertex::dump_data_vectors() {
 
 	// Derivatives around a vertex
 	dn_area.push_back(Vec3());
-	dxn_curv_h.push_back(0), dyn_curv_h.push_back(0), dzn_curv_h.push_back(0);
-	dxn_curv_g.push_back(0), dyn_curv_g.push_back(0), dzn_curv_g.push_back(0);
+	dn_curv_h.push_back(Vec3());
+	dn_curv_g.push_back(Vec3());
+	dn_n_vec.push_back(Mat3());
 
 	return 0;
 }
@@ -262,28 +263,19 @@ double vertex::calc_curv_g() {
 	Locally, k_g * A = 2\pi - \sum_{angle j around v_i} theta_j
 	*****************************************************************************/
 	if (USE_VONOROI_CELL) {
-		double a = 2 * M_PI, dx_a = 0, dy_a = 0, dz_a = 0;
-		std::vector<double> dxn_a(neighbors), dyn_a(neighbors), dzn_a(neighbors);
+		double a = 2 * M_PI;
+		Vec3 d_a;
+		std::vector<Vec3> dn_a(neighbors);
 		for (int i = 0; i < neighbors; i++) {
 			a -= theta[i];
-			dx_a -= dx_theta[i];
-			dy_a -= dy_theta[i];
-			dz_a -= dz_theta[i];
-			dxn_a[i] -= dxn_theta[i];
-			dyn_a[i] -= dyn_theta[i];
-			dzn_a[i] -= dzn_theta[i];
-			int i_n = neighbor_indices_map[n_next[i]];
-			dxn_a[i_n] -= dxnn_theta[i];
-			dyn_a[i_n] -= dynn_theta[i];
-			dzn_a[i_n] -= dznn_theta[i];
+			d_a -= d_theta[i];
+			dn_a[i] -= dn_theta[i];
+			int i_n = neighbor_indices_map[nn[i]];
+			dn_a[i_n] -= dnn_theta[i];
 		}
-		dx_curv_g = (area*dx_a - a*dx_area) / (area*area);
-		dy_curv_g = (area*dy_a - a*dy_area) / (area*area);
-		dz_curv_g = (area*dz_a - a*dz_area) / (area*area);
+		d_curv_g = (area*d_a - a*d_area) / (area*area);
 		for (int i = 0; i < neighbors; i++) {
-			dxn_curv_g[i] = (area*dxn_a[i] - a*dxn_area[i]) / (area*area);
-			dyn_curv_g[i] = (area*dyn_a[i] - a*dyn_area[i]) / (area*area);
-			dzn_curv_g[i] = (area*dzn_a[i] - a*dzn_area[i]) / (area*area);
+			dn_curv_g[i] = (area*dn_a[i] - a*dn_area[i]) / (area*area);
 		}
 		curv_g = a / area;
 		return curv_g;
