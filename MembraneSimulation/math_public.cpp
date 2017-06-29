@@ -4,13 +4,15 @@
 using namespace math_public;
 
 Mat3 math_public::Vec3::tensor(const Vec3& operand)const {
-	return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
+	Mat3 ans(operator*(operand.x), operator*(operand.y), operator*(operand.z));
+	return ans;
 }
 test::TestCase math_public::Vec3::test_case("Vec3", []() {
 	{
 		test_case.new_step("Check norm");
 		Vec3 op(3, 4, 12);
 		double ex = 13;
+		test_case.assert_bool(equal(op.get_norm(), ex));
 		test_case.assert_bool(equal(op.norm, ex));
 	}
 	{

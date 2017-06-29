@@ -30,16 +30,19 @@ namespace math_public {
 		Vec3() :x(0), y(0), z(0) {}
 		Vec3(double nx, double ny, double nz) :x(nx), y(ny), z(nz) {}
 		Vec3(const Vec3 &another) :x(another.x), y(another.y), z(another.z) {}
+		~Vec3() {
+			int a = 1;
+		}
 
 		inline Vec3& set(double nx, double ny, double nz) { x = nx; y = ny; z = nz; return *this; }
 
 		// comparisons
 		inline bool equal_to(const Vec3& operand, double eps_ratio=1e-10)const {
-			double eps = eps_ratio * norm;
+			double eps = eps_ratio * get_norm();
 			return equal(x, operand.x, eps) && equal(y, operand.y, eps) && equal(z, operand.z, eps);
 		}
 		inline bool equal_to_in_norm(const Vec3& operand, double eps_ratio=1e-10)const {
-			double eps = eps_ratio * norm;
+			double eps = eps_ratio * get_norm();
 			return equal(norm, operand.norm, eps);
 		}
 
@@ -95,19 +98,19 @@ namespace math_public {
 		Mat3 tensor(const Vec3& operand)const;
 
 		// norms
-		double norm, norm2;
+		mutable double norm, norm2;
 		// norms are not initially calculated.
 		// To use norm, one has to first calc_norm()
 		// For temporary use just use the return value of get_norm() or get_norm2()
-		inline void calc_norm() {
+		inline void calc_norm()const {
 			norm2 = x*x + y*y + z*z;
 			norm = sqrt(norm2);
 		}
-		inline double get_norm() {
+		inline double get_norm()const {
 			calc_norm();
 			return norm;
 		}
-		inline double get_norm2() {
+		inline double get_norm2()const {
 			calc_norm();
 			return norm2;
 		}
@@ -144,10 +147,14 @@ namespace math_public {
 	public:
 		Vec3 x, y, z;
 		Mat3() :x(), y(), z() { update(); }
+		Mat3(const Mat3 &another) :x(another.x), y(another.y), z(another.z) { update(); }
 		Mat3(const Vec3& nx, const Vec3& ny, const Vec3& nz) :x(nx), y(ny), z(nz) { update(); }
 		Mat3(double a11, double a12, double a13, double a21, double a22, double a23, double a31, double a32, double a33) :
-			x(a11, a21, a31), y(a12, a22, a32), z(a31, a32, a33) {
+			x(a11, a21, a31), y(a12, a22, a32), z(a13, a23, a33) {
 			update();
+		}
+		~Mat3() {
+			int a = 1;
 		}
 
 		// comparisons
