@@ -236,6 +236,7 @@ double vertex::calc_curv_h() {
 		}
 		K /= 2 * area;
 
+		K.calc_norm(); // Must be used before using norm
 		curv_h = K.norm / 2;
 		d_curv_h = (d_K*K) / (2 * K.norm);
 		for (int i = 0; i < neighbors; i++) {

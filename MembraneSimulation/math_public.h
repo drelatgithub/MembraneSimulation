@@ -6,6 +6,10 @@
 
 namespace math_public {
 
+	// Declarations first due to circular references
+	class Vec3;
+	class Mat3;
+
 	inline int loop_add(const int lhs, const int rhs, const int loop_size) {
 		// The answer is in {0, 1, ..., loop_size - 1}.
 		// Either operand (lhs or rhs) could be negative.
@@ -23,9 +27,9 @@ namespace math_public {
 	class Vec3 {
 	public:
 		double x, y, z;
-		Vec3() :x(0), y(0), z(0) { update(); }
-		Vec3(double nx, double ny, double nz) :x(nx), y(ny), z(nz) { update(); }
-		Vec3(const Vec3 &another) :x(another.x), y(another.y), z(another.z) { update(); }
+		Vec3() :x(0), y(0), z(0) {}
+		Vec3(double nx, double ny, double nz) :x(nx), y(ny), z(nz) {}
+		Vec3(const Vec3 &another) :x(another.x), y(another.y), z(another.z) {}
 
 		inline Vec3& set(double nx, double ny, double nz) { x = nx; y = ny; z = nz; return *this; }
 
@@ -88,21 +92,29 @@ namespace math_public {
 			return Vec3(y*operand.z - z*operand.y, z*operand.x - x*operand.z, x*operand.y - y*operand.x);
 		}
 		// tensor product
-		inline Mat3 tensor(const Vec3& operand)const {
-			return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
-		}
+		Mat3 tensor(const Vec3& operand)const;
 
 		// norms
 		double norm, norm2;
-		inline double get_norm() {
+		// norms are not initially calculated.
+		// To use norm, one has to first calc_norm()
+		// For temporary use just use the return value of get_norm() or get_norm2()
+		inline void calc_norm() {
 			norm2 = x*x + y*y + z*z;
 			norm = sqrt(norm2);
+		}
+		inline double get_norm() {
+			calc_norm();
 			return norm;
+		}
+		inline double get_norm2() {
+			calc_norm();
+			return norm2;
 		}
 
 		// update properties
 		inline void update() {
-			get_norm();
+			calc_norm();
 		}
 
 		// test
@@ -120,10 +132,10 @@ namespace math_public {
 	}
 
 	inline double dist2(const Vec3 &op1, const Vec3 &op2) {
-		return (op1 - op2).norm2;
+		return (op1 - op2).get_norm2();
 	}
 	inline double dist(const Vec3 &op1, const Vec3 &op2) {
-		return (op1 - op2).norm;
+		return (op1 - op2).get_norm();
 	}
 
 
@@ -189,7 +201,6 @@ namespace math_public {
 			return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
 		}
 
-	private:
 		Vec3 x_row, y_row, z_row;
 		inline void get_row_vec() {
 			x_row.set(x.x, y.x, z.x);

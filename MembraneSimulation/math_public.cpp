@@ -3,6 +3,9 @@
 
 using namespace math_public;
 
+Mat3 math_public::Vec3::tensor(const Vec3& operand)const {
+	return Mat3(operator*(operand.x), operator*(operand.y), operator*(operand.z));
+}
 test::TestCase math_public::Vec3::test_case("Vec3", []() {
 	{
 		test_case.new_step("Check norm");
@@ -71,6 +74,7 @@ test::TestCase math_public::Vec3::test_case("Vec3", []() {
 		test_case.assert_bool(op1.tensor(op2).equal_to(ex));
 	}
 });
+
 
 test::TestCase math_public::Mat3::test_case("Mat3", []() {
 	{
