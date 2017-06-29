@@ -16,8 +16,8 @@ namespace test {
 		void new_step(const std::string& step_name);
 
 		// Assertions
-		inline bool assert_bool(bool x) {
-			assertion_result(x);
+		inline bool assert_bool(bool x, const std::string& failure_info = std::string()) {
+			assertion_result(x, failure_info);
 			return x;
 		}
 
@@ -35,7 +35,7 @@ namespace test {
 		
 		// Pass and fail
 		void step_result(int which_step);
-		void assertion_result(bool res);
+		void assertion_result(bool res, const std::string& failure_info = std::string());
 	};
 
 	// Test cases registering

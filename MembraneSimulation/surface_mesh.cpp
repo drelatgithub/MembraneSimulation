@@ -328,12 +328,15 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 	test_case_geometry.assert_bool(N - 1 == vertices[0]->neighbors);
 
 	vertices[0]->update_geo();
-	test_case_geometry.new_step("Check angles");
+	test_case_geometry.new_step("Check angles, area and curvature");
 	for (int i = 0; i < 6; i++) {
-		test_case_geometry.assert_bool(equal(vertices[0]->theta[i], M_PI / 3));
-		test_case_geometry.assert_bool(equal(vertices[0]->theta2[i], M_PI / 3));
-		test_case_geometry.assert_bool(equal(vertices[0]->theta3[i], M_PI / 3));
+		test_case_geometry.assert_bool(equal(vertices[0]->theta[i], M_PI / 3), "Theta is incorrect.");
+		test_case_geometry.assert_bool(equal(vertices[0]->theta2[i], M_PI / 3), "Theta2 is incorrect.");
+		test_case_geometry.assert_bool(equal(vertices[0]->theta3[i], M_PI / 3), "Theta3 is incorrect.");
 	}
+	test_case_geometry.assert_bool(equal(vertices[0]->area, sqrt(3) / 2.0), "Area is incorrect.");
+	test_case_geometry.assert_bool(equal(vertices[0]->curv_h, 0), "Mean curvature is incorrect.");
+	test_case_geometry.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
 
 	test_case_geometry.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {
