@@ -29,7 +29,6 @@ namespace math_public {
 		double x, y, z;
 		Vec3() :x(0), y(0), z(0) {}
 		Vec3(double nx, double ny, double nz) :x(nx), y(ny), z(nz) {}
-		Vec3(const Vec3 &another) :x(another.x), y(another.y), z(another.z) {}
 
 		inline Vec3& set(double nx, double ny, double nz) { x = nx; y = ny; z = nz; return *this; }
 
@@ -144,7 +143,6 @@ namespace math_public {
 	public:
 		Vec3 x, y, z;
 		Mat3() :x(), y(), z() { update(); }
-		Mat3(const Mat3 &another) :x(another.x), y(another.y), z(another.z) { update(); }
 		Mat3(const Vec3& nx, const Vec3& ny, const Vec3& nz) :x(nx), y(ny), z(nz) { update(); }
 		Mat3(double a11, double a12, double a13, double a21, double a22, double a23, double a31, double a32, double a33) :
 			x(a11, a21, a31), y(a12, a22, a32), z(a13, a23, a33) {
