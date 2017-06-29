@@ -15,6 +15,8 @@ vertex::vertex(Vec3 *npoint) {
 }
 
 vertex::~vertex() {
+	// "point" would not be deleted, since the point might be passed to another vertex or shared by another stucture.
+	// "point" has to be manually released before vertex destructs itself.
 	delete point_last;
 }
 
@@ -302,6 +304,44 @@ void vertex::make_last() {
 	point_last->y = point->y;
 	point_last->z = point->z;
 }
+
+test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
+	test_case_geometry.new_step("Initializing");
+	LOG(TEST_DEBUG) << "Generating a hexagonal mesh which includes 7 vertices...";
+	std::vector<vertex*> vertices;
+
+	// We are only interested in the vertex in the center.
+	vertices.push_back(new vertex(new Vec3(0, 0, 0)));
+
+	for (int i = 0; i < 6; i++) {
+		vertices.push_back(new vertex(new Vec3(cos(M_PI / 3 * i), sin(M_PI / 3 * i), 0)));
+		vertices[0]->n.push_back(vertices[i + 1]);
+		vertices[i + 1]->n.push_back(vertices[0]);
+		vertices[0]->dump_data_vectors();
+		vertices[i + 1]->dump_data_vectors();
+	}
+	vertices[0]->gen_next_prev_n();
+
+	int N = vertices.size();
+
+	test_case_geometry.new_step("Check neighbor counts");
+	test_case_geometry.assert_bool(N - 1 == vertices[0]->neighbors);
+
+	vertices[0]->update_geo();
+	test_case_geometry.new_step("Check angles");
+	for (int i = 0; i < 6; i++) {
+		test_case_geometry.assert_bool(equal(vertices[0]->theta[i], M_PI / 3));
+		test_case_geometry.assert_bool(equal(vertices[0]->theta2[i], M_PI / 3));
+		test_case_geometry.assert_bool(equal(vertices[0]->theta3[i], M_PI / 3));
+	}
+
+	test_case_geometry.new_step("Cleaning");
+	for (int i = 0; i < N; i++) {
+		vertices[i]->release_point();
+		delete vertices[i];
+	}
+});
+
 
 
 bool facet::operator==(const facet& operand) {

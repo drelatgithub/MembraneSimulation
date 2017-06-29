@@ -56,7 +56,7 @@ void Logger::default_init(const char *file_name) {
 		not_info = Info ^ all;
 
 	file_lv[On_lv] = all | test_all;
-	scn_lv[On_lv] = min_info | test_min_info;
+	scn_lv[On_lv] = min_info | test_all;
 
 	file_lv[Date_lv] = all | test_all;
 	file_lv[File_lv] = all | test_all;

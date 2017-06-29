@@ -21,6 +21,7 @@ namespace MS {
 
 		vertex(math_public::Vec3 *npoint);
 		~vertex();
+		inline void release_point() { delete point; }
 
 		int neighbors;
 		std::map<vertex*, int> neighbor_indices_map;
@@ -74,6 +75,8 @@ namespace MS {
 		math_public::Vec3 *point_last;
 		void make_initial(); // Making the current geometry the initial geometry
 		void make_last(); // Recording some of the geometry as the last time geometry
+
+		static test::TestCase test_case_geometry;
 	};
 
 	// A facet stores pointers to 3 vertices which form a triangle in the counter-clockwise direction
