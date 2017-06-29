@@ -5,6 +5,7 @@
 #include<iostream>
 #include<fstream>
 
+#include"math_public.h"
 #include"surface_mesh.h"
 #include"surface_free_energy.h"
 
@@ -65,9 +66,8 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 			for (int i = 0; i < len; i++) {
 				p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
-				for (int j = 0; j < 3; j++) {
-					f_out << MS::d_h_all(vertices[i], j) << '\t';
-				}
+				math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+				f_out << cur_d_h_all.x << '\t' << cur_d_h_all.y << '\t' << cur_d_h_all.z << '\t';
 				a_out << vertices[i]->area << '\t' << vertices[i]->area0<<'\t';
 			}
 			p_out << std::endl;
@@ -82,9 +82,8 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 		for (int i = 0; i < len; i++) {
 			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
-			for (int j = 0; j < 3; j++) {
-				f_out << MS::d_h_all(vertices[i], j) << '\t';
-			}
+			math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+			f_out << cur_d_h_all.x << '\t' << cur_d_h_all.y << '\t' << cur_d_h_all.z << '\t';
 		}
 		p_out << std::endl;
 		f_out << std::endl;
@@ -127,8 +126,11 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 	for (int i = 0; i < N; i++) {
 		// Get H and d_H
 		H += MS::h_all(vertices[i]);
+		math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+		d_H[i * 3] = cur_d_h_all.x;
+		d_H[i * 3 + 1] = cur_d_h_all.y;
+		d_H[i * 3 + 2] = cur_d_h_all.z;
 		for (int j = 0; j < 3; j++) {
-			d_H[i * 3 + j] = MS::d_h_all(vertices[i], j);
 			// Initialize search direction
 			p[i * 3 + j] = -d_H[i * 3 + j];
 		}
@@ -309,8 +311,11 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		// Renew energy derivatives and m value
 		m_new = 0;
 		for (int i = 0; i < N; i++) {
+			math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+			d_H_new[i * 3] = cur_d_h_all.x;
+			d_H_new[i * 3 + 1] = cur_d_h_all.y;
+			d_H_new[i * 3 + 2] = cur_d_h_all.z;
 			for (int j = 0; j < 3; j++) {
-				d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
 				m_new += p[i * 3 + j] * d_H_new[i * 3 + j];
 			}
 		}
@@ -368,8 +373,11 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				// Renew energy derivatives and m value
 				double m_new_n = 0;
 				for (int i = 0; i < N; i++) {
+					math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+					d_H_new[i * 3] = cur_d_h_all.x;
+					d_H_new[i * 3 + 1] = cur_d_h_all.y;
+					d_H_new[i * 3 + 2] = cur_d_h_all.z;
 					for (int j = 0; j < 3; j++) {
-						d_H_new[i * 3 + j] = MS::d_h_all(vertices[i], j);
 						m_new_n += p[i * 3 + j] * d_H_new[i * 3 + j];
 					}
 				}
@@ -456,7 +464,7 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 		l1 += MS::h_curv_h(vertices[vind]->n[i]);
 		l2 += MS::h_pressure(vertices[vind]->n[i]);
 	}
-	double d1 = MS::d_h_curv_h(vertices[vind], 1), d2 = MS::d_h_pressure(vertices[vind], 1);
+	double d1 = MS::d_h_curv_h(vertices[vind]).y, d2 = MS::d_h_pressure(vertices[vind]).y;
 
 
 	vertices[vind]->point->y += increment;
