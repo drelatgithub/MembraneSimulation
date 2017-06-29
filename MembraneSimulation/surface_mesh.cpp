@@ -338,6 +338,10 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_h, 0), "Mean curvature is incorrect.");
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
 
+	test_case_geometry.new_step("Check normal vector");
+	test_case_geometry.assert_bool(equal(vertices[0]->n_vec.get_norm(), 1), "Normal vector is not unit vector.");
+	test_case_geometry.assert_bool((vertices[0]->n_vec / (vertices[0]->n_vec.norm)).equal_to(Vec3(0, 0, -1)), "Normal vector incorrect.");
+
 	test_case_geometry.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {
 		vertices[i]->release_point();
