@@ -7,6 +7,19 @@ Mat3 math_public::Vec3::tensor(const Vec3& operand)const {
 	Mat3 ans(operator*(operand.x), operator*(operand.y), operator*(operand.z));
 	return ans;
 }
+std::string math_public::Vec3::str(int mode)const {
+	std::stringstream ss;
+	switch (mode) {
+	case 0: // plain numbers separated by '\t'
+		ss << x << '\t' << y << '\t' << z;
+		break;
+	case 1: // like (x, y, z)
+		ss << "(" << x << ", " << y << ", " << z << ")";
+		break;
+	}
+	return ss.str();
+}
+
 test::TestCase math_public::Vec3::test_case("Vec3", []() {
 	{
 		test_case.new_step("Check norm");

@@ -116,6 +116,9 @@ namespace math_public {
 			calc_norm();
 		}
 
+		// string display
+		std::string str(int mode = 0)const; // mode 0: numbers separated by '\t', 1: like (x, y, z)
+
 		// test
 		static test::TestCase test_case;
 
