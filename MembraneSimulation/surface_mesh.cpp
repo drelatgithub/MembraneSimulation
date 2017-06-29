@@ -287,7 +287,7 @@ void vertex::update_geo() {
 	calc_angle();
 	calc_area();
 	calc_curv_h();
-	//calc_curv_g();
+	calc_curv_g();
 }
 
 void vertex::make_initial() {
@@ -332,6 +332,28 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 	test_case_geometry.assert_bool(equal(vertices[0]->area, sqrt(3) / 2.0), "Area is incorrect.");
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_h, 0), "Mean curvature is incorrect.");
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
+
+	test_case_geometry.new_step("Check self derivatives");
+	vertices[0]->point->set(0, 0, 1);
+	vertices[0]->update_geo();
+	vertices[0]->make_last();
+	Vec3 dx(-0.001, 0.00001, 0.0005);
+	double cur_area = vertices[0]->area,
+		cur_curv_h = vertices[0]->curv_h,
+		cur_curv_g = vertices[0]->curv_g;
+	double ex_del_area = vertices[0]->d_area.dot(dx),
+		ex_del_curv_h = vertices[0]->d_curv_h.dot(dx),
+		ex_del_curv_g = vertices[0]->d_curv_g.dot(dx);
+
+	*(vertices[0]->point) += dx; // Move the central vertex by a little bit.
+	vertices[0]->update_geo();
+
+	double del_area = vertices[0]->area - cur_area,
+		del_curv_h = vertices[0]->curv_h - cur_curv_h,
+		del_curv_g = vertices[0]->curv_g - cur_curv_g;
+	test_case_geometry.assert_bool(equal(del_area, ex_del_area), std::string("Area changed: ") + std::to_string(del_area) + std::string(" Expected: ") + std::to_string(ex_del_area));
+	test_case_geometry.assert_bool(equal(del_curv_h, ex_del_curv_h), std::string("Mean Curv changed: ") + std::to_string(del_curv_h) + std::string(" Expected: ") + std::to_string(ex_del_curv_h));
+	test_case_geometry.assert_bool(equal(del_curv_g, ex_del_curv_g), std::string("Gaussian Curv changed: ") + std::to_string(del_curv_g) + std::string(" Expected: ") + std::to_string(ex_del_curv_g));
 
 	test_case_geometry.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {
