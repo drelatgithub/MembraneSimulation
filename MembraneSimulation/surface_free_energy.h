@@ -1,5 +1,6 @@
 #pragma once
 
+#include"math_public.h"
 #include"surface_mesh.h"
 
 #define QUADRATIC_SURFACE_ENERGY false
@@ -20,16 +21,17 @@ namespace MS {
 	/********************************************
 		Partial derivatives of free energies
 	********************************************/
-	double d_h_curv_h(vertex *v, int c_index);
-	double d_h_curv_g(vertex *v, int c_index);
-	double d_h_tension(vertex *v, int c_index);
-	double d_h_pressure(vertex *v, int c_index);
-	double d_h_surface_quadratic(vertex *v, int c_index);
+	math_public::Vec3 d_h_curv_h(vertex *v);
+	math_public::Vec3 d_h_curv_h(vertex *v);
+	math_public::Vec3 d_h_curv_g(vertex *v);
+	math_public::Vec3 d_h_tension(vertex *v);
+	math_public::Vec3 d_h_pressure(vertex *v);
+	math_public::Vec3 d_h_surface_quadratic(vertex *v);
 	//double d_h_
-	double d_h_potential(vertex * v, int c_index);
+	math_public::Vec3 d_h_potential(vertex * v);
 
 	double h_all(vertex * v);
-	double d_h_all(vertex *v, int c_index);
+	math_public::Vec3 d_h_all(vertex *v);
 
 	double update_len(double param); // should be removed when considering real polymers
 }
