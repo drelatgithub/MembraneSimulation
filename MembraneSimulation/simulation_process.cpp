@@ -454,36 +454,36 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 	//std::cout << "dy r:\tactual: " << c4 << "\tsupposed: " << d4 << std::endl;
 	*/
 
-	// Test local free energies with neighbours
-	
-	int vind = 1078;
-	double increment = 0.00001;
+	//// Test local free energies with neighbours
+	//
+	//int vind = 1078;
+	//double increment = 0.00001;
 
-	double l1 = MS::h_curv_h(vertices[vind]), l2 = MS::h_pressure(vertices[vind]);
-	for (int i = 0; i < vertices[vind]->neighbors; i++) {
-		l1 += MS::h_curv_h(vertices[vind]->n[i]);
-		l2 += MS::h_pressure(vertices[vind]->n[i]);
-	}
-	double d1 = MS::d_h_curv_h(vertices[vind]).y, d2 = MS::d_h_pressure(vertices[vind]).y;
+	//double l1 = MS::h_curv_h(vertices[vind]), l2 = MS::h_pressure(vertices[vind]);
+	//for (int i = 0; i < vertices[vind]->neighbors; i++) {
+	//	l1 += MS::h_curv_h(vertices[vind]->n[i]);
+	//	l2 += MS::h_pressure(vertices[vind]->n[i]);
+	//}
+	//double d1 = MS::d_h_curv_h(vertices[vind]).y, d2 = MS::d_h_pressure(vertices[vind]).y;
 
 
-	vertices[vind]->point->y += increment;
-	vertices[vind]->update_geo();
-	for (int i = 0; i < vertices[vind]->neighbors; i++) {
-		vertices[vind]->n[i]->update_geo();
-	}
+	//vertices[vind]->point->y += increment;
+	//vertices[vind]->update_geo();
+	//for (int i = 0; i < vertices[vind]->neighbors; i++) {
+	//	vertices[vind]->n[i]->update_geo();
+	//}
 
-	double n1 = MS::h_curv_h(vertices[vind]), n2 = MS::h_pressure(vertices[vind]);
-	for (int i = 0; i < vertices[vind]->neighbors; i++) {
-		n1 += MS::h_curv_h(vertices[vind]->n[i]);
-		n2 += MS::h_pressure(vertices[vind]->n[i]);
-	}
-	double c1 = (n1 - l1) / increment,
-		c2 = (n2 - l2) / increment;
+	//double n1 = MS::h_curv_h(vertices[vind]), n2 = MS::h_pressure(vertices[vind]);
+	//for (int i = 0; i < vertices[vind]->neighbors; i++) {
+	//	n1 += MS::h_curv_h(vertices[vind]->n[i]);
+	//	n2 += MS::h_pressure(vertices[vind]->n[i]);
+	//}
+	//double c1 = (n1 - l1) / increment,
+	//	c2 = (n2 - l2) / increment;
 
-	std::cout << "dy h:\tactual: " << c1 << "\tsupposed: " << d1 << std::endl;
-	std::cout << "dy p:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
-	
+	//std::cout << "dy h:\tactual: " << c1 << "\tsupposed: " << d1 << std::endl;
+	//std::cout << "dy p:\tactual: " << c2 << "\tsupposed: " << d2 << std::endl;
+	//
 
 	// Test Overall free energy
 	/*

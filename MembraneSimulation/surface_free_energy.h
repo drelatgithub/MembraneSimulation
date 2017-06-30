@@ -3,18 +3,13 @@
 #include"math_public.h"
 #include"surface_mesh.h"
 
-#define QUADRATIC_SURFACE_ENERGY false
-
 namespace MS {
 	/********************************************
 		Free energies
 	********************************************/
 	double h_curv_h(vertex * v); // Free energy - Curvature - Mean
 	double h_curv_g(vertex * v); // Free energy - Curvature - Gaussian
-	// surface energies use either quadratic potential or tension + pressure depending on QUADRATIC_SURFACE_ENERGY
-	double h_tension(vertex * v); // Free energy - Surface tension
-	double h_pressure(vertex *v); // Free energy - Surface pressure
-	double h_surface_quadratic(vertex *v); // Free energy - Surface tension and pressure near the lowest energy
+	double h_area(vertex *v); // Free energy - Surface tesnsion and pressure
 	//double h_osmotic(vertex * v); // Free energy - Osmotic pressure
 	double h_point_interact_v(math_public::Vec3 *p, vertex * v); // Free energy - Potential energy
 
@@ -24,9 +19,7 @@ namespace MS {
 	math_public::Vec3 d_h_curv_h(vertex *v);
 	math_public::Vec3 d_h_curv_h(vertex *v);
 	math_public::Vec3 d_h_curv_g(vertex *v);
-	math_public::Vec3 d_h_tension(vertex *v);
-	math_public::Vec3 d_h_pressure(vertex *v);
-	math_public::Vec3 d_h_surface_quadratic(vertex *v);
+	math_public::Vec3 d_h_area(vertex *v);
 	//double d_h_
 	math_public::Vec3 d_h_potential(vertex * v);
 

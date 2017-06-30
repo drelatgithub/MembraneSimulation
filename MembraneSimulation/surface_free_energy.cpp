@@ -37,34 +37,10 @@ Vec3 MS::d_h_curv_g(vertex *v) {
 	return ans;
 }
 
-double MS::h_tension(vertex * v) {
-	return gamma * (v->area - v->area0);
-}
-Vec3 MS::d_h_tension(vertex *v) {
-	Vec3 ans;
-	ans += gamma * v->d_area;
-	for each(vertex* n in v->n) {
-		ans += gamma * n->dn_area[n->neighbor_indices_map[v]];
-	}
-	return ans;
-}
-double MS::h_pressure(vertex *v) {
-	if (v->area < 0.0001*v->area0)return gamma * log(10000); // Maximum value
-	return -gamma * v->area0 * log(v->area / v->area0);
-}
-Vec3 MS::d_h_pressure(vertex *v) {
-	Vec3 ans;
-	if (v->area < 0.0001 * v->area0)return ans;
-	ans += -gamma * v->area0 / v->area * v->d_area;
-	for each(vertex* n in v->n) {
-		ans += -gamma * n->area0 / n->area * n->dn_area[n->neighbor_indices_map[v]];
-	}
-	return ans;
-}
-double MS::h_surface_quadratic(vertex *v) {
+double MS::h_area(vertex *v) {
 	return gamma / 2 / v->area0 * (v->area - v->area0) * (v->area - v->area0);
 }
-Vec3 MS::d_h_surface_quadratic(vertex *v) {
+Vec3 MS::d_h_area(vertex *v) {
 	Vec3 ans;
 	ans += gamma / v->area0 * (v->area - v->area0) * v->d_area;
 	for each(vertex* n in v->n) {
@@ -78,15 +54,13 @@ double MS::h_all(vertex * v) {
 		Energy caused by Gaussian curvature could be neglected because for a closed surface
 		it is a constant (Gauss-Bonnet theorem).
 	*/
-	double h_surf = (QUADRATIC_SURFACE_ENERGY ? h_surface_quadratic(v) : h_tension(v) + h_pressure(v));
 
-	return h_curv_h(v) + h_surf + h_point_interact_v(NULL, v);
+	return h_curv_h(v) + h_area(v) + h_point_interact_v(NULL, v);
 }
 Vec3 MS::d_h_all(vertex * v) {
-	Vec3 d_h_surf = (QUADRATIC_SURFACE_ENERGY ? d_h_surface_quadratic(v) : d_h_tension(v) + d_h_pressure(v));
 
 	return d_h_curv_h(v)
-		+ d_h_surf
+		+ d_h_area(v)
 		+ d_h_potential(v);
 }
 
