@@ -20,6 +20,13 @@ namespace test {
 			assertion_result(x, failure_info);
 			return x;
 		}
+		inline bool assert_bools_lv(bool good, bool pass, const std::string& warning_info = std::string(), const std::string& failure_info = std::string()) {
+			if (pass)
+				assertion_result(good, warning_info, false);
+			else
+				assertion_result(pass, failure_info);
+			return pass;
+		}
 
 	private:
 		void(*test_content)();
@@ -35,7 +42,7 @@ namespace test {
 		
 		// Pass and fail
 		void step_result(int which_step);
-		void assertion_result(bool res, const std::string& failure_info = std::string());
+		void assertion_result(bool res, const std::string& failure_info = std::string(), bool make_error = true);
 	};
 
 	// Test cases registering

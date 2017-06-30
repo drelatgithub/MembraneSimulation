@@ -334,7 +334,7 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 	test_case_geometry.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
 
 	test_case_geometry.new_step("Check self derivatives");
-	vertices[0]->point->set(0, 0, 1);
+	vertices[0]->point->set(0, 0, 0.5);
 	vertices[0]->update_geo();
 	vertices[0]->make_last();
 	Vec3 dx(-0.001, 0.00001, 0.0005);
@@ -351,9 +351,18 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 	double del_area = vertices[0]->area - cur_area,
 		del_curv_h = vertices[0]->curv_h - cur_curv_h,
 		del_curv_g = vertices[0]->curv_g - cur_curv_g;
-	test_case_geometry.assert_bool(equal(del_area, ex_del_area), std::string("Area changed: ") + std::to_string(del_area) + std::string(" Expected: ") + std::to_string(ex_del_area));
-	test_case_geometry.assert_bool(equal(del_curv_h, ex_del_curv_h), std::string("Mean Curv changed: ") + std::to_string(del_curv_h) + std::string(" Expected: ") + std::to_string(ex_del_curv_h));
-	test_case_geometry.assert_bool(equal(del_curv_g, ex_del_curv_g), std::string("Gaussian Curv changed: ") + std::to_string(del_curv_g) + std::string(" Expected: ") + std::to_string(ex_del_curv_g));
+	double log_diff_del_area = log10(fabs(ex_del_area - del_area)),
+		log_diff_del_curv_h = log10(fabs(ex_del_curv_h - del_curv_h)),
+		log_diff_del_curv_g = log10(fabs(ex_del_curv_g - del_curv_g));
+
+	LOG(TEST_DEBUG) << "Area changed: " << del_area << " Expected: " << ex_del_area << " lg diff: " << log_diff_del_area;
+	test_case_geometry.assert_bools_lv(log_diff_del_area <= -6, log_diff_del_area <= -5, "Area change inaccurate", "Area change incorrect");
+
+	LOG(TEST_DEBUG) << "Mean curv changed: " << del_curv_h << " Expected: " << ex_del_curv_h << " lg diff: " << log_diff_del_curv_h;
+	test_case_geometry.assert_bools_lv(log_diff_del_curv_h <= -6, log_diff_del_curv_h <= -5, "Mean Curv change inaccurate", "Mean Curv change incorrect");
+
+	LOG(TEST_DEBUG) << "Gaussian curv changed: " << del_curv_g << " Expected: " << ex_del_curv_g << " lg diff: " << log_diff_del_curv_g;
+	test_case_geometry.assert_bools_lv(log_diff_del_curv_g <= -6, log_diff_del_curv_g <= -5, "Gaussian Curv change inaccurate", "Gaussian Curv change incorrect");
 
 	test_case_geometry.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {

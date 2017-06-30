@@ -35,15 +35,21 @@ void test::TestCase::new_step(const std::string& step_name) {
 void test::TestCase::step_result(int which_step) {
 	LOG((step_success[which_step] ? TEST_INFO : TEST_ERROR)) << name_block << "Step " << which_step << " " << (step_success[which_step] ? "passed" : "failed") << ".";
 }
-void test::TestCase::assertion_result(bool res, const std::string& failure_info) {
+void test::TestCase::assertion_result(bool res, const std::string& failure_info, bool make_error) {
 	if (!res) {
-		if (test_step > 0 && step_success[test_step])step_success[test_step] = false;
-		if (test_success)test_success = false;
+		if (make_error) {
+			if (test_step > 0 && step_success[test_step])step_success[test_step] = false;
+			if (test_success)test_success = false;
 
-		if (test_step > 0)
-			LOG(TEST_ERROR) << name_block << "Assertion failed in step " << test_step << ". " << failure_info;
-		else
-			LOG(TEST_ERROR) << name_block << "Assertion failed. " << failure_info;
+			if (test_step > 0)
+				LOG(TEST_ERROR) << name_block << "Assertion failed in step " << test_step << ". " << failure_info;
+			else
+				LOG(TEST_ERROR) << name_block << "Assertion failed. " << failure_info;
+		}
+		else {
+			LOG(TEST_WARNING) << name_block << failure_info;
+		}
+
 	}
 }
 
