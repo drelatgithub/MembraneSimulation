@@ -11,7 +11,7 @@ namespace MS {
 	double h_curv_g(vertex * v); // Free energy - Curvature - Gaussian
 	double h_area(vertex *v); // Free energy - Surface tesnsion and pressure
 	//double h_osmotic(vertex * v); // Free energy - Osmotic pressure
-	double h_point_interact_v(math_public::Vec3 *p, vertex * v); // Free energy - Potential energy
+	double h_point_interact_facet(math_public::Vec3 *p, facet *f); // Free energy - Potential energy
 
 	/********************************************
 		Partial derivatives of free energies

@@ -1,5 +1,6 @@
 #include<math.h>
 
+#include"common.h"
 #include"surface_free_energy.h"
 #include"surface_mesh.h"
 
@@ -55,7 +56,7 @@ double MS::h_all(vertex * v) {
 		it is a constant (Gauss-Bonnet theorem).
 	*/
 
-	return h_curv_h(v) + h_area(v) + h_point_interact_v(NULL, v);
+	return h_curv_h(v) + h_area(v);
 }
 Vec3 MS::d_h_all(vertex * v) {
 
@@ -72,10 +73,66 @@ double MS::update_len(double param) {
 	po->x = polymer_len;
 	return polymer_len;
 }
-double MS::h_point_interact_v(math_public::Vec3 *p, vertex * v) {
-	double r = dist(*(v->point), *po);
-	double R = 1e-7;
-	double ep = 1e-15;
+double MS::h_point_interact_facet(math_public::Vec3 *p, facet *f) {
+	static int int_pwr = 6;
+	static double r_0_factor = 1.0 / sqrt(5);
+
+	/**********************************
+	find the foot of perpendicular O on the triangle
+	r_O = r0 + alpha v1 + beta v2
+	**********************************/
+	Vec3 v1 = *(f->v[1]->point) - *(f->v[0]->point), v2 = *(f->v[2]->point) - *(f->v[0]->point);
+	Vec3 r0p = *p - *(f->v[0]->point);
+
+	// alpha and beta need to satisfy the perpendicular condition
+	// A * (alpha, beta)' = B
+	// So (alpha, beta)' = A^(-1) * B
+	double dot12 = dot(v1, v2);
+	v1.calc_norm();
+	v2.calc_norm();
+	double det_A = v1.norm2 * v2.norm2 - dot12 * dot12;
+	double AR11 = v2.norm2 / det_A,
+		AR12 = -dot12 / det_A,
+		AR21 = -dot12 / det_A,
+		AR22 = v1.norm2 / det_A;
+	double B1 = r0p.dot(v1), B2 = r0p.dot(v2);
+
+	double alpha = AR11*B1 + AR12*B2,
+		beta = AR21*B1 + AR22*B2;
+
+	Vec3 r0O = alpha*v1 + beta*v2;
+	Vec3 rO = r0O + *(f->v[0]->point),
+		r1O = r0O - v1,
+		r2O = r0O - v2;
+	r0O.calc_norm();
+	r1O.calc_norm();
+	r2O.calc_norm();
+	if (true) {
+		Vec3 rOp = *p - rO;
+		LOG(DEBUG) << "rOp dot v1 = " << rOp.dot(v1);
+		LOG(DEBUG) << "rOp dot v2 = " << rOp.dot(v2);
+	}
+
+	/**********************************
+	distance from the point to the triangle
+	**********************************/
+	double d = (*p - rO).get_norm();
+
+	/**********************************
+	distance from point O to all 3 edges
+	**********************************/
+	double d1 = cross(r0O, v1).get_norm() / v1.norm;
+	if (beta < 0)d1 = -d1;
+	double d2 = cross(r0O, v2).get_norm() / v2.norm;
+	if (alpha < 0)d2 = -d2;
+	double d3 = cross(r1O, v2 - v1).get_norm() / (v2 - v1).get_norm();
+	if (alpha - beta > 1)d3 = -d3;
+
+	/**********************************
+	find the affecting region
+	**********************************/
+	double sigma = d * r_0_factor;
+
 	if (r > R*pow(2, 1.0 / 6))return -ep;
 	return 4 * ep*(pow(R / r, 12) - pow(R / r, 6));
 

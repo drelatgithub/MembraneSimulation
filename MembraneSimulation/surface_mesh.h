@@ -86,6 +86,7 @@ namespace MS {
 
 		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
 		bool operator==(const facet& operand);
+
 	};
 
 }
