@@ -84,6 +84,8 @@ namespace MS {
 	public:
 		vertex *v[3];
 
+		int ind[3]; // the neighbor indices of v0-v1, v1-v2, v2-v0.
+
 		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
 		bool operator==(const facet& operand);
 
