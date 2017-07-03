@@ -21,9 +21,6 @@
     <ClCompile Include="surface_free_energy.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="surface_mesh.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="simulation_process.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -37,6 +34,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="math_public.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="surface_mesh_geometry.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -28,7 +28,9 @@ namespace MS {
 		int count_neighbors();
 		int gen_next_prev_n();
 
-		// Geometry
+		/******************************
+		Geometry part
+		******************************/
 		// Local properties other than coordinates may also depend on neighbouring points.
 		// Theta is the angle between p->n and p->nn
 		std::vector<double> theta, sin_theta;
@@ -77,6 +79,12 @@ namespace MS {
 		void make_last(); // Recording some of the geometry as the last time geometry
 
 		static test::TestCase test_case_geometry;
+
+		/******************************
+		Energy part
+		******************************/
+		double H; // Free energy of this vertex in J. Interaction energy with facet lies in the facet class.
+		math_public::Vec3 d_H; // Energy derivative on this vertex. in J/m.
 	};
 
 	// A facet stores pointers to 3 vertices which form a triangle in the counter-clockwise direction

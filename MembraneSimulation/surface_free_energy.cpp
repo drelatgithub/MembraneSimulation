@@ -76,6 +76,8 @@ double MS::update_len(double param) {
 	return polymer_len;
 }
 double MS::h_point_interact_facet(math_public::Vec3 *p, facet *f) {
+	// The derivative of this energy should go to the point and the vertices.
+
 	// The total integral over the whole plane is
 	// H = d0^n * d^(2-n) * f(n) * k
 	// where k is the coefficient, d0 is the distance of force, f(n) is a polynomial of force.
