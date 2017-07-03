@@ -74,7 +74,6 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 				for (int k = 0; k < facets.size(); k++) {
 					if (*facets[k] == *f) {
 						exist = true;
-						delete f;
 						break;
 					}
 				}
@@ -86,7 +85,7 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 					num_facets++;
 				}
 				else {
-					LOG(WARNING) << "Check your code! This should never happen.";
+					delete f;
 				}
 			}
 		}
