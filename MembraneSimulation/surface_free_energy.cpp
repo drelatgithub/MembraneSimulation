@@ -15,6 +15,11 @@ const double c_0 = 0.0; // Spontaneous curvature
 const double gamma = 0.4; // Surface tension
 
 
+void MS::vertex::clear_energy() {
+	H = 0;
+	d_H.set(0, 0, 0);
+}
+
 double MS::h_curv_h(vertex * v) {
 	return 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*v->area;
 }

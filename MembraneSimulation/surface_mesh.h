@@ -85,6 +85,8 @@ namespace MS {
 		******************************/
 		double H; // Free energy of this vertex in J. Interaction energy with facet lies in the facet class.
 		math_public::Vec3 d_H; // Energy derivative on this vertex. in J/m.
+
+		void clear_energy();
 	};
 
 	// A facet stores pointers to 3 vertices which form a triangle in the counter-clockwise direction
