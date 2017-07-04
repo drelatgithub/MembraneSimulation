@@ -83,10 +83,32 @@ namespace MS {
 		/******************************
 		Energy part
 		******************************/
+		double H_area, // Energy due to change in area
+			H_curv_h, // Energy due to mean curvature
+			H_curv_g, // Energy due to Gaussian curvature
+			H_int; // Energy due to interaction with objects that are not neighboring vertices.
 		double H; // Free energy of this vertex in J. Interaction energy with facet lies in the facet class.
+
+		math_public::Vec3 d_H_area,
+			d_H_curv_h,
+			d_H_curv_g,
+			d_H_int;
 		math_public::Vec3 d_H; // Energy derivative on this vertex. in J/m.
 
 		void clear_energy();
+
+		// Calculate energy and derivatives
+		void calc_H_area();
+		void calc_H_curv_h();
+		void calc_H_curv_g();
+		
+		inline void sum_energy() {
+			// some of d_H_int might come from facet energies
+			H = H_area + H_curv_h + H_int;
+			d_H = d_H_area + d_H_curv_h + d_H_int;
+		}
+
+		void update_energy();
 	};
 
 	// A facet stores pointers to 3 vertices which form a triangle in the counter-clockwise direction
@@ -94,10 +116,19 @@ namespace MS {
 	public:
 		vertex *v[3];
 
+		/******************************
+		Geometry is mostly calculated in vertex class
+		******************************/
 		int ind[3]; // the neighbor indices of v0-v1, v1-v2, v2-v0.
 
 		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
 		bool operator==(const facet& operand);
+
+		/******************************
+		Energy part
+		******************************/
+		double H_int;
+		// Energy derivative would be on vertices
 
 	};
 

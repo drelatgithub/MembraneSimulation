@@ -20,41 +20,35 @@ void MS::vertex::clear_energy() {
 	d_H.set(0, 0, 0);
 }
 
-double MS::h_curv_h(vertex * v) {
-	return 2 * k_c*(v->curv_h - c_0)*(v->curv_h - c_0)*v->area;
-}
-Vec3 MS::d_h_curv_h(vertex *v) {
-	Vec3 ans;
-	ans += 4 * k_c * (v->curv_h - c_0) * v->d_curv_h * v->area + 2 * k_c * (v->curv_h - c_0) * (v->curv_h - c_0) * v->d_area;
-	for each(vertex* n in v->n) {
-		int i = n->neighbor_indices_map[v];
-		ans += 4 * k_c * (n->curv_h - c_0) * n->dn_curv_h[i] * n->area + 2 * k_c * (n->curv_h - c_0) * (n->curv_h - c_0) * n->dn_area[i];
+void MS::vertex::calc_H_area() {
+	H_area = gamma / 2 / area0 * (area - area0) * (area - area0);
+	d_H_area = gamma / area0 * (area - area0) * d_area;
+	for each(vertex* each_n in n) {
+		d_H_area += gamma / each_n->area0 * (each_n->area - each_n->area0) * each_n->dn_area[each_n->neighbor_indices_map[this]];
 	}
-	return ans;
 }
-double MS::h_curv_g(vertex * v) {
-	return k_g * v->curv_g * v->area;
-}
-Vec3 MS::d_h_curv_g(vertex *v) {
-	Vec3 ans;
-	ans += k_g * (v->d_curv_g * v->area + v->curv_g * v->d_area);
-	for each(vertex* n in v->n) {
-		int i = n->neighbor_indices_map[v];
-		ans += k_g * (n->dn_curv_g[i] * n->area + n->curv_g * n->dn_area[i]);
+void MS::vertex::calc_H_curv_h() {
+	H_curv_h = 2 * k_c*(curv_h - c_0)*(curv_h - c_0) * area;
+	d_H_curv_h = 4 * k_c * (curv_h - c_0) * d_curv_h * area + 2 * k_c * (curv_h - c_0) * (curv_h - c_0) * d_area;
+	for each(vertex* each_n in n) {
+		int i = each_n->neighbor_indices_map[this];
+		d_H_curv_h += 4 * k_c * (each_n->curv_h - c_0) * each_n->dn_curv_h[i] * each_n->area + 2 * k_c * (each_n->curv_h - c_0) * (each_n->curv_h - c_0) * each_n->dn_area[i];
 	}
-	return ans;
+}
+void MS::vertex::calc_H_curv_g() {
+	H_curv_g = k_g * curv_g * area;
+	d_H_curv_g = k_g * (d_curv_g * area + curv_g * d_area);
+	for each(vertex* each_n in n) {
+		int i = each_n->neighbor_indices_map[this];
+		d_H_curv_g += k_g * (each_n->dn_curv_g[i] * each_n->area + each_n->curv_g * each_n->dn_area[i]);
+	}
 }
 
-double MS::h_area(vertex *v) {
-	return gamma / 2 / v->area0 * (v->area - v->area0) * (v->area - v->area0);
-}
-Vec3 MS::d_h_area(vertex *v) {
-	Vec3 ans;
-	ans += gamma / v->area0 * (v->area - v->area0) * v->d_area;
-	for each(vertex* n in v->n) {
-		ans += gamma / n->area0 * (n->area - n->area0) * n->dn_area[n->neighbor_indices_map[v]];
-	}
-	return ans;
+void MS::vertex::update_energy() {
+	calc_H_area();
+	calc_H_curv_h();
+	//calc_H_curv_g();
+	sum_energy();
 }
 
 double MS::h_all(vertex * v) {
