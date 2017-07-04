@@ -373,6 +373,11 @@ test::TestCase MS::vertex::test_case_geometry("Vertex Geometry", []() {
 
 
 
+void facet::update_geo() {
+	ind[0] = v[0]->neighbor_indices_map[v[1]];
+	ind[1] = v[1]->neighbor_indices_map[v[2]];
+	ind[2] = v[2]->neighbor_indices_map[v[0]];
+}
 bool facet::operator==(const facet& operand) {
 	int first_index = 0;
 	while (first_index < 3) {

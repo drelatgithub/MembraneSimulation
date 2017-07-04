@@ -51,11 +51,12 @@ void MS::vertex::update_energy() {
 	sum_energy();
 }
 
+
+void MS::facet::update_energy() {
+	sum_energy();
+}
 double MS::h_all(vertex * v) {
-	/*
-		Energy caused by Gaussian curvature could be neglected because for a closed surface
-		it is a constant (Gauss-Bonnet theorem).
-	*/
+
 
 	return h_curv_h(v) + h_area(v);
 }

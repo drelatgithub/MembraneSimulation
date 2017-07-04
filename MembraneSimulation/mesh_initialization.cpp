@@ -79,9 +79,7 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 				}
 				if (!exist) {
 					facets.push_back(f); // Leave the facet in heap
-					f->ind[0] = f->v[0]->neighbor_indices_map[f->v[1]];
-					f->ind[1] = f->v[1]->neighbor_indices_map[f->v[2]];
-					f->ind[2] = f->v[2]->neighbor_indices_map[f->v[0]];
+					f->update_geo();
 					num_facets++;
 				}
 				else {

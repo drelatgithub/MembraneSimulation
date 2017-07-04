@@ -103,6 +103,10 @@ namespace MS {
 		void calc_H_curv_g();
 		
 		inline void sum_energy() {
+			/*
+				Energy caused by Gaussian curvature could be neglected because for a closed surface
+				it is a constant (Gauss-Bonnet theorem).
+			*/
 			// some of d_H_int might come from facet energies
 			H = H_area + H_curv_h + H_int;
 			d_H = d_H_area + d_H_curv_h + d_H_int;
@@ -124,11 +128,20 @@ namespace MS {
 		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
 		bool operator==(const facet& operand);
 
+		void update_geo();
+
 		/******************************
 		Energy part
 		******************************/
 		double H_int;
+		double H;
 		// Energy derivative would be on vertices
+
+		inline void sum_energy() {
+			H = H_int;
+		}
+
+		void update_energy();
 
 	};
 
