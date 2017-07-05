@@ -84,7 +84,10 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	**********************************/
 	Vec3 v1 = *(v[1]->point) - *(v[0]->point), v2 = *(v[2]->point) - *(v[0]->point);
 	Vec3 r12 = v2 - v1;
+	Mat3 d0_v1 = -Eye3, d1_v1 = Eye3, d0_v2 = -Eye3, d2_v2 = Eye3, d1_r12 = -Eye3, d2_r12 = Eye3;
+
 	Vec3 r0p = *p - *(v[0]->point);
+	Mat3 d0_r0p = -Eye3;
 
 	// alpha and beta need to satisfy the perpendicular condition
 	// A * (alpha, beta)' = B
