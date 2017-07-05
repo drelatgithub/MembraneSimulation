@@ -141,7 +141,9 @@ namespace MS {
 			H = H_int;
 		}
 
-		void update_energy();
+		void calc_H_int(math_public::Vec3 *p);
+
+		void update_energy(math_public::Vec3 *p);
 
 	};
 

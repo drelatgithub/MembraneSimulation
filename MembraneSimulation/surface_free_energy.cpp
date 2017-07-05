@@ -52,19 +52,9 @@ void MS::vertex::update_energy() {
 }
 
 
-void MS::facet::update_energy() {
+void MS::facet::update_energy(math_public::Vec3 *p) {
+	calc_H_int(p); // also updates the energy derivatives of vertices
 	sum_energy();
-}
-double MS::h_all(vertex * v) {
-
-
-	return h_curv_h(v) + h_area(v);
-}
-Vec3 MS::d_h_all(vertex * v) {
-
-	return d_h_curv_h(v)
-		+ d_h_area(v)
-		+ d_h_potential(v);
 }
 
 double polymer_len = 0;
@@ -75,7 +65,7 @@ double MS::update_len(double param) {
 	po->x = polymer_len;
 	return polymer_len;
 }
-double MS::h_point_interact_facet(math_public::Vec3 *p, facet *f) {
+void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	// The derivative of this energy should go to the point and the vertices.
 
 	// The total integral over the whole plane is
@@ -92,9 +82,9 @@ double MS::h_point_interact_facet(math_public::Vec3 *p, facet *f) {
 	find the foot of perpendicular O on the triangle
 	r_O = r0 + alpha v1 + beta v2
 	**********************************/
-	Vec3 v1 = *(f->v[1]->point) - *(f->v[0]->point), v2 = *(f->v[2]->point) - *(f->v[0]->point);
+	Vec3 v1 = *(v[1]->point) - *(v[0]->point), v2 = *(v[2]->point) - *(v[0]->point);
 	Vec3 r12 = v2 - v1;
-	Vec3 r0p = *p - *(f->v[0]->point);
+	Vec3 r0p = *p - *(v[0]->point);
 
 	// alpha and beta need to satisfy the perpendicular condition
 	// A * (alpha, beta)' = B
@@ -114,7 +104,7 @@ double MS::h_point_interact_facet(math_public::Vec3 *p, facet *f) {
 		beta = AR21*B1 + AR22*B2;
 
 	Vec3 r0O = alpha*v1 + beta*v2;
-	Vec3 rO = r0O + *(f->v[0]->point),
+	Vec3 rO = r0O + *(v[0]->point),
 		r1O = r0O - v1,
 		r2O = r0O - v2;
 	r0O.calc_norm();
@@ -155,13 +145,13 @@ double MS::h_point_interact_facet(math_public::Vec3 *p, facet *f) {
 	double ecoe1 = 0.5 + 0.5*tanh(d1 / sigma),
 		ecoe2 = 0.5 + 0.5*tanh(d2 / sigma),
 		ecoe3 = 0.5 + 0.5*tanh(d3 / sigma);
-	double en = vcoe1*(f->v[0]->theta[f->ind[0]] / (2 * M_PI))
-		+ vcoe2*(f->v[1]->theta[f->ind[1]] / (2 * M_PI))
-		+ vcoe3*(f->v[2]->theta[f->ind[2]] / (2 * M_PI))
+	double en = vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI))
+		+ vcoe2*(v[1]->theta[ind[1]] / (2 * M_PI))
+		+ vcoe3*(v[2]->theta[ind[2]] / (2 * M_PI))
 		+ (1 - vcoe1)*(1 - vcoe2)*(1 - vcoe3)*ecoe1*ecoe2*ecoe3;
 	en *= I;
 
-	return en;
+	H = en;
 	
 }
 
