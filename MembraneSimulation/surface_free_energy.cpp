@@ -95,11 +95,11 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	double dot12 = dot(v1, v2);
 	Vec3 d0_dot12 = -v2 - v1, d1_dot12 = v2, d2_dot12 = v1; // Already taken into account those "Eye"-derivatives.
 	v1.calc_norm();
-	Vec3 d0_norm_v1 = -v1 / v1.norm, d1_norm_v1 = v1 / v1.norm;
+	Vec3 d0_norm2_v1 = -v1 * 2, d1_norm2_v1 = v1 * 2;
 	v2.calc_norm();
-	Vec3 d0_norm_v2 = -v2 / v2.norm, d2_norm_v2 = v2 / v2.norm;
+	Vec3 d0_norm2_v2 = -v2 * 2, d2_norm2_v2 = v2 * 2;
 	r12.calc_norm();
-	Vec3 d1_norm_r12 = -r12 / r12.norm, d2_norm_r12 = r12 / r12.norm;
+	Vec3 d1_norm2_r12 = -r12 * 2, d2_norm2_r12 = r12 * 2;
 	double det_A = v1.norm2 * v2.norm2 - dot12 * dot12;
 	double AR11 = v2.norm2 / det_A,
 		AR12 = -dot12 / det_A,
