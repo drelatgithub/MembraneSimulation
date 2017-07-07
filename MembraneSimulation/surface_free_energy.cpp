@@ -93,6 +93,7 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	// A * (alpha, beta)' = B
 	// So (alpha, beta)' = A^(-1) * B
 	double dot12 = dot(v1, v2);
+	Vec3 d0_dot12 = -v2 - v1, d1_dot12 = v2, d2_dot12 = v1; // Already taken into account those "Eye"-derivatives.
 	v1.calc_norm();
 	v2.calc_norm();
 	r12.calc_norm();
