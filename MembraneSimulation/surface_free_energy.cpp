@@ -205,13 +205,28 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	find the affecting region and calculate energy
 	**********************************/
 	double sigma = d * r_0_factor;
+	Vec3 d0_sigma = d0_d*r_0_factor,
+		d1_sigma = d1_d*r_0_factor,
+		d2_sigma = d2_d*r_0_factor;
 	if (sigma >= 0.05*(v1.norm + v2.norm + r12.norm))
 		LOG(WARNING) << "Sigma is not significantly smaller than the scale of the facet.";
 
 	double I = pow(d, 2 - po_pwr) * pre_calc;
+	Vec3 d0_I = (2 - po_pwr)*pow(d, 1 - po_pwr)*pre_calc*d0_d,
+		d1_I = (2 - po_pwr)*pow(d, 1 - po_pwr)*pre_calc*d1_d,
+		d2_I = (2 - po_pwr)*pow(d, 1 - po_pwr)*pre_calc*d2_d;
 	double vcoe1 = exp(-r0O.norm2 / (sigma*sigma)),
 		vcoe2 = exp(-r1O.norm2 / (sigma*sigma)),
 		vcoe3 = exp(-r2O.norm2 / (sigma*sigma));
+	Vec3 d0_vcoe1 = vcoe1 * 2 * (-sigma*d0_r0O*r0O + r0O.norm2 * d0_sigma) / (sigma*sigma*sigma),
+		d1_vcoe1 = vcoe1 * 2 * (-sigma*d1_r0O*r0O + r0O.norm2*d1_sigma) / (sigma*sigma*sigma),
+		d2_vcoe1 = vcoe1 * 2 * (-sigma*d2_r0O*r0O + r0O.norm2*d2_sigma) / (sigma*sigma*sigma),
+		d0_vcoe2 = vcoe2 * 2 * (-sigma*d0_r1O*r1O + r1O.norm2*d0_sigma) / (sigma*sigma*sigma),
+		d1_vcoe2 = vcoe2 * 2 * (-sigma*d1_r1O*r1O + r1O.norm2*d1_sigma) / (sigma*sigma*sigma),
+		d2_vcoe2 = vcoe2 * 2 * (-sigma*d2_r1O*r1O + r1O.norm2*d2_sigma) / (sigma*sigma*sigma),
+		d0_vcoe3 = vcoe3 * 2 * (-sigma*d0_r2O*r2O + r2O.norm2*d0_sigma) / (sigma*sigma*sigma),
+		d1_vcoe3 = vcoe3 * 2 * (-sigma*d1_r2O*r2O + r2O.norm2*d1_sigma) / (sigma*sigma*sigma),
+		d2_vcoe3 = vcoe3 * 2 * (-sigma*d2_r2O*r2O + r2O.norm2*d2_sigma) / (sigma*sigma*sigma);
 	double ecoe1 = 0.5 + 0.5*tanh(d1 / sigma),
 		ecoe2 = 0.5 + 0.5*tanh(d2 / sigma),
 		ecoe3 = 0.5 + 0.5*tanh(d3 / sigma);
