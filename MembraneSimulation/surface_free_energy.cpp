@@ -230,6 +230,15 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	double ecoe1 = 0.5 + 0.5*tanh(d1 / sigma),
 		ecoe2 = 0.5 + 0.5*tanh(d2 / sigma),
 		ecoe3 = 0.5 + 0.5*tanh(d3 / sigma);
+	Vec3 d0_ecoe1 = 0.5*(1 - pow(tanh(d1 / sigma), 2))*(sigma*d0_d1 - d1*d0_sigma) / (sigma*sigma),
+		d1_ecoe1 = 0.5*(1 - pow(tanh(d1 / sigma), 2))*(sigma*d1_d1 - d1*d1_sigma) / (sigma*sigma),
+		d2_ecoe1 = 0.5*(1 - pow(tanh(d1 / sigma), 2))*(sigma*d2_d1 - d1*d2_sigma) / (sigma*sigma),
+		d0_ecoe2 = 0.5*(1 - pow(tanh(d2 / sigma), 2))*(sigma*d0_d2 - d2*d0_sigma) / (sigma*sigma),
+		d1_ecoe2 = 0.5*(1 - pow(tanh(d2 / sigma), 2))*(sigma*d1_d2 - d2*d1_sigma) / (sigma*sigma),
+		d2_ecoe2 = 0.5*(1 - pow(tanh(d2 / sigma), 2))*(sigma*d2_d2 - d2*d2_sigma) / (sigma*sigma),
+		d0_ecoe3 = 0.5*(1 - pow(tanh(d3 / sigma), 2))*(sigma*d0_d3 - d3*d0_sigma) / (sigma*sigma),
+		d1_ecoe3 = 0.5*(1 - pow(tanh(d3 / sigma), 2))*(sigma*d1_d3 - d3*d1_sigma) / (sigma*sigma),
+		d2_ecoe3 = 0.5*(1 - pow(tanh(d3 / sigma), 2))*(sigma*d2_d3 - d3*d2_sigma) / (sigma*sigma);
 	double en = vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI))
 		+ vcoe2*(v[1]->theta[ind[1]] / (2 * M_PI))
 		+ vcoe3*(v[2]->theta[ind[2]] / (2 * M_PI))
