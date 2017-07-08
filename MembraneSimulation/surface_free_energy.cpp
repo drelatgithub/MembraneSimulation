@@ -80,7 +80,7 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 
 	/**********************************
 	find the foot of perpendicular O on the triangle
-	r_O = r0 + alpha v1 + beta v2
+	rO = r0 + alpha v1 + beta v2
 	**********************************/
 	Vec3 v1 = *(v[1]->point) - *(v[0]->point), v2 = *(v[2]->point) - *(v[0]->point);
 	Vec3 r12 = v2 - v1;
@@ -94,31 +94,59 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	// So (alpha, beta)' = A^(-1) * B
 	double dot12 = dot(v1, v2);
 	Vec3 d0_dot12 = -v2 - v1, d1_dot12 = v2, d2_dot12 = v1; // Already taken into account those "Eye"-derivatives.
+
 	v1.calc_norm();
-	Vec3 d0_norm2_v1 = -v1 * 2, d1_norm2_v1 = v1 * 2;
+	Vec3 d0_norm2_v1 = -v1 * 2, d1_norm2_v1 = v1 * 2, d0_norm_v1 = -v1 / v1.norm, d1_norm_v1 = v1 / v1.norm;
 	v2.calc_norm();
-	Vec3 d0_norm2_v2 = -v2 * 2, d2_norm2_v2 = v2 * 2;
+	Vec3 d0_norm2_v2 = -v2 * 2, d2_norm2_v2 = v2 * 2, d0_norm_v2 = -v2 / v2.norm, d2_norm_v2 = v2 / v2.norm;
 	r12.calc_norm();
-	Vec3 d1_norm2_r12 = -r12 * 2, d2_norm2_r12 = r12 * 2;
+	Vec3 d1_norm2_r12 = -r12 * 2, d2_norm2_r12 = r12 * 2, d1_norm_r12 = -r12 / r12.norm, d2_norm_r12 = r12 / r12.norm;
+
 	double det_A = v1.norm2 * v2.norm2 - dot12 * dot12;
+	double det_A2 = det_A*det_A;
+	Vec3 d0_det_A = v1.norm2*d0_norm2_v2 + d0_norm2_v1*v2.norm2 - 2 * dot12*d0_dot12,
+		d1_det_A = d1_norm2_v1*v2.norm2 - 2 * dot12*d1_dot12,
+		d2_det_A = v1.norm2*d2_norm2_v2 - 2 * dot12*d2_dot12;
 	double AR11 = v2.norm2 / det_A,
-		AR12 = -dot12 / det_A,
-		AR21 = -dot12 / det_A,
+		AR12 = -dot12 / det_A, // AR21 = AR12
 		AR22 = v1.norm2 / det_A;
+	Vec3 d0_AR11 = (det_A*d0_norm2_v2 - v2.norm2*d0_det_A) / det_A2,
+		d1_AR11 = -v2.norm2*d1_det_A / det_A2,
+		d2_AR11 = (det_A*d2_norm2_v2 - v2.norm2*d2_det_A) / det_A2,
+		d0_AR12 = -(det_A*d0_dot12 - dot12*d0_det_A) / det_A2,
+		d1_AR12 = -(det_A*d1_dot12 - dot12*d1_det_A) / det_A2,
+		d2_AR12 = -(det_A*d2_dot12 - dot12*d2_det_A) / det_A2,
+		d0_AR22 = (det_A*d0_norm2_v1 - v1.norm2*d0_det_A) / det_A2,
+		d1_AR22 = (det_A*d1_norm2_v1 - v1.norm2*d1_det_A) / det_A2,
+		d2_AR22 = -v1.norm2*d2_det_A / det_A2;
 	double B1 = r0p.dot(v1), B2 = r0p.dot(v2);
+	Vec3 d0_B1 = -v1 - r0p, d1_B1 = r0p,
+		d0_B2 = -v2 - r0p, d2_B2 = r0p;
 
 	double alpha = AR11*B1 + AR12*B2,
-		beta = AR21*B1 + AR22*B2;
+		beta = AR12*B1 + AR22*B2; // Actually it's AR21 * B1 + AR22 * B2
+	Vec3 d0_alpha = d0_AR11*B1 + AR11*d0_B1 + d0_AR12*B2 + AR12*d0_B2,
+		d1_alpha = d1_AR11*B1 + AR11*d1_B1 + d1_AR12*B2,
+		d2_alpha = d2_AR11*B1 + d2_AR12*B2 + AR12*d2_B2,
+		d0_beta = d0_AR12*B1 + AR12*d0_B1 + d0_AR22*B2 + AR22*d0_B2,
+		d1_beta = d1_AR12*B1 + AR12*d1_B1 + d1_AR22*B2,
+		d2_beta = d2_AR12*B1 + d2_AR22*B2 + AR22*d2_B2;
 
 	Vec3 r0O = alpha*v1 + beta*v2;
+	Mat3 d0_r0O = d0_alpha.tensor(v1) + alpha*d0_v1 + d0_beta.tensor(v2) + beta*d0_v2,
+		d1_r0O = d1_alpha.tensor(v1) + alpha*d1_v1 + d1_beta.tensor(v2),
+		d2_r0O = d2_alpha.tensor(v1) + d2_beta.tensor(v2) + beta*d2_v2;
 	Vec3 rO = r0O + *(v[0]->point),
 		r1O = r0O - v1,
 		r2O = r0O - v2;
+	Mat3 d0_rO = d0_r0O + Eye3, d1_rO = d1_r0O, d2_rO = d2_r0O,
+		d0_r1O = d0_r0O - d0_v1, d1_r1O = d1_r0O - d1_v1, d2_r1O = d2_r0O,
+		d0_r2O = d0_r0O - d0_v2, d1_r2O = d1_r0O, d2_r2O = d2_r0O - d2_v2;
 	r0O.calc_norm();
 	r1O.calc_norm();
 	r2O.calc_norm();
-	if (true) {
-		Vec3 rOp = *p - rO;
+	Vec3 rOp = *p - rO; // derivatives w.r.t. r0, r1, r2 are just negative of d0_rO, d1_rO and d2_rO
+	if (true) { // Check whether they are indeed perpendicular
 		LOG(DEBUG) << "rOp dot v1 = " << rOp.dot(v1);
 		LOG(DEBUG) << "rOp dot v2 = " << rOp.dot(v2);
 	}
@@ -126,17 +154,52 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	/**********************************
 	distance from the point to the triangle
 	**********************************/
-	double d = (*p - rO).get_norm();
+	double d = rOp.get_norm();
+	Vec3 d0_d = (-d0_rO)*rOp / d,
+		d1_d = (-d1_rO)*rOp / d,
+		d2_d = (-d2_rO)*rOp / d;
 
 	/**********************************
 	distance from point O to all 3 edges
 	**********************************/
-	double d1 = cross(r0O, v1).get_norm() / v1.norm;
-	if (beta < 0)d1 = -d1;
-	double d2 = cross(r0O, v2).get_norm() / v2.norm;
-	if (alpha < 0)d2 = -d2;
-	double d3 = cross(r1O, r12).get_norm() / r12.norm;
-	if (alpha - beta > 1)d3 = -d3;
+	double a1 = cross(r0O, v1).get_norm(), dot_r0O_v1 = dot(r0O, v1);
+	Vec3 d0_a1 = (r0O.norm2*d0_v1*v1 + v1.norm2*d0_r0O*r0O - dot_r0O_v1*(d0_v1*r0O + d0_r0O*v1)) / a1,
+		d1_a1 = (r0O.norm2*d1_v1*v1 + v1.norm2*d1_r0O*r0O - dot_r0O_v1*(d1_v1*r0O + d1_r0O*v1)) / a1,
+		d2_a1 = (v1.norm2*d2_r0O*r0O - dot_r0O_v1*(d2_r0O*v1)) / a1;
+	double d1 = a1 / v1.norm;
+	Vec3 d0_d1 = (v1.norm*d0_a1 - a1*d0_norm_v1) / v1.norm2,
+		d1_d1 = (v1.norm*d1_a1 - a1*d1_norm_v1) / v1.norm2,
+		d2_d1 = d2_a1 / v1.norm;
+	if (beta < 0) {
+		d1 = -d1;
+		d0_d1 = -d0_d1; d1_d1 = -d1_d1; d2_d1 = -d2_d1;
+	}
+
+	double a2 = cross(r0O, v2).get_norm(), dot_r0O_v2 = dot(r0O, v2);
+	Vec3 d0_a2 = (r0O.norm2*d0_v2*v2 + v2.norm2*d0_r0O*r0O - dot_r0O_v2*(d0_v2*r0O + d0_r0O*v2)) / a2,
+		d1_a2 = (v2.norm2*d1_r0O*r0O - dot_r0O_v2*(d1_r0O*v2)) / a2,
+		d2_a2 = (r0O.norm2*d2_v2*v2 + v2.norm2*d2_r0O*r0O - dot_r0O_v2*(d2_v2*r0O + d2_r0O*v2)) / a2;
+	double d2 = a2 / v2.norm;
+	Vec3 d0_d2 = (v2.norm*d0_a2 - a2*d0_norm_v2) / v2.norm2,
+		d1_d2 = d1_a2 / v2.norm,
+		d2_d2 = (v2.norm*d2_a2 - a2*d2_norm_v2) / v2.norm2;
+	if (alpha < 0) {
+		d2 = -d2;
+		d0_d2 = -d0_d2; d1_d2 = -d1_d2; d2_d2 = -d2_d2;
+	}
+
+	double a3 = cross(r1O, r12).get_norm(), dot_r1O_r12 = dot(r1O, r12);
+	Vec3 d0_a3 = (r12.norm2*d0_r1O*r1O - dot_r1O_r12*d0_r1O*r12) / a3,
+		d1_a3 = (r1O.norm2*d1_r12*r12 + r12.norm2*d1_r1O*r1O - dot_r1O_r12*(d1_r12*r1O + d1_r1O*r12)) / a3,
+		d2_a3 = (r1O.norm2*d2_r12*r12 + r12.norm2*d2_r1O*r1O - dot_r1O_r12*(d2_r12*r1O + d2_r1O*r12)) / a3;
+	double d3 = a3 / r12.norm;
+	Vec3 d0_d3 = d0_a3 / r12.norm,
+		d1_d3 = (r12.norm*d1_a3 - a3*d1_norm_r12) / r12.norm2,
+		d2_d3 = (r12.norm*d2_a3 - a3*d2_norm_r12) / r12.norm2;
+	if (alpha - beta > 1) {
+		d3 = -d3;
+		d0_d3 = -d0_d3; d1_d3 = -d1_d3; d2_d3 = -d2_d3;
+	}
 
 	/**********************************
 	find the affecting region and calculate energy
