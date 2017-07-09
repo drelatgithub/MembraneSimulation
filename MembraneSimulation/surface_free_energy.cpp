@@ -239,11 +239,44 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 		d0_ecoe3 = 0.5*(1 - pow(tanh(d3 / sigma), 2))*(sigma*d0_d3 - d3*d0_sigma) / (sigma*sigma),
 		d1_ecoe3 = 0.5*(1 - pow(tanh(d3 / sigma), 2))*(sigma*d1_d3 - d3*d1_sigma) / (sigma*sigma),
 		d2_ecoe3 = 0.5*(1 - pow(tanh(d3 / sigma), 2))*(sigma*d2_d3 - d3*d2_sigma) / (sigma*sigma);
-	double en = vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI))
+	double not_at_corner = (1 - vcoe1)*(1 - vcoe2)*(1 - vcoe3),
+		in_triangle = ecoe1*ecoe2*ecoe3;
+	double en_fact = vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI))
 		+ vcoe2*(v[1]->theta[ind[1]] / (2 * M_PI))
 		+ vcoe3*(v[2]->theta[ind[2]] / (2 * M_PI))
-		+ (1 - vcoe1)*(1 - vcoe2)*(1 - vcoe3)*ecoe1*ecoe2*ecoe3;
-	en *= I;
+		+ not_at_corner * in_triangle;
+	Vec3 d0_en_fact = d0_vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI)) + vcoe1*(v[0]->d_theta[ind[0]] / (2 * M_PI))
+		+ d0_vcoe2*(v[1]->theta[ind[1]] / (2 * M_PI)) + vcoe2*(v[1]->dnn_theta[ind[1]] / (2 * M_PI))
+		+ d0_vcoe3*(v[2]->theta[ind[2]] / (2 * M_PI)) + vcoe3*(v[2]->dn_theta[ind[2]] / (2 * M_PI))
+		- d0_vcoe1*(1 - vcoe2)*(1 - vcoe3)*in_triangle
+		- d0_vcoe2*(1 - vcoe1)*(1 - vcoe3)*in_triangle
+		- d0_vcoe3*(1 - vcoe1)*(1 - vcoe2)*in_triangle
+		+ not_at_corner*d0_ecoe1*ecoe2*ecoe3
+		+ not_at_corner*ecoe1*d0_ecoe2*ecoe3
+		+ not_at_corner*ecoe1*ecoe2*d0_ecoe3,
+		d1_en_fact = d1_vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI)) + vcoe1*(v[0]->dn_theta[ind[0]] / (2 * M_PI))
+		+ d1_vcoe2*(v[1]->theta[ind[1]] / (2 * M_PI)) + vcoe2*(v[1]->d_theta[ind[1]] / (2 * M_PI))
+		+ d1_vcoe3*(v[2]->theta[ind[2]] / (2 * M_PI)) + vcoe3*(v[2]->dnn_theta[ind[2]] / (2 * M_PI))
+		- d1_vcoe1*(1 - vcoe2)*(1 - vcoe3)*in_triangle
+		- d1_vcoe2*(1 - vcoe1)*(1 - vcoe3)*in_triangle
+		- d1_vcoe3*(1 - vcoe1)*(1 - vcoe2)*in_triangle
+		+ not_at_corner*d1_ecoe1*ecoe2*ecoe3
+		+ not_at_corner*ecoe1*d1_ecoe2*ecoe3
+		+ not_at_corner*ecoe1*ecoe2*d1_ecoe3,
+		d2_en_fact = d2_vcoe1*(v[0]->theta[ind[0]] / (2 * M_PI)) + vcoe1*(v[0]->dnn_theta[ind[0]] / (2 * M_PI))
+		+ d2_vcoe2*(v[1]->theta[ind[1]] / (2 * M_PI)) + vcoe2*(v[1]->dn_theta[ind[1]] / (2 * M_PI))
+		+ d2_vcoe3*(v[2]->theta[ind[2]] / (2 * M_PI)) + vcoe3*(v[2]->d_theta[ind[2]] / (2 * M_PI))
+		- d2_vcoe1*(1 - vcoe2)*(1 - vcoe3)*in_triangle
+		- d2_vcoe2*(1 - vcoe1)*(1 - vcoe3)*in_triangle
+		- d2_vcoe3*(1 - vcoe1)*(1 - vcoe2)*in_triangle
+		+ not_at_corner*d2_ecoe1*ecoe2*ecoe3
+		+ not_at_corner*ecoe1*d2_ecoe2*ecoe3
+		+ not_at_corner*ecoe1*ecoe2*d2_ecoe3;
+
+	double en = en_fact * I;
+	Vec3 d0_en = d0_en_fact * I + en_fact * d0_I,
+		d1_en = d1_en_fact * I + en_fact * d1_I,
+		d2_en = d2_en_fact * I + en_fact * d2_I;
 
 	H = en;
 	
