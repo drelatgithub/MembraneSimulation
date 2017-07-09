@@ -278,16 +278,10 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 		d1_en = d1_en_fact * I + en_fact * d1_I,
 		d2_en = d2_en_fact * I + en_fact * d2_I;
 
-	H = en;
+	H_int = en;
+	v[0]->d_H_int += d0_en;
+	v[1]->d_H_int += d1_en;
+	v[2]->d_H_int += d2_en;
 	
 }
 
-Vec3 MS::d_h_potential(vertex * v) {
-	double r = dist(*(v->point), *po);
-	double R = 1e-7;
-	double ep = 1e-15;
-	if (r > R*pow(2, 1.0 / 6))return Vec3();
-
-	Vec3 dr = (*(v->point) - *po) / r;
-	return 4 * ep*(-12 * pow(R / r, 12) + 6 * pow(R / r, 6)) / r * dr;
-}
