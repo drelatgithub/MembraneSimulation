@@ -5,5 +5,6 @@
 
 namespace MS {
 
+	extern math_public::Vec3 *po;
 	double update_len(double param); // should be removed when considering real polymers
 }

@@ -1,10 +1,6 @@
 #include"simulation_process.h"
 
-#include<vector>
-#include<math.h>
-#include<iostream>
-#include<fstream>
-
+#include"common.h"
 #include"math_public.h"
 #include"surface_mesh.h"
 #include"surface_free_energy.h"
@@ -32,15 +28,35 @@ const double d_eps = 1e-8; // Maximum tolerance for coordinates
 const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
 
-int minimization(std::vector<MS::vertex*> &vertices);
+int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 
-double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0);
+double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, int N, int N_f, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0);
 
-void test_derivatives(std::vector<MS::vertex*> &vertices);
-void force_profile(std::vector<MS::vertex*> &vertices);
+void test_derivatives(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
+void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 
+void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, bool update_geometry=true, bool update_energy=true) {
+	int len = vertices.size(), len_f = facets.size();
+	if (update_geometry) {
+		for (int i = 0; i < len; i++) {
+			vertices[i]->update_geo();
+		}
+		for (int i = 0; i < len_f; i++) {
+			facets[i]->update_geo();
+		}
+	}
+	if (update_energy) {
+		for (int i = 0; i < len; i++) {
+			vertices[i]->update_energy();
+		}
+		for (int i = 0; i < len_f; i++) {
+			facets[i]->update_energy(MS::po); // This could also change energy derivatives in vertices
+		}
+	}
+}
 int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &facets) {
-	int len = vertices.size();
+	int len = vertices.size(),
+		len_f = facets.size();
 
 	for (int i = 0; i < len; i++) {
 		vertices[i]->count_neighbors();
@@ -62,11 +78,13 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 		for (double a = 0.9e-6; a < 1.2e-6; a += 0.02e-6) {
 			std::cout << update_len(a) << std::endl;
 
-			minimization(vertices);
+			minimization(vertices, facets);
+
+			update_all_energy(vertices, facets);
 
 			for (int i = 0; i < len; i++) {
 				p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
-				math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+				math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 				f_out << cur_d_h_all.x << '\t' << cur_d_h_all.y << '\t' << cur_d_h_all.z << '\t';
 				a_out << vertices[i]->area << '\t' << vertices[i]->area0<<'\t';
 			}
@@ -78,11 +96,12 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 		std::cout << update_len(-3) << std::endl;
 
-		minimization(vertices);
+		minimization(vertices, facets);
+		update_all_energy(vertices, facets);
 
 		for (int i = 0; i < len; i++) {
 			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
-			math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+			math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 			f_out << cur_d_h_all.x << '\t' << cur_d_h_all.y << '\t' << cur_d_h_all.z << '\t';
 		}
 		p_out << std::endl;
@@ -90,11 +109,11 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 		break;
 
 	case 1:
-		test_derivatives(vertices);
+		test_derivatives(vertices, facets);
 		break;
 
 	case 2:
-		force_profile(vertices);
+		force_profile(vertices, facets);
 		break;
 	}
 	
@@ -106,9 +125,10 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 	return 0;
 }
 
-int minimization(std::vector<MS::vertex*> &vertices) {
+int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
 	bool finished = false;
 	int N = vertices.size(); // Number of vertices
+	int N_f = facets.size(); // Number of facets
 	double H = 0, H_new = 0;
 	double *d_H = new double[3 * N];
 	double *d_H_new = new double[3 * N];
@@ -123,10 +143,11 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 	sd_min_out.open("F:\\sd_min_out.txt");
 	
 	// Initializing
+	update_all_energy(vertices, facets);
 	for (int i = 0; i < N; i++) {
 		// Get H and d_H
-		H += MS::h_all(vertices[i]);
-		math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+		H += vertices[i]->H; // This is only the vertices part of the energy
+		math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 		d_H[i * 3] = cur_d_h_all.x;
 		d_H[i * 3 + 1] = cur_d_h_all.y;
 		d_H[i * 3 + 2] = cur_d_h_all.z;
@@ -140,6 +161,9 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 		//temp_out << MS::d_h_curv_g(&vertices[i], 0) << '\t' << MS::d_h_curv_g(&vertices[i], 1) << '\t' << MS::d_h_curv_g(&vertices[i], 2) << '\t';
 	}
+	for (int i = 0; i < N_f; i++) {
+		H += facets[i]->H;
+	}
 	//temp_out.close();
 
 	int k = 0; // Iteration counter. Only for debug use.
@@ -152,7 +176,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 		}
 		if(d_H_max < h_eps) break; // Force is almost zero
 		alpha0 = max_move / d_H_max; // This ensures that no vertex would have greater step than max_move
-		std::cout << "[MIN] Max gradient: " << d_H_max <<"\talpha0: "<<alpha0<< std::endl;
+		LOG(INFO) << "[MIN] Max gradient: " << d_H_max <<"\talpha0: "<<alpha0;
 
 		// m is the inner product of the gradient and the search direcion, and must be non-negative.
 		double m = 0, m_new = 0;
@@ -167,7 +191,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 				m += p[i] * d_H[i];
 			}
 			if (m > 0) {
-				std::cout << "[MIN] Warning: along search direction is increasing energy. Reassigning search direction.\n";
+				LOG(WARNING) << "[MIN] Warning: along search direction is increasing energy. Reassigning search direction.";
 				m = 0;
 				for (int i = 0; i < N; i++) {
 					for (int j = 0; j < 3; j++) {
@@ -179,7 +203,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			}
 		}
 
-		std::cout << "[MIN] H: " << H << "\tm: " << m << std::endl;
+		LOG(INFO) << "[MIN] H: " << H << "\tm: " << m;
 
 
 		if (false) { // Data verification
@@ -191,13 +215,13 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 			}
 		}
 
-		alpha = line_search(vertices, N, H, H_new, p, d_H_max, d_H_new, m, m_new, alpha0);
+		alpha = line_search(vertices, facets, N, H, N_f, H_new, p, d_H_max, d_H_new, m, m_new, alpha0);
 		std::ofstream t1;
 		t1.open("F:\\t1.txt");
 		for (int i = 0; i < 3 * N; i++) {
 			t1 << p[i] << '\t' << d_H[i] << '\t' << d_H_new[i] << std::endl;
 		}
-		std::cout << "[MIN] t1 complete." << std::endl;
+		LOG(INFO) << "[MIN] t1 complete.";
 		t1.close();
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
 		// H_new and d_H_new are updated.
@@ -236,7 +260,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 		}
 
 		k++;
-		std::cout << k << "\tm: " << m << "\talpha: " << alpha << "\tFree energy: " << H << std::endl;
+		LOG(INFO) << k << "\tm: " << m << "\talpha: " << alpha << "\tFree energy: " << H;
 		for (int i = 0; i < N; i++) {
 			p_min_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
@@ -259,7 +283,7 @@ int minimization(std::vector<MS::vertex*> &vertices) {
 
 	return 0;
 }
-double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0) {
+double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, int N, int N_f, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0) {
 
 	double MIN_D_ALPHA_FAC = 1e-15; // Minimum delta
 
@@ -280,38 +304,43 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 			return alpha; // Ensure this won't happen for the 1st iteration.
 		}
 
+		// Change the position and renew energy
 		for (int i = 0; i < N; i++) {
 			vertices[i]->point->x = vertices[i]->point_last->x + alpha * p[i * 3];
 			vertices[i]->point->y = vertices[i]->point_last->y + alpha * p[i * 3 + 1];
 			vertices[i]->point->z = vertices[i]->point_last->z + alpha * p[i * 3 + 2];
 		}
-		
+		update_all_energy(vertices, facets);
+
+		// Make sure that area is not negative
 		for (int i = 0; i < N; i++) {
-			vertices[i]->update_geo();
 			if (vertices[i]->area <= 0) {
 				accepted = false; // define H = infty, also need to backtrack
 			}
 		}
 		if (!accepted) {
 			backtrack = true;
-			std::cout << "[LINE] [BACK] area" << std::endl;
+			LOG(INFO) << "BACK: area";
 		}
 
-		// Renew energy
+		// Renew the sum of energy
 		H_new = 0;
 		for (int i = 0; i < N; i++) {
-			H_new += MS::h_all(vertices[i]);
+			H_new += vertices[i]->H;
+		}
+		for (int i = 0; i < N_f; i++) {
+			H_new += facets[i]->H;
 		}
 
 		if (USE_LINE_SEARCH && (H_new >= H_p)) { // Armijo condition not satisfied. simply taking c1=0
-			std::cout << "[LINE] [BACK] energy" << std::endl;
+			LOG(INFO) << "BACK: energy";
 			backtrack = true;
-		} // Armijo condition satisfied.
+		} // Otherwise, Armijo condition is satisfied.
 
 		// Renew energy derivatives and m value
 		m_new = 0;
 		for (int i = 0; i < N; i++) {
-			math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+			math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 			d_H_new[i * 3] = cur_d_h_all.x;
 			d_H_new[i * 3 + 1] = cur_d_h_all.y;
 			d_H_new[i * 3 + 2] = cur_d_h_all.z;
@@ -320,24 +349,24 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 			}
 		}
 		if (m_new > 0) {
-			std::cout << "[LINE] [BACK] force" << std::endl;
+			LOG(INFO) << "BACK: force";
 			backtrack = true;
 		}
 		
-		std::cout << "[LINE] H_new: " << H_new << "\tm_new: " << m_new << std::endl;
+		LOG(INFO) << "H_new: " << H_new << "\tm_new: " << m_new;
 
 		if(backtrack){
 			alpha -= d_alpha;
 
 			if(false && m_new > 0){ // The force has changed sign
-				d_alpha *= m_p / (m_p - m_new); // Linearized force profile
+				d_alpha *= m_p / (m_p - m_new); // Linearized force profile. Currently we don't use that.
 			}else{
 				d_alpha *= tau; // Just to make it small
 			}
 
 			// Consider cases where moves are simply too small
 			if (d_H_max * d_alpha <= MIN_D_ALPHA_FAC) {
-				std::cout << "[LINE] d_alpha too small" << std::endl;
+				LOG(INFO) << "d_alpha too small";
 				return alpha;
 			}
 
@@ -351,6 +380,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 
 		if (false && abs(H_new - 1.06455e-13) < 0.0001e-13) {
 			//test derivative
+			// TODO: Consider facet interactions
 
 			for (int ind = 0; ind < N; ind++) {
 				
@@ -359,21 +389,24 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				vertices[ind]->point->z = vertices[ind]->point_last->z + (alpha + 2e-2) * p[ind * 3 + 2];
 
 				vertices[ind]->update_geo();
-
 				for (int i = 0; i < vertices[ind]->neighbors; i++) {
 					vertices[ind]->n[i]->update_geo();
+				}
+				vertices[ind]->update_energy();
+				for (int i = 0; i < vertices[ind]->neighbors; i++) {
+					vertices[ind]->n[i]->update_energy();
 				}
 
 				// Renew energy
 				double H_new_n = 0;
 				for (int i = 0; i < N; i++) {
-					H_new_n += MS::h_all(vertices[i]);
+					H_new_n += vertices[i]->H;
 				}
 
 				// Renew energy derivatives and m value
 				double m_new_n = 0;
 				for (int i = 0; i < N; i++) {
-					math_public::Vec3 cur_d_h_all = MS::d_h_all(vertices[i]);
+					math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 					d_H_new[i * 3] = cur_d_h_all.x;
 					d_H_new[i * 3 + 1] = cur_d_h_all.y;
 					d_H_new[i * 3 + 2] = cur_d_h_all.z;
@@ -386,7 +419,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 				std::cout << ind << "\tDE: " << H_new_n - H_new << "\ta: " << a << std::endl;
 				H_new = H_new_n;
 			}
-		}
+		} // End of derivative test
 		
 		if (!USE_LINE_SEARCH || abs(m_new) <= -c2 * m) { // Curvature condition satisfied. Good.
 			return alpha;
@@ -398,7 +431,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 		if (boostFactor > 4) boostFactor = 4;
 		d_alpha *= boostFactor;
 
-		std::cout << "[LINE] alpha: " << alpha << "\td_alpha: " << d_alpha << std::endl;
+		LOG(INFO) << "alpha: " << alpha << "\td_alpha: " << d_alpha;
 
 		// start over
 		m_p = m_new;
@@ -407,7 +440,7 @@ double line_search(std::vector<MS::vertex*> &vertices, int N, double H, double &
 	}
 }
 
-void test_derivatives(std::vector<MS::vertex*> &vertices) {
+void test_derivatives(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
 	// Test local properties (main)
 	/*
 	int vind = 1078;
@@ -519,7 +552,8 @@ void test_derivatives(std::vector<MS::vertex*> &vertices) {
 
 }
 
-void force_profile(std::vector<MS::vertex*> &vertices) {
+void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
+	// TODO: Consider facet interactions
 	int v_index = 10;
 	int N = vertices.size();
 	int len = vertices[v_index]->n.size();
@@ -529,11 +563,13 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 	lfp1.open("F:\\lfp1.txt");
 
 	vertices[v_index]->update_geo();
-	double H = MS::h_all(vertices[v_index]);
+	double H = vertices[v_index]->H;
 	for (int j = 0; j < len; j++) {
 		vertices[v_index]->n[j]->update_geo();
-		H += MS::h_all(vertices[v_index]->n[j]);
+		vertices[v_index]->n[j]->update_energy();
+		H += vertices[v_index]->n[j]->H;
 	}
+	vertices[v_index]->update_energy();
 
 	vertices[v_index]->make_last();
 	double n_x = vertices[v_index]->n_vec.x;
@@ -550,11 +586,12 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + n_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + n_z*move;
 		vertices[v_index]->update_geo();
+		vertices[v_index]->update_energy();
 		H_new = 0;
-		H_new = MS::h_all(vertices[v_index]);
+		H_new = vertices[v_index]->H;
 		for (int j = 0; j < len; j++) {
 			vertices[v_index]->n[j]->update_geo();
-			H_new += MS::h_all(vertices[v_index]->n[j]);
+			H_new += vertices[v_index]->n[j]->H;
 		}
 		//std::cout << "move: " << move << "\tdH: " << H_new - H << std::endl;
 		nfp << move << '\t' << H_new - H << std::endl;
@@ -565,11 +602,12 @@ void force_profile(std::vector<MS::vertex*> &vertices) {
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + l1_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + l1_z*move;
 		vertices[v_index]->update_geo();
+		vertices[v_index]->update_energy();
 		H_new = 0;
-		H_new = MS::h_all(vertices[v_index]);
+		H_new = vertices[v_index]->H;
 		for (int j = 0; j < len; j++) {
 			vertices[v_index]->n[j]->update_geo();
-			H_new += MS::h_all(vertices[v_index]->n[j]);
+			H_new += vertices[v_index]->n[j]->H;
 		}
 		//std::cout << "move: " << move << "\tdH: " << H_new - H << std::endl;
 		lfp1 << move << '\t' << H_new - H << std::endl;
