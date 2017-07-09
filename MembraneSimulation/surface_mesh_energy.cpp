@@ -58,7 +58,7 @@ void MS::facet::update_energy(math_public::Vec3 *p) {
 }
 
 double polymer_len = 0;
-math_public::Vec3 *po = new math_public::Vec3(polymer_len, 0, 0);
+math_public::Vec3 *MS::po = new math_public::Vec3(polymer_len, 0, 0);
 
 double MS::update_len(double param) {
 	polymer_len = param;
