@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="surface_free_energy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="simulation_process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -37,6 +34,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="surface_mesh_geometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="surface_mesh_energy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

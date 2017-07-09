@@ -122,7 +122,7 @@
     <ClCompile Include="math_public.cpp" />
     <ClCompile Include="mesh_initialization.cpp" />
     <ClCompile Include="simulation_process.cpp" />
-    <ClCompile Include="surface_free_energy.cpp" />
+    <ClCompile Include="surface_mesh_energy.cpp" />
     <ClCompile Include="surface_mesh_geometry.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
