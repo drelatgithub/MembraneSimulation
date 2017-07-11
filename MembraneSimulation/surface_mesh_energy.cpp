@@ -43,17 +43,24 @@ void MS::vertex::calc_H_curv_g() {
 		d_H_curv_g += k_g * (each_n->dn_curv_g[i] * each_n->area + each_n->curv_g * each_n->dn_area[i]);
 	}
 }
+void MS::vertex::inc_d_H_int(const Vec3 &d) {
+	d_H_int += d;
+	d_H += d;
+}
+
 
 void MS::vertex::update_energy() {
 	calc_H_area();
 	calc_H_curv_h();
 	calc_H_curv_g();
+	calc_H_int();
 	sum_energy();
 }
 
 
 void MS::facet::update_energy(math_public::Vec3 *p) {
-	calc_H_int(p); // also updates the energy derivatives of vertices
+	// TODO: Add interaction with multiple points
+	calc_H_int();
 	sum_energy();
 }
 
@@ -66,7 +73,7 @@ double MS::update_len(double param) {
 	po->x = polymer_len;
 	return polymer_len;
 }
-void MS::facet::calc_H_int(math_public::Vec3 *p) {
+void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	// The derivative of this energy should go to the point and the vertices.
 
 	// The total integral over the whole plane is
@@ -171,9 +178,12 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	distance from point O to all 3 edges
 	**********************************/
 	double a1 = cross(r0O, v1).get_norm(), dot_r0O_v1 = dot(r0O, v1);
-	Vec3 d0_a1 = (r0O.norm2*d0_v1*v1 + v1.norm2*d0_r0O*r0O - dot_r0O_v1*(d0_v1*r0O + d0_r0O*v1)) / a1,
-		d1_a1 = (r0O.norm2*d1_v1*v1 + v1.norm2*d1_r0O*r0O - dot_r0O_v1*(d1_v1*r0O + d1_r0O*v1)) / a1,
+	Vec3 d0_a1, d1_a1, d2_a1;
+	if (a1 != 0) {
+		d0_a1 = (r0O.norm2*d0_v1*v1 + v1.norm2*d0_r0O*r0O - dot_r0O_v1*(d0_v1*r0O + d0_r0O*v1)) / a1;
+		d1_a1 = (r0O.norm2*d1_v1*v1 + v1.norm2*d1_r0O*r0O - dot_r0O_v1*(d1_v1*r0O + d1_r0O*v1)) / a1;
 		d2_a1 = (v1.norm2*d2_r0O*r0O - dot_r0O_v1*(d2_r0O*v1)) / a1;
+	}
 	double d1 = a1 / v1.norm;
 	Vec3 d0_d1 = (v1.norm*d0_a1 - a1*d0_norm_v1) / v1.norm2,
 		d1_d1 = (v1.norm*d1_a1 - a1*d1_norm_v1) / v1.norm2,
@@ -184,9 +194,12 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	}
 
 	double a2 = cross(r0O, v2).get_norm(), dot_r0O_v2 = dot(r0O, v2);
-	Vec3 d0_a2 = (r0O.norm2*d0_v2*v2 + v2.norm2*d0_r0O*r0O - dot_r0O_v2*(d0_v2*r0O + d0_r0O*v2)) / a2,
-		d1_a2 = (v2.norm2*d1_r0O*r0O - dot_r0O_v2*(d1_r0O*v2)) / a2,
+	Vec3 d0_a2, d1_a2, d2_a2;
+	if (a2 != 0) {
+		d0_a2 = (r0O.norm2*d0_v2*v2 + v2.norm2*d0_r0O*r0O - dot_r0O_v2*(d0_v2*r0O + d0_r0O*v2)) / a2;
+		d1_a2 = (v2.norm2*d1_r0O*r0O - dot_r0O_v2*(d1_r0O*v2)) / a2;
 		d2_a2 = (r0O.norm2*d2_v2*v2 + v2.norm2*d2_r0O*r0O - dot_r0O_v2*(d2_v2*r0O + d2_r0O*v2)) / a2;
+	}
 	double d2 = a2 / v2.norm;
 	Vec3 d0_d2 = (v2.norm*d0_a2 - a2*d0_norm_v2) / v2.norm2,
 		d1_d2 = d1_a2 / v2.norm,
@@ -197,9 +210,12 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	}
 
 	double a3 = cross(r1O, r12).get_norm(), dot_r1O_r12 = dot(r1O, r12);
-	Vec3 d0_a3 = (r12.norm2*d0_r1O*r1O - dot_r1O_r12*d0_r1O*r12) / a3,
-		d1_a3 = (r1O.norm2*d1_r12*r12 + r12.norm2*d1_r1O*r1O - dot_r1O_r12*(d1_r12*r1O + d1_r1O*r12)) / a3,
+	Vec3 d0_a3, d1_a3, d2_a3;
+	if (a3 != 0) {
+		d0_a3 = (r12.norm2*d0_r1O*r1O - dot_r1O_r12*d0_r1O*r12) / a3;
+		d1_a3 = (r1O.norm2*d1_r12*r12 + r12.norm2*d1_r1O*r1O - dot_r1O_r12*(d1_r12*r1O + d1_r1O*r12)) / a3;
 		d2_a3 = (r1O.norm2*d2_r12*r12 + r12.norm2*d2_r1O*r1O - dot_r1O_r12*(d2_r12*r1O + d2_r1O*r12)) / a3;
+	}
 	double d3 = a3 / r12.norm;
 	Vec3 d0_d3 = d0_a3 / r12.norm,
 		d1_d3 = (r12.norm*d1_a3 - a3*d1_norm_r12) / r12.norm2,
@@ -286,10 +302,10 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 		d1_en = d1_en_fact * I + en_fact * d1_I,
 		d2_en = d2_en_fact * I + en_fact * d2_I;
 
-	H_int = en;
-	v[0]->d_H_int += d0_en;
-	v[1]->d_H_int += d1_en;
-	v[2]->d_H_int += d2_en;
+	H_int += en; H += en;
+	v[0]->inc_d_H_int(d0_en);
+	v[1]->inc_d_H_int(d1_en);
+	v[2]->inc_d_H_int(d2_en);
 	
 }
 

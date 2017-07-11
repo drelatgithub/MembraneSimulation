@@ -69,7 +69,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	vertices[0]->update_geo();
 	vertices[0]->update_energy();
 
-	LOG(TEST_DEBUG) << "==================== After changing ====================";
+	LOG(TEST_DEBUG) << "==================== After change ====================";
 	double del_area = vertices[0]->area - cur_area,
 		del_H_area = vertices[0]->H_area - cur_H_area,
 		del_curv_h = vertices[0]->curv_h - cur_curv_h,
@@ -103,6 +103,72 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 
 	test_case.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {
+		vertices[i]->release_point();
+		delete vertices[i];
+	}
+});
+
+test::TestCase MS::facet::test_case("Facet Test", []() {
+	test_case.new_step("Initializing");
+	LOG(TEST_DEBUG) << "Generating a triangle mesh which includes 3 vertices...";
+	std::vector<vertex*> vertices;
+
+	vertices.push_back(new vertex(new Vec3(0.01, 0, 0)));
+	vertices.push_back(new vertex(new Vec3(-0.005, sqrt(3)/200, 0)));
+	vertices.push_back(new vertex(new Vec3(-0.005, -sqrt(3)/200, 0)));
+
+	facet f(vertices[0], vertices[1], vertices[2]);
+	for (int i = 0; i < 3; i++) {
+		f.ind[i] = 0;
+		vertices[i]->n.push_back(vertices[loop_add(i, 1, 3)]);
+		vertices[i]->n.push_back(vertices[loop_add(i, 2, 3)]);
+		vertices[i]->gen_next_prev_n();
+		vertices[i]->dump_data_vectors(2);
+	}
+	for (int i = 0; i < 3; i++) {
+		vertices[i]->calc_angle();
+		vertices[i]->calc_H_int();
+	}
+
+	Vec3 a_point(0, 0, -1e-9),
+		a_point_2(0.01, 0, -1e-9);
+	f.calc_H_int();
+	f.inc_H_int(&a_point);
+	f.inc_H_int(&a_point_2);
+
+	test_case.new_step("Check derivatives");
+	Vec3 dx0(-1e-6, 1e-8, 2e-11),
+		dx1(1e-7, 2e-8, 5e-11),
+		dx2(-1e-9, -1e-6, -1e-10);
+	double cur_H_int = f.H_int;
+	LOG(TEST_DEBUG) << "==================== Before change ====================";
+	LOG(TEST_DEBUG) << "H: " << cur_H_int;
+	double ex_del_H_int_0 = vertices[0]->d_H_int.dot(dx0),
+		ex_del_H_int_1 = vertices[1]->d_H_int.dot(dx1),
+		ex_del_H_int_2 = vertices[2]->d_H_int.dot(dx2);
+	double ex_del_H_int = ex_del_H_int_0 + ex_del_H_int_1 + ex_del_H_int_2;
+
+	// Move vertices by a little bit
+	*(vertices[0]->point) += dx0;
+	*(vertices[1]->point) += dx1;
+	*(vertices[2]->point) += dx2;
+	for (int i = 0; i < 3; i++) {
+		vertices[i]->calc_angle();
+		vertices[i]->calc_H_int();
+	}
+	f.calc_H_int();
+	f.inc_H_int(&a_point);
+	f.inc_H_int(&a_point_2);
+
+	LOG(TEST_DEBUG) << "==================== After change ====================";
+	double del_H_int = f.H_int - cur_H_int;
+	double log_diff_del_H_int = log10(fabs(ex_del_H_int - del_H_int));
+
+	LOG(TEST_DEBUG) << "Interaction energy changed: " << del_H_int << " Expected: " << ex_del_H_int << " lg diff: " << log_diff_del_H_int;
+	test_case.assert_bools_lv(log_diff_del_H_int <= -15, log_diff_del_H_int <= -12, "Interaction energy change inaccurate", "Interaction energy change incorrect");
+
+	test_case.new_step("Cleaning");
+	for (int i = 0; i < 3; i++) {
 		vertices[i]->release_point();
 		delete vertices[i];
 	}

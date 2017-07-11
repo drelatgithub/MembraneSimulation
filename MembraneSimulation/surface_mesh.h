@@ -64,7 +64,7 @@ namespace MS {
 		//math_public::Mat3 d_n_vec;
 		//std::vector<math_public::Mat3> dn_n_vec;
 
-		int dump_data_vectors();
+		int dump_data_vectors(int size=1);
 
 		void calc_angle();
 		double calc_area();
@@ -100,6 +100,8 @@ namespace MS {
 		void calc_H_area();
 		void calc_H_curv_h();
 		void calc_H_curv_g();
+		inline void calc_H_int() { H_int = 0; d_H_int.set(0, 0, 0); } // This actually serves as cleaning
+		void inc_d_H_int(const math_public::Vec3 &d);
 		
 		inline void sum_energy() {
 			/*
@@ -146,9 +148,15 @@ namespace MS {
 			H = H_int;
 		}
 
-		void calc_H_int(math_public::Vec3 *p);
+		inline void calc_H_int() { H_int = 0; } // Serves as cleaning
+		void inc_H_int(math_public::Vec3 *p);
 
-		void update_energy(math_public::Vec3 *p);
+		void update_energy(math_public::Vec3 *p); // TODO: This should be changed to interacting with all points
+
+		/******************************
+		Test
+		******************************/
+		static test::TestCase test_case;
 
 	};
 

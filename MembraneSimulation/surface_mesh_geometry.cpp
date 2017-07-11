@@ -37,28 +37,30 @@ int vertex::gen_next_prev_n() {
 	return 0;
 }
 
-int vertex::dump_data_vectors() {
-	// theta
-	theta.push_back(0), sin_theta.push_back(0);
-	d_theta.push_back(Vec3()), dn_theta.push_back(Vec3()), dnn_theta.push_back(Vec3());
-	d_sin_theta.push_back(Vec3()), dn_sin_theta.push_back(Vec3()), dnn_sin_theta.push_back(Vec3());
-	// theta2
-	theta2.push_back(0), cot_theta2.push_back(0);
-	d_theta2.push_back(Vec3()), dn_theta2.push_back(Vec3()), dnp_theta2.push_back(Vec3());
-	d_cot_theta2.push_back(Vec3()), dn_cot_theta2.push_back(Vec3()), dnp_cot_theta2.push_back(Vec3());
-	// theta3
-	theta3.push_back(0), cot_theta3.push_back(0);
-	d_theta3.push_back(Vec3()), dn_theta3.push_back(Vec3()), dnn_theta3.push_back(Vec3());
-	d_cot_theta3.push_back(Vec3()), dn_cot_theta3.push_back(Vec3()), dnn_cot_theta3.push_back(Vec3());
-	// distances
-	r_p_n.push_back(0), d_r_p_n.push_back(Vec3()), dn_r_p_n.push_back(Vec3());
-	r_p_np.push_back(0), d_r_p_np.push_back(Vec3()), dnp_r_p_np.push_back(Vec3());
-	r_p_nn.push_back(0), d_r_p_nn.push_back(Vec3()), dnn_r_p_nn.push_back(Vec3());
+int vertex::dump_data_vectors(int size) {
+	for (int i = 0; i < size; i++) {
+		// theta
+		theta.push_back(0), sin_theta.push_back(0);
+		d_theta.push_back(Vec3()), dn_theta.push_back(Vec3()), dnn_theta.push_back(Vec3());
+		d_sin_theta.push_back(Vec3()), dn_sin_theta.push_back(Vec3()), dnn_sin_theta.push_back(Vec3());
+		// theta2
+		theta2.push_back(0), cot_theta2.push_back(0);
+		d_theta2.push_back(Vec3()), dn_theta2.push_back(Vec3()), dnp_theta2.push_back(Vec3());
+		d_cot_theta2.push_back(Vec3()), dn_cot_theta2.push_back(Vec3()), dnp_cot_theta2.push_back(Vec3());
+		// theta3
+		theta3.push_back(0), cot_theta3.push_back(0);
+		d_theta3.push_back(Vec3()), dn_theta3.push_back(Vec3()), dnn_theta3.push_back(Vec3());
+		d_cot_theta3.push_back(Vec3()), dn_cot_theta3.push_back(Vec3()), dnn_cot_theta3.push_back(Vec3());
+		// distances
+		r_p_n.push_back(0), d_r_p_n.push_back(Vec3()), dn_r_p_n.push_back(Vec3());
+		r_p_np.push_back(0), d_r_p_np.push_back(Vec3()), dnp_r_p_np.push_back(Vec3());
+		r_p_nn.push_back(0), d_r_p_nn.push_back(Vec3()), dnn_r_p_nn.push_back(Vec3());
 
-	// Derivatives around a vertex
-	dn_area.push_back(Vec3());
-	dn_curv_h.push_back(Vec3());
-	dn_curv_g.push_back(Vec3());
+		// Derivatives around a vertex
+		dn_area.push_back(Vec3());
+		dn_curv_h.push_back(Vec3());
+		dn_curv_g.push_back(Vec3());
+	}
 
 	return 0;
 }
