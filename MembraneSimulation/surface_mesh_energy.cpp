@@ -59,6 +59,7 @@ void MS::facet::update_energy(math_public::Vec3 *p) {
 
 double polymer_len = 0;
 math_public::Vec3 *MS::po = new math_public::Vec3(polymer_len, 0, 0);
+std::vector<MS::facet*> MS::po_neighbor;
 
 double MS::update_len(double param) {
 	polymer_len = param;
@@ -73,8 +74,8 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	// where k is the coefficient, d0 is the distance of force, f(n) is a polynomial of force.
 	static int po_pwr = 6; // negative power of distance in expression of potential energy
 	static double r_0_factor = 1.0 / sqrt(po_pwr-1);
-	static double d0 = 1e-8;
-	static double energy_coe = 1.0; // in J/m^2
+	static double d0 = 1e-9;
+	static double energy_coe = 1e-1; // in J/m^2
 	static double d0_pwr = pow(d0, po_pwr);
 	static double pre_calc = d0_pwr * energy_coe;
 
@@ -146,7 +147,7 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	r1O.calc_norm();
 	r2O.calc_norm();
 	Vec3 rOp = *p - rO; // derivatives w.r.t. r0, r1, r2 are just negative of d0_rO, d1_rO and d2_rO
-	if (true) { // Check whether they are indeed perpendicular
+	if (false) { // Check whether they are indeed perpendicular
 		LOG(DEBUG) << "rOp dot v1 = " << rOp.dot(v1);
 		LOG(DEBUG) << "rOp dot v2 = " << rOp.dot(v2);
 	}
@@ -158,6 +159,13 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	Vec3 d0_d = (-d0_rO)*rOp / d,
 		d1_d = (-d1_rO)*rOp / d,
 		d2_d = (-d2_rO)*rOp / d;
+
+	// If the point is too far away from the triangle then cut it off
+	double c_f = v1.norm + v2.norm + r12.norm; // circumference of the facet
+	if (d > 5 * d0 || (r0O.norm > c_f && r1O.norm > c_f && r2O.norm > c_f)) {
+		H_int = 0;
+		return; // No increase in energy derivative
+	}
 
 	/**********************************
 	distance from point O to all 3 edges
@@ -211,7 +219,7 @@ void MS::facet::calc_H_int(math_public::Vec3 *p) {
 	if (sigma >= 0.05*(v1.norm + v2.norm + r12.norm))
 		LOG(WARNING) << "Sigma is not significantly smaller than the scale of the facet.";
 
-	double I = pow(d, 2 - po_pwr) * pre_calc;
+	double I = pow(d, 2 - po_pwr) * pre_calc; // The energy integral
 	Vec3 d0_I = (2 - po_pwr)*pow(d, 1 - po_pwr)*pre_calc*d0_d,
 		d1_I = (2 - po_pwr)*pow(d, 1 - po_pwr)*pre_calc*d1_d,
 		d2_I = (2 - po_pwr)*pow(d, 1 - po_pwr)*pre_calc*d2_d;

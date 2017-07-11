@@ -124,6 +124,7 @@
     <ClCompile Include="simulation_process.cpp" />
     <ClCompile Include="surface_mesh_energy.cpp" />
     <ClCompile Include="surface_mesh_geometry.cpp" />
+    <ClCompile Include="surface_mesh_test.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>

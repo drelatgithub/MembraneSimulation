@@ -75,7 +75,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 	switch (RUN_MODE) {
 	case 0:
-		for (double a = 0.9e-6; a < 1.2e-6; a += 0.02e-6) {
+		for (double a = 0.994e-6; a < 1.010e-6; a += 0.001e-6) {
 			std::cout << update_len(a) << std::endl;
 
 			minimization(vertices, facets);

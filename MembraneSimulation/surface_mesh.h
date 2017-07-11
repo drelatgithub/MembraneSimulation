@@ -78,7 +78,6 @@ namespace MS {
 		void make_initial(); // Making the current geometry the initial geometry
 		void make_last(); // Recording some of the geometry as the last time geometry
 
-		static test::TestCase test_case_geometry;
 
 		/******************************
 		Energy part
@@ -113,6 +112,12 @@ namespace MS {
 		}
 
 		void update_energy();
+
+		/******************************
+		Test
+		******************************/
+		static test::TestCase test_case;
+
 	};
 
 	// A facet stores pointers to 3 vertices which form a triangle in the counter-clockwise direction
