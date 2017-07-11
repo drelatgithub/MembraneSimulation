@@ -47,7 +47,7 @@ void MS::vertex::calc_H_curv_g() {
 void MS::vertex::update_energy() {
 	calc_H_area();
 	calc_H_curv_h();
-	//calc_H_curv_g();
+	calc_H_curv_g();
 	sum_energy();
 }
 
