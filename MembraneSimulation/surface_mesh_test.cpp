@@ -55,7 +55,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 		cur_H_curv_h = vertices[0]->H_curv_h,
 		cur_curv_g = vertices[0]->curv_g,
 		cur_H_curv_g = vertices[0]->H_curv_g;
-	LOG(TEST_DEBUG) << "==================== Before change ====================";
+	LOG(TEST_DEBUG) << "-------------------- Before change --------------------";
 	LOG(TEST_DEBUG) << "area: " << cur_area << " curv_h: " << cur_curv_h << " curv_g: " << cur_curv_g;
 	LOG(TEST_DEBUG) << "H_area: " << cur_H_area << " H_curv_h: " << cur_H_curv_h << " H_curv_g: " << cur_H_curv_g;
 	double ex_del_area = vertices[0]->d_area.dot(dx),
@@ -69,7 +69,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	vertices[0]->update_geo();
 	vertices[0]->update_energy();
 
-	LOG(TEST_DEBUG) << "==================== After change ====================";
+	LOG(TEST_DEBUG) << "-------------------- After change --------------------";
 	double del_area = vertices[0]->area - cur_area,
 		del_H_area = vertices[0]->H_area - cur_H_area,
 		del_curv_h = vertices[0]->curv_h - cur_curv_h,
@@ -141,7 +141,7 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 		dx1(1e-7, 2e-8, 5e-11),
 		dx2(-1e-9, -1e-6, -1e-10);
 	double cur_H_int = f.H_int;
-	LOG(TEST_DEBUG) << "==================== Before change ====================";
+	LOG(TEST_DEBUG) << "-------------------- Before change --------------------";
 	LOG(TEST_DEBUG) << "H: " << cur_H_int;
 	double ex_del_H_int_0 = vertices[0]->d_H_int.dot(dx0),
 		ex_del_H_int_1 = vertices[1]->d_H_int.dot(dx1),
@@ -158,9 +158,9 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	}
 	f.calc_H_int();
 	f.inc_H_int(&a_point);
-	f.inc_H_int(&a_point_2);
+	//f.inc_H_int(&a_point_2);
 
-	LOG(TEST_DEBUG) << "==================== After change ====================";
+	LOG(TEST_DEBUG) << "-------------------- After change --------------------";
 	double del_H_int = f.H_int - cur_H_int;
 	double log_diff_del_H_int = log10(fabs(ex_del_H_int - del_H_int));
 

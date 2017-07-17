@@ -111,10 +111,10 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	Vec3 r0p = *p - *(v[0]->point);
 	Mat3 d0_r0p = -Eye3;
 
-	// Calculate the area of the triangle.
-	double S = cross(v1, v2).get_norm();
-	if (S <= 0) {
-		LOG(WARNING) << "Facet area is not positive. S = " << S;
+	// Calculate the double area of the triangle.
+	double S2 = cross(v1, v2).get_norm();
+	if (S2 <= 0) {
+		LOG(WARNING) << "Facet area is not positive. S2 = " << S2;
 	}
 
 	// alpha and beta need to satisfy the perpendicular condition
@@ -130,16 +130,16 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	r12.calc_norm();
 	Vec3 d1_norm2_r12 = -r12 * 2, d2_norm2_r12 = r12 * 2, d1_norm_r12 = -r12 / r12.norm, d2_norm_r12 = r12 / r12.norm;
 
-	Vec3 d0_S = (-v1.norm2*v2 - v2.norm2*v1 + dot12*(v1 + v2)) / S,
-		d1_S = (v2.norm2*v1 - dot12*v2) / S,
-		d2_S = (v1.norm2*v2 - dot12*v1) / S;
+	Vec3 d0_S2 = (-v1.norm2*v2 - v2.norm2*v1 + dot12*(v1 + v2)) / S2,
+		d1_S2 = (v2.norm2*v1 - dot12*v2) / S2,
+		d2_S2 = (v1.norm2*v2 - dot12*v1) / S2;
 
-	// det(A) = |v1|^2 |v2|^2 - (v1 * v2)^2, but theoretically this is essentially S^2
-	double det_A = S*S;
+	// det(A) = |v1|^2 |v2|^2 - (v1 * v2)^2, but theoretically this is essentially S2^2
+	double det_A = S2*S2;
 	double det_A2 = det_A*det_A;
-	Vec3 d0_det_A = 2 * S*d0_S,
-		d1_det_A = 2 * S*d1_S,
-		d2_det_A = 2 * S*d2_S;
+	Vec3 d0_det_A = 2 * S2*d0_S2,
+		d1_det_A = 2 * S2*d1_S2,
+		d2_det_A = 2 * S2*d2_S2;
 	double AR11 = v2.norm2 / det_A,
 		AR12 = -dot12 / det_A, // AR21 = AR12
 		AR22 = v1.norm2 / det_A;
@@ -202,28 +202,28 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	/**********************************
 	distance from point O to all 3 edges
 	**********************************/
-	double a1 = beta*S;
-	Vec3 d0_a1 = d0_beta*S + beta*d0_S,
-		d1_a1 = d1_beta*S + beta*d1_S,
-		d2_a1 = d2_beta*S + beta*d2_S;
+	double a1 = beta*S2;
+	Vec3 d0_a1 = d0_beta*S2 + beta*d0_S2,
+		d1_a1 = d1_beta*S2 + beta*d1_S2,
+		d2_a1 = d2_beta*S2 + beta*d2_S2;
 	double d1 = a1 / v1.norm;
 	Vec3 d0_d1 = (v1.norm*d0_a1 - a1*d0_norm_v1) / v1.norm2,
 		d1_d1 = (v1.norm*d1_a1 - a1*d1_norm_v1) / v1.norm2,
 		d2_d1 = d2_a1 / v1.norm;
 
-	double a2 = alpha*S;
-	Vec3 d0_a2 = d0_alpha*S + alpha*d0_S,
-		d1_a2 = d1_alpha*S + alpha*d1_S,
-		d2_a2 = d2_alpha*S + alpha*d2_S;
+	double a2 = alpha*S2;
+	Vec3 d0_a2 = d0_alpha*S2 + alpha*d0_S2,
+		d1_a2 = d1_alpha*S2 + alpha*d1_S2,
+		d2_a2 = d2_alpha*S2 + alpha*d2_S2;
 	double d2 = a2 / v2.norm;
 	Vec3 d0_d2 = (v2.norm*d0_a2 - a2*d0_norm_v2) / v2.norm2,
 		d1_d2 = d1_a2 / v2.norm,
 		d2_d2 = (v2.norm*d2_a2 - a2*d2_norm_v2) / v2.norm2;
 
-	double a3 = (1 - alpha - beta)*S;
-	Vec3 d0_a3 = (-d0_alpha - d0_beta)*S + (1 - alpha - beta)*d0_S,
-		d1_a3 = (-d1_alpha - d1_beta)*S + (1 - alpha - beta)*d1_S,
-		d2_a3 = (-d2_alpha - d2_beta)*S + (1 - alpha - beta)*d2_S;
+	double a3 = (1 - alpha - beta)*S2;
+	Vec3 d0_a3 = (-d0_alpha - d0_beta)*S2 + (1 - alpha - beta)*d0_S2,
+		d1_a3 = (-d1_alpha - d1_beta)*S2 + (1 - alpha - beta)*d1_S2,
+		d2_a3 = (-d2_alpha - d2_beta)*S2 + (1 - alpha - beta)*d2_S2;
 	double d3 = a3 / r12.norm;
 	Vec3 d0_d3 = d0_a3 / r12.norm,
 		d1_d3 = (r12.norm*d1_a3 - a3*d1_norm_r12) / r12.norm2,
