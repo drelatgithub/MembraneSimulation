@@ -3,6 +3,24 @@
 
 using namespace math_public;
 
+test::TestCase math_public::test_case_arithmetics("Math arithmetics", []() {
+	auto& tc = test_case_arithmetics;
+	{
+		tc.new_step("Check smooth sign function");
+		double x[3] = { -40,0,40 },
+			dx = 1e-4;
+		tc.assert_bool(equal(smooth_sgn(x[0]), 0), "Function incorrect at x -> -infty.");
+		tc.assert_bool(equal(smooth_sgn(x[1]), 0.5), "Function incorrect at x = 0.");
+		tc.assert_bool(equal(smooth_sgn(x[2]), 1), "Function incorrect at x -> +infty.");
+		for (int i = 0; i < 3; i++) {
+			double x0 = smooth_sgn(x[i]);
+			double ex_del = d_smooth_sgn(x[i]);
+			double del = (smooth_sgn(x[i] + dx) - x0) / dx;
+			tc.assert_bool(equal(del, ex_del), std::string("Derivative is incorrect at x = ").append(std::to_string(x[i])));
+		}
+	}
+});
+
 Mat3 math_public::Vec3::tensor(const Vec3& operand)const {
 	Mat3 ans(operator*(operand.x), operator*(operand.y), operator*(operand.z));
 	return ans;

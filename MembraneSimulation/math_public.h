@@ -10,6 +10,7 @@ namespace math_public {
 	class Vec3;
 	class Mat3;
 
+	// Useful arithmetics
 	inline int loop_add(const int lhs, const int rhs, const int loop_size) {
 		// The answer is in {0, 1, ..., loop_size - 1}.
 		// Either operand (lhs or rhs) could be negative.
@@ -18,6 +19,14 @@ namespace math_public {
 		if (raw < 0)raw += loop_size;
 		return raw;
 	}
+	inline double smooth_sgn(double x) {
+		return 0.5 + 0.5*tanh(x);
+	}
+	inline double d_smooth_sgn(double x) {
+		double tanh_x = tanh(x);
+		return 0.5*(1 - tanh_x*tanh_x);
+	}
+	extern test::TestCase test_case_arithmetics;
 
 	inline bool equal(double op1, double op2, double eps = 1e-6) {
 		return fabs(op1 - op2) < eps;
