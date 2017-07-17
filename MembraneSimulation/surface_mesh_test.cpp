@@ -137,9 +137,9 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	f.inc_H_int(&a_point_2);
 
 	test_case.new_step("Check derivatives");
-	Vec3 dx0(-1e-6, 1e-8, 2e-11),
-		dx1(1e-7, 2e-8, 5e-11),
-		dx2(-1e-9, -1e-6, -1e-10);
+	Vec3 dx0(-1e-7, 1e-8, 2e-11),
+		dx1(1e-7, 2e-8, 1e-11),
+		dx2(-1e-9, -1e-6, -1e-11);
 	double cur_H_int = f.H_int;
 	LOG(TEST_DEBUG) << "-------------------- Before change --------------------";
 	LOG(TEST_DEBUG) << "H: " << cur_H_int;
@@ -158,7 +158,7 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	}
 	f.calc_H_int();
 	f.inc_H_int(&a_point);
-	//f.inc_H_int(&a_point_2);
+	f.inc_H_int(&a_point_2);
 
 	LOG(TEST_DEBUG) << "-------------------- After change --------------------";
 	double del_H_int = f.H_int - cur_H_int;
