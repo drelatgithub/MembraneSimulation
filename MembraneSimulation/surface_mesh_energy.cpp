@@ -112,7 +112,7 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	Mat3 d0_r0p = -Eye3;
 
 	// Calculate the area of the triangle.
-	double S = cross(v1, v2).get_norm;
+	double S = cross(v1, v2).get_norm();
 	if (S <= 0) {
 		LOG(WARNING) << "Facet area is not positive. S = " << S;
 	}
