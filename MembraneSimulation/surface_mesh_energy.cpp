@@ -74,11 +74,25 @@ double MS::update_len(double param) {
 	return polymer_len;
 }
 void MS::facet::inc_H_int(math_public::Vec3 *p) {
-	// The derivative of this energy should go to the point and the vertices.
+	/*
+	Purpose:
+		This function calculates the interaction energy between this facet and a certain point (filament tip).
+		The energy would be added to both the interaction energy (H_int) and the total energy (H) of this facet.
+		The derivative of this energy should go to the point and each vertex of this facet.
+
+	Method:
+		We first calculate the integral of interaction energy over the whole plane,
+		and then use the cut-off method to get approximately how much portion of that integral
+		lies in the facet.
+
+	Limits:
+		In order that this function works, one has to make sure that the triangle has positive area,
+		i.e. the 3 vertices are not in a line (which also implies that no 2 vertices could be at the same position).
+	*/
 
 	// The total integral over the whole plane is
 	// H = d0^n * d^(2-n) * f(n) * k
-	// where k is the coefficient, d0 is the distance of force, f(n) is a polynomial of force.
+	// where k is the coefficient, d0 is the distance of force, f(n) is a constexpr polynomial of n.
 	static int po_pwr = 6; // negative power of distance in expression of potential energy
 	static double r_0_factor = 1.0 / sqrt(po_pwr-1);
 	static double d0 = 1e-9;
@@ -97,6 +111,12 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	Vec3 r0p = *p - *(v[0]->point);
 	Mat3 d0_r0p = -Eye3;
 
+	// Calculate the area of the triangle.
+	double S = cross(v1, v2).get_norm;
+	if (S <= 0) {
+		LOG(WARNING) << "Facet area is not positive. S = " << S;
+	}
+
 	// alpha and beta need to satisfy the perpendicular condition
 	// A * (alpha, beta)' = B
 	// So (alpha, beta)' = A^(-1) * B
@@ -110,11 +130,16 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	r12.calc_norm();
 	Vec3 d1_norm2_r12 = -r12 * 2, d2_norm2_r12 = r12 * 2, d1_norm_r12 = -r12 / r12.norm, d2_norm_r12 = r12 / r12.norm;
 
-	double det_A = v1.norm2 * v2.norm2 - dot12 * dot12;
+	Vec3 d0_S = (-v1.norm2*v2 - v2.norm2*v1 + dot12*(v1 + v2)) / S,
+		d1_S = (v2.norm2*v1 - dot12*v2) / S,
+		d2_S = (v1.norm2*v2 - dot12*v1) / S;
+
+	// det(A) = |v1|^2 |v2|^2 - (v1 * v2)^2, but theoretically this is essentially S^2
+	double det_A = S*S;
 	double det_A2 = det_A*det_A;
-	Vec3 d0_det_A = v1.norm2*d0_norm2_v2 + d0_norm2_v1*v2.norm2 - 2 * dot12*d0_dot12,
-		d1_det_A = d1_norm2_v1*v2.norm2 - 2 * dot12*d1_dot12,
-		d2_det_A = v1.norm2*d2_norm2_v2 - 2 * dot12*d2_dot12;
+	Vec3 d0_det_A = 2 * S*d0_S,
+		d1_det_A = 2 * S*d1_S,
+		d2_det_A = 2 * S*d2_S;
 	double AR11 = v2.norm2 / det_A,
 		AR12 = -dot12 / det_A, // AR21 = AR12
 		AR22 = v1.norm2 / det_A;
@@ -177,53 +202,32 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	/**********************************
 	distance from point O to all 3 edges
 	**********************************/
-	double a1 = cross(r0O, v1).get_norm(), dot_r0O_v1 = dot(r0O, v1);
-	Vec3 d0_a1, d1_a1, d2_a1;
-	if (a1 != 0) {
-		d0_a1 = (r0O.norm2*d0_v1*v1 + v1.norm2*d0_r0O*r0O - dot_r0O_v1*(d0_v1*r0O + d0_r0O*v1)) / a1;
-		d1_a1 = (r0O.norm2*d1_v1*v1 + v1.norm2*d1_r0O*r0O - dot_r0O_v1*(d1_v1*r0O + d1_r0O*v1)) / a1;
-		d2_a1 = (v1.norm2*d2_r0O*r0O - dot_r0O_v1*(d2_r0O*v1)) / a1;
-	}
+	double a1 = beta*S;
+	Vec3 d0_a1 = d0_beta*S + beta*d0_S,
+		d1_a1 = d1_beta*S + beta*d1_S,
+		d2_a1 = d2_beta*S + beta*d2_S;
 	double d1 = a1 / v1.norm;
 	Vec3 d0_d1 = (v1.norm*d0_a1 - a1*d0_norm_v1) / v1.norm2,
 		d1_d1 = (v1.norm*d1_a1 - a1*d1_norm_v1) / v1.norm2,
 		d2_d1 = d2_a1 / v1.norm;
-	if (beta < 0) {
-		d1 = -d1;
-		d0_d1 = -d0_d1; d1_d1 = -d1_d1; d2_d1 = -d2_d1;
-	}
 
-	double a2 = cross(r0O, v2).get_norm(), dot_r0O_v2 = dot(r0O, v2);
-	Vec3 d0_a2, d1_a2, d2_a2;
-	if (a2 != 0) {
-		d0_a2 = (r0O.norm2*d0_v2*v2 + v2.norm2*d0_r0O*r0O - dot_r0O_v2*(d0_v2*r0O + d0_r0O*v2)) / a2;
-		d1_a2 = (v2.norm2*d1_r0O*r0O - dot_r0O_v2*(d1_r0O*v2)) / a2;
-		d2_a2 = (r0O.norm2*d2_v2*v2 + v2.norm2*d2_r0O*r0O - dot_r0O_v2*(d2_v2*r0O + d2_r0O*v2)) / a2;
-	}
+	double a2 = alpha*S;
+	Vec3 d0_a2 = d0_alpha*S + alpha*d0_S,
+		d1_a2 = d1_alpha*S + alpha*d1_S,
+		d2_a2 = d2_alpha*S + alpha*d2_S;
 	double d2 = a2 / v2.norm;
 	Vec3 d0_d2 = (v2.norm*d0_a2 - a2*d0_norm_v2) / v2.norm2,
 		d1_d2 = d1_a2 / v2.norm,
 		d2_d2 = (v2.norm*d2_a2 - a2*d2_norm_v2) / v2.norm2;
-	if (alpha < 0) {
-		d2 = -d2;
-		d0_d2 = -d0_d2; d1_d2 = -d1_d2; d2_d2 = -d2_d2;
-	}
 
-	double a3 = cross(r1O, r12).get_norm(), dot_r1O_r12 = dot(r1O, r12);
-	Vec3 d0_a3, d1_a3, d2_a3;
-	if (a3 != 0) {
-		d0_a3 = (r12.norm2*d0_r1O*r1O - dot_r1O_r12*d0_r1O*r12) / a3;
-		d1_a3 = (r1O.norm2*d1_r12*r12 + r12.norm2*d1_r1O*r1O - dot_r1O_r12*(d1_r12*r1O + d1_r1O*r12)) / a3;
-		d2_a3 = (r1O.norm2*d2_r12*r12 + r12.norm2*d2_r1O*r1O - dot_r1O_r12*(d2_r12*r1O + d2_r1O*r12)) / a3;
-	}
+	double a3 = (1 - alpha - beta)*S;
+	Vec3 d0_a3 = (-d0_alpha - d0_beta)*S + (1 - alpha - beta)*d0_S,
+		d1_a3 = (-d1_alpha - d1_beta)*S + (1 - alpha - beta)*d1_S,
+		d2_a3 = (-d2_alpha - d2_beta)*S + (1 - alpha - beta)*d2_S;
 	double d3 = a3 / r12.norm;
 	Vec3 d0_d3 = d0_a3 / r12.norm,
 		d1_d3 = (r12.norm*d1_a3 - a3*d1_norm_r12) / r12.norm2,
 		d2_d3 = (r12.norm*d2_a3 - a3*d2_norm_r12) / r12.norm2;
-	if (alpha - beta > 1) {
-		d3 = -d3;
-		d0_d3 = -d0_d3; d1_d3 = -d1_d3; d2_d3 = -d2_d3;
-	}
 
 	/**********************************
 	find the affecting region and calculate energy
