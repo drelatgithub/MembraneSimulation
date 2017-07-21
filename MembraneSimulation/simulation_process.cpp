@@ -42,7 +42,7 @@ void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet
 			vertices[i]->update_geo();
 		}
 		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_geo();
+			facets[i]->update_geo(); // Just assigning indices. Currently no other calculations.
 		}
 	}
 	if (update_energy) {
@@ -50,7 +50,8 @@ void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet
 			vertices[i]->update_energy();
 		}
 		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_energy(MS::po); // This could also change energy derivatives in vertices
+			facets[i]->update_energy(MS::po);
+			facets[i]->inc_H_int(MS::po); // This could also change energy derivatives in vertices
 		}
 	}
 }
@@ -76,7 +77,8 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 	switch (RUN_MODE) {
 	case 0:
 		for (double a = 0.994e-6; a < 1.010e-6; a += 0.001e-6) {
-			std::cout << update_len(a) << std::endl;
+			// Update filament tip position
+			LOG(INFO) << "Polymer tip x position: " << update_len(a);
 
 			minimization(vertices, facets);
 
@@ -93,8 +95,6 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 			a_out << std::endl;
 
 		}
-
-		std::cout << update_len(-3) << std::endl;
 
 		minimization(vertices, facets);
 		update_all_energy(vertices, facets);

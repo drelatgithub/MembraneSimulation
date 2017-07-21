@@ -289,7 +289,7 @@ void vertex::update_geo() {
 	calc_angle();
 	calc_area();
 	calc_curv_h();
-	calc_curv_g();
+	//calc_curv_g();
 }
 
 void vertex::make_initial() {
