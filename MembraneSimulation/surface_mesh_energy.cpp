@@ -191,7 +191,7 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	Vec3 d0_d = (-d0_rO)*rOp / d,
 		d1_d = (-d1_rO)*rOp / d,
 		d2_d = (-d2_rO)*rOp / d;
-	if (true) {
+	if (false) {
 		LOG(DEBUG) << "Distance to the plane: " << d;
 	}
 
@@ -232,7 +232,7 @@ void MS::facet::inc_H_int(math_public::Vec3 *p) {
 		d1_d3 = (r12.norm*d1_a3 - a3*d1_norm_r12) / r12.norm2,
 		d2_d3 = (r12.norm*d2_a3 - a3*d2_norm_r12) / r12.norm2;
 
-	if (true) {
+	if (false) {
 		LOG(DEBUG) << "Distance to the edges: " << d1 << ", " << d2 << ", " << d3;
 	}
 

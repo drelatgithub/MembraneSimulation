@@ -173,6 +173,9 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 	int k = 0; // Iteration counter. Only for debug use.
 
 	while (true) {
+		k++;
+		LOG(INFO) << "Iteration " << k << " starting...";
+
 		// Find alpha and update coordinates
 		double d_H_max = 0.0;
 		for (int i=0; i<3*N; i++){
@@ -180,7 +183,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		}
 		if(d_H_max < h_eps) break; // Force is almost zero
 		alpha0 = max_move / d_H_max; // This ensures that no vertex would have greater step than max_move
-		LOG(INFO) << "Max gradient: " << d_H_max <<" alpha0: "<<alpha0;
+		LOG(INFO) << "Max gradient: " << d_H_max << " alpha0: " << alpha0;
 
 		// m is the inner product of the gradient and the search direcion, and must be non-negative.
 		double m = 0, m_new = 0;
@@ -227,7 +230,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		for (int i = 0; i < 3 * N; i++) {
 			t1 << p[i] << '\t' << d_H[i] << '\t' << d_H_new[i] << std::endl;
 		}
-		LOG(INFO) << "[MIN] t1 complete.";
+		LOG(DEBUG) << "t1 data dump complete.";
 		t1.close();
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
 		
@@ -266,8 +269,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		}
 
 		// Finish off and get ready for the next iteration.
-		k++;
-		LOG(INFO) << k << " m: " << m << " alpha: " << alpha << " H: " << H;
+		LOG(INFO) << "m: " << m << " alpha: " << alpha << " H: " << H;
 		for (int i = 0; i < N; i++) {
 			p_min_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
@@ -315,6 +317,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		alpha += d_alpha;
 		if(alpha > alpha0){
 			alpha -= d_alpha;
+			LOG(INFO) << "Returning alpha as " << alpha << " as it reaches maximum";
 			return alpha; // Ensure this won't happen for the 1st iteration, because we cannot let alpha to be zero.
 		}
 
@@ -366,7 +369,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 			backtrack = true;
 		}
 		
-		LOG(INFO) << "H_new: " << H_new << " m_new: " << m_new;
+		LOG(DEBUG) << "H_new: " << H_new << " m_new: " << m_new;
 
 		if(backtrack){
 			alpha -= d_alpha; // Get back to last alpha
@@ -379,7 +382,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 
 			// Consider cases where moves are simply too small
 			if (d_H_max * d_alpha <= MIN_D_ALPHA_FAC) {
-				LOG(INFO) << "d_alpha too small";
+				LOG(INFO) << "Returning alpha as " << alpha << " as d_alpha is too small";
 				if (alpha == 0.0) LOG(WARNING) << "d_alpha is too small, and returned alpha is zero.";
 				return alpha;
 			}
@@ -436,6 +439,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		} // End of derivative test
 		
 		if (!USE_LINE_SEARCH || abs(m_new) <= -c2 * m) { // Curvature condition satisfied. Good.
+			LOG(INFO) << "Returning alpha as " << alpha << " as it fits search criteria.";
 			return alpha;
 		} // Curvature condition not satisfied
 
@@ -445,7 +449,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		if (boostFactor > 4) boostFactor = 4;
 		d_alpha *= boostFactor;
 
-		LOG(INFO) << "alpha: " << alpha << " d_alpha: " << d_alpha<<" before next iteration.";
+		LOG(DEBUG) << "alpha: " << alpha << " d_alpha: " << d_alpha<<" before next iteration.";
 
 		// start over
 		m_p = m_new;
