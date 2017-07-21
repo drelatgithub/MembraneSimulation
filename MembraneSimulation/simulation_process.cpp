@@ -209,7 +209,6 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 
 		LOG(INFO) << "Current H: " << H << " m: " << m;
 
-
 		if (false) { // Data verification
 			int vinds[] = { 0,100,200,1078 };
 			for (int i = 0; i < 4; i++) {
@@ -220,6 +219,9 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		}
 
 		alpha = line_search(vertices, facets, N, H, N_f, H_new, p, d_H_max, d_H_new, m, m_new, alpha0);
+		// So far, H_new and d_H_new have already been updated in line_search.
+
+		// Temporary debugging output
 		std::ofstream t1;
 		t1.open("F:\\t1.txt");
 		for (int i = 0; i < 3 * N; i++) {
@@ -228,9 +230,9 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		LOG(INFO) << "[MIN] t1 complete.";
 		t1.close();
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
-		// So far, H_new and d_H_new have already been updated in line_search.
+		
 
-		if (!USE_STEEPEST_DESCENT) {
+		if (!USE_STEEPEST_DESCENT) { // Conjugate gradient method renewal of search direction.
 			// Find beta (Fletcher-Reeves)
 			double a = 0, b = 0;
 			for (int i = 0; i < 3 * N; i++) {
@@ -253,7 +255,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		}
 
 		for (int i = 0; i < N; i++) {
-			// Record coordinates as last-time coordinates
+			// Store coordinates as last-time coordinates
 			vertices[i]->make_last();
 		}
 
@@ -263,8 +265,9 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 			d_H[i] = d_H_new[i];
 		}
 
+		// Finish off and get ready for the next iteration.
 		k++;
-		LOG(INFO) << k << "\tm: " << m << "\talpha: " << alpha << "\tFree energy: " << H;
+		LOG(INFO) << k << " m: " << m << " alpha: " << alpha << " H: " << H;
 		for (int i = 0; i < N; i++) {
 			p_min_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
@@ -288,15 +291,22 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 	return 0;
 }
 double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, int N, int N_f, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0) {
+	/**************************************************************************
+	Purpose:
+		This function does the line search for a given search direction.
+
+	Parameters:
+		alpha0: max value that alpha could take.
+	**************************************************************************/
 
 	double MIN_D_ALPHA_FAC = 1e-15; // Minimum delta
 
-	double alpha_init = -0.1 * abs(H) / m;
+	double alpha_init = -0.1 * abs(H) / m; // In m^2/J
 	double alpha = 0;
 	double d_alpha = std::fmin(alpha_init, alpha0 * 0.5); // To ensure that 1st alpha is not larger than alpha0
-	double H_p = H, m_p = m;
+	double H_p = H, m_p = m; // Previous H and m
 	bool accepted = false;
-	bool backtrack = true;
+	bool backtrack = true; // Whether alpha is too big for some reason so that we need to decrease alpha and do further iterations
 
 	while (true) {
 		accepted = true;
@@ -305,7 +315,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		alpha += d_alpha;
 		if(alpha > alpha0){
 			alpha -= d_alpha;
-			return alpha; // Ensure this won't happen for the 1st iteration.
+			return alpha; // Ensure this won't happen for the 1st iteration, because we cannot let alpha to be zero.
 		}
 
 		// Change the position and renew energy
@@ -319,12 +329,11 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		// Make sure that area is not negative
 		for (int i = 0; i < N; i++) {
 			if (vertices[i]->area <= 0) {
-				accepted = false; // define H = infty, also need to backtrack
+				accepted = false;
+				backtrack = true; // Because H = infty, we also need to do backtracking
+				LOG(INFO) << "[BACKTRACK] Area is negative.";
+				break;
 			}
-		}
-		if (!accepted) {
-			backtrack = true;
-			LOG(INFO) << "BACK: area";
 		}
 
 		// Renew the sum of energy
@@ -337,7 +346,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		}
 
 		if (USE_LINE_SEARCH && (H_new >= H_p)) { // Armijo condition not satisfied. simply taking c1=0
-			LOG(INFO) << "BACK: energy";
+			LOG(INFO) << "[BACKTRACK] Energy is increasing.";
 			backtrack = true;
 		} // Otherwise, Armijo condition is satisfied.
 
@@ -353,14 +362,14 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 			}
 		}
 		if (m_new > 0) {
-			LOG(INFO) << "BACK: force";
+			LOG(INFO) << "[BACKTRACK] New force along search direction.";
 			backtrack = true;
 		}
 		
-		LOG(INFO) << "H_new: " << H_new << "\tm_new: " << m_new;
+		LOG(INFO) << "H_new: " << H_new << " m_new: " << m_new;
 
 		if(backtrack){
-			alpha -= d_alpha;
+			alpha -= d_alpha; // Get back to last alpha
 
 			if(false && m_new > 0){ // The force has changed sign
 				d_alpha *= m_p / (m_p - m_new); // Linearized force profile. Currently we don't use that.
@@ -371,6 +380,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 			// Consider cases where moves are simply too small
 			if (d_H_max * d_alpha <= MIN_D_ALPHA_FAC) {
 				LOG(INFO) << "d_alpha too small";
+				if (alpha == 0.0) LOG(WARNING) << "d_alpha is too small, and returned alpha is zero.";
 				return alpha;
 			}
 
@@ -435,7 +445,7 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		if (boostFactor > 4) boostFactor = 4;
 		d_alpha *= boostFactor;
 
-		LOG(INFO) << "alpha: " << alpha << "\td_alpha: " << d_alpha;
+		LOG(INFO) << "alpha: " << alpha << " d_alpha: " << d_alpha<<" before next iteration.";
 
 		// start over
 		m_p = m_new;
