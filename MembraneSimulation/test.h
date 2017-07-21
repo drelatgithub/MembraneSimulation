@@ -10,7 +10,7 @@ namespace test {
 	public:
 		TestCase(const std::string& n_name, void(*n_func)());
 		std::string name;
-		void run_test();
+		bool run_test();
 
 		// Test flow control
 		void new_step(const std::string& step_name);

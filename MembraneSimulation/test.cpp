@@ -7,10 +7,11 @@ test::TestCase::TestCase(const std::string& n_name, void(*n_func)()) :name(n_nam
 	get_test_cases().push_back(this);
 	name_block.append("[").append(name).append("] ");
 }
-void test::TestCase::run_test() {
+bool test::TestCase::run_test() {
 	test_start();
 	test_content();
 	test_end();
+	return test_success;
 }
 void test::TestCase::test_start() {
 	test_success = true;
@@ -60,8 +61,16 @@ std::vector<TestCase*>& test::get_test_cases() {
 }
 
 void test::run_all_tests() {
+	int num_test_cases = 0, num_passed_test_cases = 0;
 	int N = get_test_cases().size();
 	for (int i = 0; i < N; i++) {
-		get_test_cases()[i]->run_test();
+		if (get_test_cases()[i]->run_test())num_passed_test_cases++;
+		num_test_cases++;
+	}
+	if (num_test_cases == num_passed_test_cases) {
+		LOG(TEST_INFO) << "All tests passed.";
+	}
+	else {
+		LOG(TEST_ERROR) << num_test_cases - num_passed_test_cases << " test(s) out of " << num_test_cases << " failed.";
 	}
 }
