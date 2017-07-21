@@ -5,7 +5,7 @@
 #include"surface_mesh.h"
 #include"surface_free_energy.h"
 
-#define USE_STEEPEST_DESCENT true
+#define USE_STEEPEST_DESCENT false
 #define USE_LINE_SEARCH true
 
 
@@ -269,7 +269,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		}
 
 		// Finish off and get ready for the next iteration.
-		LOG(INFO) << "m: " << m << " alpha: " << alpha << " H: " << H;
+		LOG(INFO) << "H_new: " << H_new << " m_new: " << m_new;
 		for (int i = 0; i < N; i++) {
 			p_min_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			for (int j = 0; j < 3; j++) {
