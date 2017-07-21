@@ -137,8 +137,8 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	f.inc_H_int(&a_point_2);
 
 	test_case.new_step("Check derivatives");
-	Vec3 dx0(-1e-7, 1e-8, 2e-11),
-		dx1(1e-7, 2e-8, 1e-11),
+	Vec3 dx0(-1e-12, 5e-12, 1e-11),
+		dx1(1e-8, 2e-8, 1e-11),
 		dx2(-1e-9, -1e-6, -1e-11);
 	double cur_H_int = f.H_int;
 	LOG(TEST_DEBUG) << "-------------------- Before change --------------------";
@@ -165,7 +165,7 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	double log_diff_del_H_int = log10(fabs(ex_del_H_int - del_H_int));
 
 	LOG(TEST_DEBUG) << "Interaction energy changed: " << del_H_int << " Expected: " << ex_del_H_int << " lg diff: " << log_diff_del_H_int;
-	test_case.assert_bools_lv(log_diff_del_H_int <= -15, log_diff_del_H_int <= -12, "Interaction energy change inaccurate", "Interaction energy change incorrect");
+	test_case.assert_bools_lv(log_diff_del_H_int <= -22, log_diff_del_H_int <= -20, "Interaction energy change inaccurate", "Interaction energy change incorrect");
 
 	test_case.new_step("Cleaning");
 	for (int i = 0; i < 3; i++) {
