@@ -23,7 +23,7 @@ const double tau = 0.1; // Shrink size of alpha after each iteration
 // Curvature condition
 const double c2 = 0.1;
 
-const double h_eps = 1e-8; // Maximum tolerance for forces
+const double h_eps = 1e-12; // Maximum tolerance for forces
 const double d_eps = 1e-8; // Maximum tolerance for coordinates
 const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
@@ -126,6 +126,10 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 }
 
 int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
+	/**************************************************************************
+		This function uses the conjugate gradient method to do the energy
+		minimization for vertices/facets system.
+	**************************************************************************/
 	bool finished = false;
 	int N = vertices.size(); // Number of vertices
 	int N_f = facets.size(); // Number of facets
@@ -134,7 +138,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 	double *d_H_new = new double[3 * N];
 	double *p = new double[3 * N]; // Search direction
 	double alpha0;
-	double alpha;
+	double alpha; // alpha is the "portion" of distance that each vertex should go along the search vector.
 	double beta;
 
 	std::ofstream p_min_out, f_min_out, sd_min_out;
@@ -162,7 +166,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		//temp_out << MS::d_h_curv_g(&vertices[i], 0) << '\t' << MS::d_h_curv_g(&vertices[i], 1) << '\t' << MS::d_h_curv_g(&vertices[i], 2) << '\t';
 	}
 	for (int i = 0; i < N_f; i++) {
-		H += facets[i]->H;
+		H += facets[i]->H; // Now add the facets part of the energy
 	}
 	//temp_out.close();
 
@@ -176,7 +180,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		}
 		if(d_H_max < h_eps) break; // Force is almost zero
 		alpha0 = max_move / d_H_max; // This ensures that no vertex would have greater step than max_move
-		LOG(INFO) << "[MIN] Max gradient: " << d_H_max <<"\talpha0: "<<alpha0;
+		LOG(INFO) << "Max gradient: " << d_H_max <<" alpha0: "<<alpha0;
 
 		// m is the inner product of the gradient and the search direcion, and must be non-negative.
 		double m = 0, m_new = 0;
@@ -186,12 +190,12 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 				m += p[i] * d_H[i];
 			}
 		}
-		else {
+		else { // Use conjugate gradient
 			for (int i = 0; i < 3*N; i++) {
 				m += p[i] * d_H[i];
 			}
 			if (m > 0) {
-				LOG(WARNING) << "[MIN] Warning: along search direction is increasing energy. Reassigning search direction.";
+				LOG(WARNING) << "Warning: along search direction is increasing energy. Reassigning search direction.";
 				m = 0;
 				for (int i = 0; i < N; i++) {
 					for (int j = 0; j < 3; j++) {
@@ -203,7 +207,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 			}
 		}
 
-		LOG(INFO) << "[MIN] H: " << H << "\tm: " << m;
+		LOG(INFO) << "Current H: " << H << " m: " << m;
 
 
 		if (false) { // Data verification
@@ -224,7 +228,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 		LOG(INFO) << "[MIN] t1 complete.";
 		t1.close();
 		//std::cout << "New! Hn-H-c1*a*m=" << H_new - H - c1*alpha*m << "\t|mn|+c2*m=" << abs(m_new) + c2*m << std::endl;
-		// H_new and d_H_new are updated.
+		// So far, H_new and d_H_new have already been updated in line_search.
 
 		if (!USE_STEEPEST_DESCENT) {
 			// Find beta (Fletcher-Reeves)
