@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+
 #include"simulation_process.h"
 
 #include"common.h"
@@ -56,10 +58,10 @@ void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet
 	}
 }
 int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &facets) {
-	int len = vertices.size(),
-		len_f = facets.size();
+	int N = vertices.size(),
+		N_f = facets.size();
 
-	for (int i = 0; i < len; i++) {
+	for (int i = 0; i < N; i++) {
 		vertices[i]->count_neighbors();
 		if (i == 0) {
 			int a = 1;
@@ -67,6 +69,45 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 		vertices[i]->update_geo();
 		vertices[i]->make_initial();
 	}
+
+	{ // Do some statistics
+		double total_edge_length = 0, total_area = 0, total_edge_length_sq = 0, total_area_sq = 0;
+		int num_edge2 = 0;
+		for (int i = 0; i < N; i++) {
+			total_area += vertices[i]->area;
+			total_area_sq += vertices[i]->area*vertices[i]->area;
+			num_edge2 += vertices[i]->neighbors;
+			for (int j = 0; j < vertices[i]->neighbors; j++) {
+				total_edge_length += vertices[i]->r_p_n[j];
+				total_edge_length_sq += vertices[i]->r_p_n[j] * vertices[i]->r_p_n[j];
+			}
+		}
+		double avg_edge_length = total_edge_length / num_edge2,
+			avg_edge_length_sq = total_edge_length_sq / num_edge2;
+		double stdev_edge_length = sqrt(avg_edge_length_sq - avg_edge_length*avg_edge_length);
+		double avg_area = total_area / N,
+			avg_area_sq = total_area_sq / N;
+		double stdev_area = sqrt(avg_area_sq - avg_area*avg_area);
+
+		std::stringstream ss;
+		std::string big_divider(40, '='),
+			small_divider(40, '-');
+		ss << big_divider << std::endl
+			<< "Number of vertices: " << N << std::endl
+			<< "Number of facets: " << N_f << std::endl
+			<< "Number of edges: " << num_edge2 / 2 << std::endl
+			<< small_divider << std::endl
+			<< "Total surface area: " << total_area << std::endl
+			<< "Diameter if spherical: " << sqrt(total_area / M_PI) << std::endl
+			<< "Average vertex area: " << avg_area << std::endl
+			<< "Stdev vertex area: " << stdev_area << std::endl
+			<< small_divider << std::endl
+			<< "Average edge length: " << avg_edge_length << std::endl
+			<< "Stdev edge length: " << stdev_edge_length << std::endl
+			<< big_divider;
+		LOG(INFO) << "Meshwork properties: " << std::endl << ss.str();
+	}
+
 
 	std::ofstream p_out, f_out, a_out;
 	p_out.open("F:\\p_out.txt");
@@ -84,7 +125,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 			update_all_energy(vertices, facets);
 
-			for (int i = 0; i < len; i++) {
+			for (int i = 0; i < N; i++) {
 				p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 				math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 				f_out << cur_d_h_all.x << '\t' << cur_d_h_all.y << '\t' << cur_d_h_all.z << '\t';
@@ -99,7 +140,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 		minimization(vertices, facets);
 		update_all_energy(vertices, facets);
 
-		for (int i = 0; i < len; i++) {
+		for (int i = 0; i < N; i++) {
 			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
 			math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 			f_out << cur_d_h_all.x << '\t' << cur_d_h_all.y << '\t' << cur_d_h_all.z << '\t';
