@@ -30,7 +30,7 @@ const double d_eps = 1e-8; // Maximum tolerance for coordinates
 const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
 
-int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
+int minimization(MS::surface_mesh &sm);
 
 double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, int N, int N_f, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0);
 
@@ -57,7 +57,10 @@ void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet
 		}
 	}
 }
-int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &facets) {
+int MS::simulation_start(MS::surface_mesh &sm) {
+	auto &vertices = sm.vertices;
+	auto &facets = sm.facets;
+
 	int N = vertices.size(),
 		N_f = facets.size();
 
@@ -121,7 +124,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 			// Update filament tip position
 			LOG(INFO) << "Polymer tip x position: " << update_len(a);
 
-			minimization(vertices, facets);
+			minimization(sm);
 
 			update_all_energy(vertices, facets);
 
@@ -137,7 +140,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 		}
 
-		minimization(vertices, facets);
+		minimization(sm);
 		update_all_energy(vertices, facets);
 
 		for (int i = 0; i < N; i++) {
@@ -166,11 +169,14 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 	return 0;
 }
 
-int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
+int minimization(MS::surface_mesh &sm) {
 	/**************************************************************************
 		This function uses the conjugate gradient method to do the energy
 		minimization for vertices/facets system.
 	**************************************************************************/
+	auto &vertices = sm.vertices;
+	auto &facets = sm.facets;
+
 	bool finished = false;
 	int N = vertices.size(); // Number of vertices
 	int N_f = facets.size(); // Number of facets

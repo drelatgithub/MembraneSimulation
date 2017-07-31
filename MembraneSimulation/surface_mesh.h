@@ -160,4 +160,10 @@ namespace MS {
 
 	};
 
+	class surface_mesh {
+	public:
+		std::vector<vertex*> vertices;
+		std::vector<facet*> facets;
+	};
+
 }

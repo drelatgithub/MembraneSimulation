@@ -12,7 +12,10 @@ Loading an already defined mesh file into the data structure.
 #include"surface_mesh.h"
 #include"simulation_process.h"
 
-bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
+bool mesh_init(MS::surface_mesh &sm) {
+	auto &vertices = sm.vertices;
+	auto &facets = sm.facets;
+
 	bool success = false;
 
 	char *position_file = "position.txt";
