@@ -3,7 +3,7 @@
 #include<math.h>
 
 #include"common.h"
-#include"surface_free_energy.h"
+#include"surface_mesh_tip.h"
 #include"surface_mesh.h"
 
 using namespace math_public;
@@ -13,6 +13,9 @@ const double k_c = 1e-19; // Bending modulus
 const double k_g = -2*k_c; // Saddle-splay modulus
 const double c_0 = 0.0; // Spontaneous curvature
 const double gamma = 0.4; // Surface tension
+
+const double surface_repulsion_en_0 = 6.9e-20; // k_B * 5000K
+const double surface_repulsion_d0 = 2e-9;
 
 
 void MS::vertex::clear_energy() {
@@ -73,6 +76,15 @@ double MS::update_len(double param) {
 	po->x = polymer_len;
 	return polymer_len;
 }
+
+void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
+	static double distance_cut_off = 20 * surface_repulsion_d0;
+	for (int i = 0; i < sm.facets.size(); i++) {
+
+	}
+}
+
+// The following function calculating point-facet interaction energy using facet integral is archived and currently not used.
 void MS::facet::inc_H_int(math_public::Vec3 *p) {
 	/*
 	Purpose:

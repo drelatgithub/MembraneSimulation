@@ -5,7 +5,7 @@
 #include"common.h"
 #include"math_public.h"
 #include"surface_mesh.h"
-#include"surface_free_energy.h"
+#include"surface_mesh_tip.h"
 
 #define USE_STEEPEST_DESCENT false
 #define USE_LINE_SEARCH true

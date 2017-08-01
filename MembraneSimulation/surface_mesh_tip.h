@@ -10,6 +10,20 @@
 
 namespace MS {
 
+	class tip_facet_interaction {
+	public:
+		double d;
+	};
+	class filament_tip {
+	public:
+		Vec3 *point;
+		std::vector<facet*> n_facets; // neighbor facet lists
+
+		filament_tip(Vec3 *np) :point(np) {}
+
+		void get_neighbor_facets(const surface_mesh& sm);
+		
+	};
 	extern math_public::Vec3 *po;
 	double update_len(double param); // should be removed when considering real polymers
 

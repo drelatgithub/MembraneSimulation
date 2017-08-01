@@ -50,9 +50,6 @@
     <ClInclude Include="simulation_process.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="surface_free_energy.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="mesh_initialization.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -66,6 +63,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="test.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="surface_mesh_tip.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
