@@ -10,12 +10,12 @@ using namespace math_public;
 
 
 const double k_c = 1e-19; // Bending modulus
-const double k_g = -2*k_c; // Saddle-splay modulus
+const double k_g = -2 * k_c; // Saddle-splay modulus
 const double c_0 = 0.0; // Spontaneous curvature
 const double gamma = 0.4; // Surface tension
 
 const double surface_repulsion_en_0 = 6.9e-20; // k_B * 5000K
-const double surface_repulsion_d0 = 2e-9;
+const double surface_repulsion_d0 = 5e-9;
 
 
 void MS::vertex::clear_energy() {
@@ -78,9 +78,20 @@ double MS::update_len(double param) {
 }
 
 void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
-	static double distance_cut_off = 20 * surface_repulsion_d0;
-	for (int i = 0; i < sm.facets.size(); i++) {
-
+	// This function can be improved by putting vertices in different compartments,
+	// so that we only need to search neighboring compartments.
+	static double distance_cut_off = std::fmax(100e-9, 20 * surface_repulsion_d0);
+	int N = sm.vertices.size();
+	n_facets.clear();
+	for (int i = 0; i < N; i++) {
+		double d = dist(*point, *(sm.vertices[i]->point));
+		if (d < distance_cut_off) {
+			for (int j = 0; j < sm.vertices[i]->neighbors; j++) {
+				if (std::find(n_facets.begin(), n_facets.end(), sm.vertices[i]->f[j]) == n_facets.end()) {
+					n_facets.push_back(sm.vertices[i]->f[j]);
+				}
+			}
+		}
 	}
 }
 
