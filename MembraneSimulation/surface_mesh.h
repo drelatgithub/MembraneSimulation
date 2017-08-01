@@ -140,6 +140,19 @@ namespace MS {
 
 		void update_geo();
 
+		// Area and projection matrix are calculated only when necessary and is not updated in update_geo
+		double S;
+		math_public::Vec3 d_S[3];
+		/*
+		How to use projmat:
+			B1 = dot(r0p, v1), B2 = dot(r0p, v2),
+			Then alpha = AR11*B1 + AR12*B2, beta = AR21 * B1 + AR22 * B2,
+			and r0O = alpha * v1 + beta * v2
+		*/
+		double AR11, AR12, AR22; // AR12 = AR21
+		math_public::Vec3 d_AR11[3], d_AR12[3], d_AR22[3];
+		void calc_area_and_projmat();
+
 		/******************************
 		Energy part
 		******************************/

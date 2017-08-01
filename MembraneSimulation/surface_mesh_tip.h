@@ -17,7 +17,7 @@ namespace MS {
 	class filament_tip {
 	public:
 		math_public::Vec3 *point;
-		std::vector<facet*> n_facets; // neighbor facet lists
+		std::vector<facet*> n_facets; // neighbor facet list
 
 		filament_tip(math_public::Vec3 *np) :point(np) {}
 
