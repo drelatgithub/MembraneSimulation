@@ -13,11 +13,14 @@ Definition of point and vertex structure, and some common functions associated.
 #include"math_public.h"
 
 namespace MS {
+	class vertex;
+	class facet;
 
 	class vertex {
 	public:
 		math_public::Vec3 *point;
 		std::vector<vertex*> n, np, nn; // neighbor, previous neighbor, next neighbor
+		std::vector<facet*> f; // the facet with vertices (point, n, nn)
 
 		vertex(math_public::Vec3 *npoint);
 		~vertex();

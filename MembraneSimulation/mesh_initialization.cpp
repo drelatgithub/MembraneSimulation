@@ -74,7 +74,8 @@ bool mesh_init(MS::surface_mesh &sm) {
 
 				// Check whether this facet has already existed
 				bool exist = false;
-				for (int k = 0; k < facets.size(); k++) {
+				int k;
+				for (k = 0; k < facets.size(); k++) {
 					if (*facets[k] == *f) {
 						exist = true;
 						break;
@@ -83,9 +84,11 @@ bool mesh_init(MS::surface_mesh &sm) {
 				if (!exist) {
 					facets.push_back(f); // Leave the facet in heap
 					f->update_geo();
+					vertices[i]->f.push_back(f);
 					num_facets++;
 				}
 				else {
+					vertices[i]->f.push_back(facets[k]);
 					delete f;
 				}
 			}
