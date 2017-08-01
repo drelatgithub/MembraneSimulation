@@ -141,6 +141,7 @@ namespace MS {
 		void update_geo();
 
 		// Area and projection matrix are calculated only when necessary and is not updated in update_geo
+		math_public::Vec3 v1, v2, r12;
 		double S;
 		math_public::Vec3 d_S[3];
 		/*

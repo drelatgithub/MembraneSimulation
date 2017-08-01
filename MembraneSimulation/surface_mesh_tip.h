@@ -13,6 +13,8 @@ namespace MS {
 	class tip_facet_interaction {
 	public:
 		double d;
+		Vec3 d_d[3];
+		Vec3 dp_d;
 	};
 	class filament_tip {
 	public:
@@ -22,6 +24,7 @@ namespace MS {
 		filament_tip(math_public::Vec3 *np) :point(np) {}
 
 		void get_neighbor_facets(const surface_mesh& sm);
+		tip_facet_interaction get_facet_interaction(const facet& f);
 		
 	};
 	extern math_public::Vec3 *po;

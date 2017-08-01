@@ -326,8 +326,9 @@ bool facet::operator==(const facet& operand) {
 }
 
 void facet::calc_area_and_projmat() {
-	Vec3 v1 = *(v[1]->point) - *(v[0]->point), v2 = *(v[2]->point) - *(v[0]->point);
-	Vec3 r12 = v2 - v1;
+	v1 = *(v[1]->point) - *(v[0]->point);
+	v2 = *(v[2]->point) - *(v[0]->point);
+	r12 = v2 - v1;
 	v1.calc_norm();
 	v2.calc_norm();
 	r12.calc_norm();

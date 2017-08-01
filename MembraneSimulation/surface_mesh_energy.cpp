@@ -94,6 +94,33 @@ void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
 		}
 	}
 }
+MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::facet& f) {
+	tip_facet_interaction res;
+
+	Vec3 r0p = *point - *(f.v[0]->point);
+	
+
+	// Calculate alpha and beta
+	double B1 = r0p.dot(f.v1), B2 = r0p.dot(f.v2);
+	Vec3 d0_B1 = -f.v1 - r0p, d1_B1 = r0p, dp_B1 = f.v1,
+		d0_B2 = -f.v2 - r0p, d2_B2 = r0p, dp_B2 = f.v2;
+
+	double alpha = f.AR11*B1 + f.AR12*B2,
+		beta = f.AR12*B1 + f.AR22*B2; // Actually it's AR21 * B1 + AR22 * B2
+	Vec3 d0_alpha = f.d_AR11[0] * B1 + f.AR11*d0_B1 + f.d_AR12[0] * B2 + f.AR12*d0_B2,
+		d1_alpha = f.d_AR11[1] * B1 + f.AR11*d1_B1 + f.d_AR12[1] * B2,
+		d2_alpha = f.d_AR11[2] * B1 + f.d_AR12[2] * B2 + f.AR12*d2_B2,
+		dp_alpha = f.AR11*dp_B1 + f.AR12*dp_B2,
+		d0_beta = f.d_AR12[0] * B1 + f.AR12*d0_B1 + f.d_AR22[0] * B2 + f.AR22*d0_B2,
+		d1_beta = f.d_AR12[1] * B1 + f.AR12*d1_B1 + f.d_AR22[1] * B2,
+		d2_beta = f.d_AR12[2] * B1 + f.d_AR22[2] * B2 + f.AR22*d2_B2,
+		dp_beta = f.AR12*dp_B1 + f.AR22*dp_B2;
+
+
+
+	return res;
+}
+
 
 // The following function calculating point-facet interaction energy using facet integral is archived and currently not used.
 void MS::facet::inc_H_int(math_public::Vec3 *p) {
