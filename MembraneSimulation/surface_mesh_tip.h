@@ -13,8 +13,8 @@ namespace MS {
 	class tip_facet_interaction {
 	public:
 		double d;
-		Vec3 d_d[3];
-		Vec3 dp_d;
+		math_public::Vec3 d_d[3];
+		math_public::Vec3 dp_d;
 	};
 	class filament_tip {
 	public:
