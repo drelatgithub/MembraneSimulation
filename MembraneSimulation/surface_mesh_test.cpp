@@ -31,7 +31,10 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	test_case.new_step("Check neighbor counts");
 	test_case.assert_bool(N - 1 == vertices[0]->neighbors);
 
-	vertices[0]->update_geo();
+	vertices[0]->calc_angle();
+	vertices[0]->calc_area();
+	vertices[0]->calc_curv_h();
+	vertices[0]->calc_curv_g();
 	test_case.new_step("Check angles, area and curvature");
 	for (int i = 0; i < 6; i++) {
 		test_case.assert_bool(equal(vertices[0]->theta[i], M_PI / 3), "Theta is incorrect.");
@@ -44,7 +47,10 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 
 	test_case.new_step("Check self derivatives");
 	vertices[0]->point->set(0, 0, 0.5);
-	vertices[0]->update_geo();
+	vertices[0]->calc_angle();
+	vertices[0]->calc_area();
+	vertices[0]->calc_curv_h();
+	vertices[0]->calc_curv_g();
 	vertices[0]->make_last();
 	vertices[0]->make_initial();
 	vertices[0]->update_energy();
@@ -66,7 +72,10 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 		ex_del_H_curv_g = vertices[0]->d_H_curv_g.dot(dx);
 
 	*(vertices[0]->point) += dx; // Move the central vertex by a little bit.
-	vertices[0]->update_geo();
+	vertices[0]->calc_angle();
+	vertices[0]->calc_area();
+	vertices[0]->calc_curv_h();
+	vertices[0]->calc_curv_g();
 	vertices[0]->update_energy();
 
 	LOG(TEST_DEBUG) << "-------------------- After change --------------------";
