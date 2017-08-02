@@ -102,6 +102,17 @@ bool mesh_init(MS::surface_mesh &sm) {
 		if (predicted_num_facets != num_facets)
 			LOG(WARNING) << "The number of facets (" << num_facets << ") is not as expected (" << predicted_num_facets << ").";
 
+		// Facets-edges interplay
+		for (int i = 0; i < num_facets; i++) {
+			for (int j = 0; i < 3; j++)
+				facets[i]->e[j] = facets[i]->v[j]->e[facets[i]->ind[j]];
+		}
+		for (int i = 0; i < num_edges; i++) {
+			for (int j = 0; j < 2; j++)
+				edges[i]->f[j] = edges[i]->v[j]->f[edges[i]->ind[j]];
+		}
+
+
 		position_in.close();
 		neighbors_in.close();
 

@@ -189,6 +189,7 @@ namespace MS {
 		// Defines a undirectioned edge
 	public:
 		vertex *v[2];
+		facet *f[2];
 		/******************************
 		Geometry part
 		******************************/
