@@ -275,6 +275,31 @@ void MS::filament_tip::calc_repulsion() {
 			}
 		}
 		interaction_winner = &interactions[min_d_at];
+
+		Vec3 normal_vector; // Pointing outward
+		switch (interaction_winner->pos) {
+		case 0: normal_vector = interaction_winner->which_facet->n_vec; break;
+		case 1: normal_vector = interaction_winner->which_facet->e[0]->n_vec; break;
+		case 2: normal_vector = interaction_winner->which_facet->e[1]->n_vec; break;
+		case 3: normal_vector = interaction_winner->which_facet->e[2]->n_vec; break;
+		case 4: normal_vector = interaction_winner->which_facet->v[0]->n_vec; break;
+		case 5: normal_vector = interaction_winner->which_facet->v[1]->n_vec; break;
+		case 6: normal_vector = interaction_winner->which_facet->v[2]->n_vec; break;
+		}
+		bool isInside = (dot(normal_vector, interaction_winner->nearest_vec) <= 0);
+
+		double d = (isInside ? interaction_winner->d : -interaction_winner->d);
+		Vec3 d_d[3];
+		for (int i = 0; i < 3; i++) {
+			d_d[i] = (isInside ? interaction_winner->d_d[i] : -interaction_winner->d_d[i]);
+		}
+		Vec3 dp_d = (isInside ? interaction_winner->dp_d : -interaction_winner->dp_d);
+		H = surface_repulsion_en_0 * exp(-d / surface_repulsion_d0);
+		d_H = -H / surface_repulsion_d0*dp_d;
+
+		// Increase in vertex energy derivatives
+		for (int i = 0; i < 3; i++)
+			interaction_winner->which_facet->v[i]->inc_d_H_int(d_d[i]);
 	}
 }
 
