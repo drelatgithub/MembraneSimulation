@@ -40,11 +40,11 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, bool update_geometry=true, bool update_energy=true) {
 	int len = vertices.size(), len_f = facets.size();
 	if (update_geometry) {
+		for (int i = 0; i < len_f; i++) {
+			facets[i]->update_geo();
+		}
 		for (int i = 0; i < len; i++) {
 			vertices[i]->update_geo();
-		}
-		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_geo(); // Just assigning indices. Currently no other calculations.
 		}
 	}
 	if (update_energy) {
