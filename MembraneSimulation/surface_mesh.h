@@ -15,6 +15,7 @@ Definition of point and vertex structure, and some common functions associated.
 namespace MS {
 	class vertex;
 	class facet;
+	class edge;
 
 	class vertex {
 	public:
@@ -177,10 +178,23 @@ namespace MS {
 
 	};
 
+	class edge {
+		// Defines a undirectioned edge
+	public:
+		vertex *v[2];
+		/******************************
+		Geometry part
+		******************************/
+		int ind[2]; // the neighbor indices of v0-v1, v1-v0
+
+		edge(vertex *v0, vertex *v1) { v[0] = v0, v[1] = v1; }
+	};
+
 	class surface_mesh {
 	public:
 		std::vector<vertex*> vertices;
 		std::vector<facet*> facets;
+		std::vector<edge*> edges;
 	};
 
 }
