@@ -70,46 +70,30 @@ bool mesh_init(MS::surface_mesh &sm) {
 		edges.reserve(num_edges);
 		num_facets = 0;
 		for (int i = 0; i < num_vertices; i++) {
+			vertices[i]->f.resize(vertices[i]->neighbors, 0);
+			vertices[i]->e.resize(vertices[i]->neighbors, 0);
+		}
+		for (int i = 0; i < num_vertices; i++) {
 			for (int j = 0; j < vertices[i]->neighbors; j++) {
-				// Propose a facet
-				MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->nn[j]);
-				// Propose an edge
-				MS::edge *e = new MS::edge(vertices[i], vertices[i]->n[j]);
-
-				// Check whether this facet has already existed
-				bool facet_exist = false, edge_exist = false;
-				int k_facet, k_edge;
-				for (k_facet = 0; k_facet < facets.size(); k_facet++) {
-					if (*facets[k_facet] == *f) {
-						facet_exist = true;
-						break;
-					}
-				}
-				if (!facet_exist) {
-					facets.push_back(f); // Leave the facet in heap
-					f->update_geo();
-					vertices[i]->f.push_back(f);
+				if (!vertices[i]->f[j]) { // facet not registered
+					// Propose a facet
+					MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->nn[j]);
+					// should have j == f->ind[0]
+					if (true && j != f->ind[0])LOG(ERROR) << "Facet inconsistent: i=" << i << ", j=" << j;
+					vertices[i]->f[j] = f;
+					vertices[i]->n[j]->f[f->ind[1]] = f;
+					vertices[i]->nn[j]->f[f->ind[2]] = f;
+					facets.push_back(f);
 					num_facets++;
 				}
-				else {
-					vertices[i]->f.push_back(facets[k_facet]);
-					delete f;
-				}
-
-				for (k_edge = 0; k_edge < edges.size(); k_edge++) {
-					if (*edges[k_edge] == *e) {
-						edge_exist = true;
-						break;
-					}
-				}
-				if (!edge_exist) {
-					edges.push_back(e); // Leave the edge in heap
-					//e->update_geo();
-					vertices[i]->e.push_back(e);
-				}
-				else {
-					vertices[i]->e.push_back(edges[k_edge]);
-					delete e;
+				if (!vertices[i]->e[j]) { // edge not registered
+					// Propose an edge
+					MS::edge *e = new MS::edge(vertices[i], vertices[i]->n[j]);
+					// should have j == e->ind[0]
+					if (true && j != e->ind[0])LOG(ERROR) << "Edge inconsistent: i=" << i << ", j=" << j;
+					vertices[i]->e[j] = e;
+					vertices[i]->n[j]->e[e->ind[1]] = e;
+					edges.push_back(e);
 				}
 
 			}

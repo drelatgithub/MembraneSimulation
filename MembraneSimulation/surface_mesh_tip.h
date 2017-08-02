@@ -13,7 +13,7 @@ namespace MS {
 	class tip_facet_interaction {
 	public:
 		double d;
-		Vec3 nearest_vec;
+		math_public::Vec3 nearest_vec;
 		int pos; // 0: in triangle; 1, 2, 3: edge 01, 12, 20; 4, 5, 6: vertex 0, 1, 2
 		math_public::Vec3 d_d[3];
 		math_public::Vec3 dp_d;
