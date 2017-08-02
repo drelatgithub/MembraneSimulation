@@ -245,7 +245,7 @@ double vertex::calc_curv_h() {
 		for (int i = 0; i < neighbors; i++) {
 			dn_curv_h[i] = (dn_K[i] * K) / (2 * K.norm);
 		}
-		n_vec = K / K.norm; // normal vector. would be very inaccurate when |K| is close to 0.
+		//n_vec = K / K.norm; // We no longer calculate normal vector here because it would be very inaccurate when |K| is close to 0.
 
 		return curv_h;
 	}
@@ -284,12 +284,27 @@ double vertex::calc_curv_g() {
 		return 0;
 	}
 }
+void vertex::calc_normal() {
+	/*****************************************************************************
+	This function calculates the normal vector around a vertex using angle weighted pseudo normal method.
+	
+	Must be used after
+		- the angles surrounding the vertex have been calculated
+		- the normal vectors of the surrounding facets have been calculated
+	*****************************************************************************/
+	Vec3 sum(0, 0, 0);
+	for (int i = 0; i < neighbors; i++) {
+		sum += f[i]->n_vec * theta[i];
+	}
+	n_vec = sum / sum.get_norm();
+}
 
 void vertex::update_geo() {
 	calc_angle();
 	calc_area();
 	calc_curv_h();
 	//calc_curv_g();
+	calc_normal();
 }
 
 void vertex::make_initial() {
@@ -302,10 +317,22 @@ void vertex::make_last() {
 	point_last->z = point->z;
 }
 
-
-
+void facet::calc_vec() {
+	v1 = *(v[1]->point) - *(v[0]->point);
+	v2 = *(v[2]->point) - *(v[0]->point);
+	r12 = v2 - v1;
+	v1.calc_norm();
+	v2.calc_norm();
+	r12.calc_norm();
+}
+void facet::calc_normal() {
+	Vec3 res = cross(v1, v2);
+	res /= res.get_norm();
+	n_vec = (n_vec_flip ? (-res) : res);
+}
 void facet::update_geo() {
-	// do nothing
+	calc_vec();
+	calc_normal();
 }
 bool facet::operator==(const facet& operand) {
 	int first_index = 0;
@@ -324,12 +351,6 @@ bool facet::operator==(const facet& operand) {
 }
 
 void facet::calc_area_and_projmat() {
-	v1 = *(v[1]->point) - *(v[0]->point);
-	v2 = *(v[2]->point) - *(v[0]->point);
-	r12 = v2 - v1;
-	v1.calc_norm();
-	v2.calc_norm();
-	r12.calc_norm();
 
 	// Calculate the double area of the triangle.
 	S = cross(v1, v2).get_norm()/2;

@@ -65,7 +65,7 @@ namespace MS {
 		std::vector<math_public::Vec3> dn_curv_g;
 		
 		math_public::Vec3 n_vec; // Normal vector
-		// we do not calculate derivative of normal vector here, because it would be very inaccurate when curv_h is close to 0.
+		// We calculate the normal vector using the average of surrounding facet normal vectors.
 		//math_public::Mat3 d_n_vec;
 		//std::vector<math_public::Mat3> dn_n_vec;
 
@@ -75,6 +75,7 @@ namespace MS {
 		double calc_area();
 		double calc_curv_h();
 		double calc_curv_g();
+		void calc_normal();
 
 		void update_geo();
 
@@ -146,10 +147,17 @@ namespace MS {
 		}
 		bool operator==(const facet& operand);
 
+		math_public::Vec3 v1, v2, r12; // v1 is r01; v2 is r02
+
+		math_public::Vec3 n_vec; // normal vector pointing outward
+		bool n_vec_flip; // this is determined at mesh generation
+
+		void calc_vec();
+		void calc_normal();
+
 		void update_geo();
 
 		// Area and projection matrix are calculated only when necessary and is not updated in update_geo
-		math_public::Vec3 v1, v2, r12;
 		double S;
 		math_public::Vec3 d_S[3];
 		/*
