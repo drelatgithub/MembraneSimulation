@@ -123,22 +123,134 @@ MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::face
 		res.d = res.nearest_vec.get_norm();
 		Mat3 d0_rO = d0_alpha.tensor(f.v1) + d0_beta.tensor(f.v2) + (1 - alpha - beta)* Eye3,
 			d1_rO = d1_alpha.tensor(f.v1) + alpha*Eye3 + d1_beta.tensor(f.v2),
-			d2_rO = d2_alpha.tensor(f.v1) + d2_beta.tensor(f.v2) + beta*Eye3;
+			d2_rO = d2_alpha.tensor(f.v1) + d2_beta.tensor(f.v2) + beta*Eye3,
+			dp_rO = dp_alpha.tensor(f.v1) + dp_beta.tensor(f.v2);
 		res.d_d[0] = (-d0_rO)*res.nearest_vec / res.d;
 		res.d_d[1] = (-d1_rO)*res.nearest_vec / res.d;
 		res.d_d[2] = (-d2_rO)*res.nearest_vec / res.d;
+		res.dp_d = (Eye3 - dp_rO)*res.nearest_vec / res.d;
 		res.pos = 0;
 	}
 	else {
 		Vec3 r1p = *point - *(f.v[1]->point), r2p = *point - *(f.v[2]->point);
 		if(beta<=0 && dot(r0p,f.v1)>0 && dot(r1p,f.v1)<0){ // on edge v1
-
+			bool edge_flip = false;
+			if (f.v[0] != f.e[0]->v[0])edge_flip = true;
+			tip_edge_interaction edge_result = get_edge_interaction(*(f.e[0]));
+			res.nearest_vec = edge_result.nearest_vec;
+			res.d = edge_result.d;
+			if (edge_flip) {
+				res.d_d[0] = edge_result.d_d[1];
+				res.d_d[1] = edge_result.d_d[0];
+			}
+			else {
+				res.d_d[0] = edge_result.d_d[0];
+				res.d_d[1] = edge_result.d_d[1];
+			}
+			res.d_d[2].set(0, 0, 0);
+			res.dp_d = edge_result.dp_d;
+			res.pos = 1;
+		}else if(alpha<=0 && dot(r0p,f.v2)>0 && dot(r2p,f.v2)<0){ // on edge v2
+			bool edge_flip = false;
+			if (f.v[2] != f.e[2]->v[0])edge_flip = true;
+			tip_edge_interaction edge_result = get_edge_interaction(*(f.e[2]));
+			res.nearest_vec = edge_result.nearest_vec;
+			res.d = edge_result.d;
+			if (edge_flip) {
+				res.d_d[2] = edge_result.d_d[1];
+				res.d_d[0] = edge_result.d_d[0];
+			}
+			else {
+				res.d_d[2] = edge_result.d_d[0];
+				res.d_d[0] = edge_result.d_d[1];
+			}
+			res.d_d[1].set(0, 0, 0);
+			res.dp_d = edge_result.dp_d;
+			res.pos = 3;
+		}else if(alpha+beta>=1 && dot(r1p,f.r12)>0 && dot(r2p,f.r12)<0){ // on edge r12
+			bool edge_flip = false;
+			if (f.v[1] != f.e[1]->v[0])edge_flip = true;
+			tip_edge_interaction edge_result = get_edge_interaction(*(f.e[1]));
+			res.nearest_vec = edge_result.nearest_vec;
+			res.d = edge_result.d;
+			if (edge_flip) {
+				res.d_d[1] = edge_result.d_d[1];
+				res.d_d[2] = edge_result.d_d[0];
+			}
+			else {
+				res.d_d[1] = edge_result.d_d[0];
+				res.d_d[2] = edge_result.d_d[1];
+			}
+			res.d_d[0].set(0, 0, 0);
+			res.dp_d = edge_result.dp_d;
+			res.pos = 2;
+		}else if(dot(r0p,f.v1)<=0 && dot(r0p,f.v2)<=0){ // on vertex 0
+			res.nearest_vec = *point - *(f.v[0]->point);
+			res.d = res.nearest_vec.get_norm();
+			res.d_d[0] = (-Eye3)*res.nearest_vec / res.d;
+			res.d_d[1].set(0, 0, 0);
+			res.d_d[2].set(0, 0, 0);
+			res.dp_d = (Eye3)*res.nearest_vec / res.d;
+			res.pos = 4;
+		}else if(dot(r1p,f.v1)>=0 && dot(r1p,f.r12)<=0){ // on vertex 1
+			res.nearest_vec = *point - *(f.v[1]->point);
+			res.d = res.nearest_vec.get_norm();
+			res.d_d[1] = (-Eye3)*res.nearest_vec / res.d;
+			res.d_d[0].set(0, 0, 0);
+			res.d_d[2].set(0, 0, 0);
+			res.dp_d = (Eye3)*res.nearest_vec / res.d;
+			res.pos = 5;
+		}else if(dot(r2p,f.r12)>=0 && dot(r2p,f.v2)>=0){ // on vertex 2
+			res.nearest_vec = *point - *(f.v[2]->point);
+			res.d = res.nearest_vec.get_norm();
+			res.d_d[2] = (-Eye3)*res.nearest_vec / res.d;
+			res.d_d[0].set(0, 0, 0);
+			res.d_d[1].set(0, 0, 0);
+			res.dp_d = (Eye3)*res.nearest_vec / res.d;
+			res.pos = 6;
+		}
+		else {
+			LOG(ERROR) << "Unexpected condition when interacting with the triangle";
+			LOG(DEBUG) << "Facet: " << f.v[0]->point->str(1) << " " << f.v[1]->point->str(1) << " " << f.v[2]->point->str(1)
+				<< " Point: " << point->str(1);
 		}
 	}
 
 
 
 
+
+	return res;
+}
+MS::tip_edge_interaction MS::filament_tip::get_edge_interaction(const MS::edge& e) {
+	tip_edge_interaction res;
+
+	Vec3 v1 = *(e.v[1]->point) - *(e.v[0]->point);
+	v1.calc_norm();
+	Vec3 r0p = *point - *(e.v[0]->point);
+
+	// alpha = ( r0p \cdot v1 ) / |v1|^2
+	// First calculate derivative of v1 / |v1|^2
+	Vec3 vv = v1 / v1.norm2;
+	Mat3 d1_vv = Eye3 / v1.norm2 - 2 / (v1.norm2*v1.norm2)*v1.tensor(v1); // Notebook page 65
+	Mat3 d0_vv = -d1_vv;
+
+	// Then calculate the derivative of alpha
+	double alpha = dot(r0p, vv);
+	Vec3 d0_alpha = -vv + d0_vv*r0p,
+		d1_alpha = d1_vv*r0p,
+		dp_alpha = vv;
+
+	// Then rO
+	Vec3 rO = *(e.v[0]->point) + alpha*v1;
+	res.nearest_vec = *point - rO;
+	res.d = res.nearest_vec.get_norm();
+	Mat3 d0_rO = (1 - alpha)*Eye3 + d0_alpha.tensor(v1),
+		d1_rO = alpha*Eye3 + d1_alpha.tensor(v1),
+		dp_rO = dp_alpha.tensor(v1);
+	res.d_d[0] = (-d0_rO)*res.nearest_vec / res.d;
+	res.d_d[1] = (-d1_rO)*res.nearest_vec / res.d;
+	res.dp_d = (Eye3 - dp_rO)*res.nearest_vec / res.d;
 
 	return res;
 }

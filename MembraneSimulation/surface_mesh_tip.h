@@ -10,12 +10,17 @@
 
 namespace MS {
 
-	class tip_facet_interaction {
-	public:
+	struct tip_facet_interaction {
 		double d;
 		math_public::Vec3 nearest_vec;
 		int pos; // 0: in triangle; 1, 2, 3: edge 01, 12, 20; 4, 5, 6: vertex 0, 1, 2
 		math_public::Vec3 d_d[3];
+		math_public::Vec3 dp_d;
+	};
+	struct tip_edge_interaction {
+		double d;
+		math_public::Vec3 nearest_vec;
+		math_public::Vec3 d_d[2];
 		math_public::Vec3 dp_d;
 	};
 	class filament_tip {
@@ -27,7 +32,8 @@ namespace MS {
 
 		void get_neighbor_facets(const surface_mesh& sm);
 		tip_facet_interaction get_facet_interaction(const facet& f);
-		
+		tip_edge_interaction get_edge_interaction(const edge& e);
+
 	};
 	extern math_public::Vec3 *po;
 	double update_len(double param); // should be removed when considering real polymers
