@@ -78,10 +78,6 @@ bool mesh_init(MS::surface_mesh &sm) {
 				if (!vertices[i]->f[j]) { // facet not registered
 					// Propose a facet
 					MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->nn[j]);
-					f->update_geo();
-					if (f->v1.cross(f->v2).dot(*(f->v[0]->point)) <= 0) {
-						LOG(WARNING) << "N vec not pointing outside!";
-					}
 					// should have j == f->ind[0]
 					if (true && j != f->ind[0])LOG(ERROR) << "Facet inconsistent: i=" << i << ", j=" << j;
 					vertices[i]->f[j] = f;

@@ -150,7 +150,6 @@ namespace MS {
 		math_public::Vec3 v1, v2, r12; // v1 is r01; v2 is r02
 
 		math_public::Vec3 n_vec; // normal vector pointing outward
-		bool n_vec_flip; // this is determined at mesh generation
 
 		void calc_vec();
 		void calc_normal();

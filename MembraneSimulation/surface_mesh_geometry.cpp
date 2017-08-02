@@ -327,8 +327,7 @@ void facet::calc_vec() {
 }
 void facet::calc_normal() {
 	Vec3 res = cross(v1, v2);
-	res /= res.get_norm();
-	n_vec = (n_vec_flip ? (-res) : res);
+	n_vec = res / res.get_norm();
 }
 void facet::update_geo() {
 	calc_vec();
