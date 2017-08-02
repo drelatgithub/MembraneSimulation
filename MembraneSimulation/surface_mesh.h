@@ -18,6 +18,12 @@ namespace MS {
 	class edge;
 
 	class vertex {
+		/**********************************************************************
+		This is a class which describe a vertex.
+		
+		Different from facet and edge, this is the class where most of the derivatives
+		would finally go to.
+		**********************************************************************/
 	public:
 		math_public::Vec3 *point;
 		std::vector<vertex*> n, np, nn; // neighbor, previous neighbor, next neighbor
@@ -150,6 +156,7 @@ namespace MS {
 		math_public::Vec3 v1, v2, r12; // v1 is r01; v2 is r02
 
 		math_public::Vec3 n_vec; // normal vector pointing outward
+		math_public::Mat3 d_n_vec[3];
 
 		void calc_vec();
 		void calc_normal();
