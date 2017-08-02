@@ -370,3 +370,20 @@ void facet::calc_area_and_projmat() {
 	d_AR22[2] = -v1.norm2*d2_det_A / det_A2;
 
 }
+
+
+bool edge::operator==(const edge& operand) {
+	int first_index = 0;
+	while (first_index < 2) {
+		if (v[0] == operand.v[first_index]) { // found a common vertex
+			for (int i = 1; i < 2; i++) {
+				if (v[i] != operand.v[math_public::loop_add(first_index, i, 2)])
+					return false;
+			}
+			return true;
+		}
+		++first_index;
+	}
+
+	return false;
+}

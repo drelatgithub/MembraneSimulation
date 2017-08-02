@@ -22,6 +22,7 @@ namespace MS {
 		math_public::Vec3 *point;
 		std::vector<vertex*> n, np, nn; // neighbor, previous neighbor, next neighbor
 		std::vector<facet*> f; // the facet with vertices (point, n, nn)
+		std::vector<edge*> e; // the edge with vertices (point, n)
 
 		vertex(math_public::Vec3 *npoint);
 		~vertex();
@@ -130,6 +131,7 @@ namespace MS {
 	class facet {
 	public:
 		vertex *v[3];
+		edge *e[3];
 
 		/******************************
 		Geometry is mostly calculated in vertex class
@@ -197,6 +199,7 @@ namespace MS {
 			ind[0] = v[0]->neighbor_indices_map[v[1]];
 			ind[1] = v[1]->neighbor_indices_map[v[0]];
 		}
+		bool operator==(const edge& operand);
 	};
 
 	class surface_mesh {
