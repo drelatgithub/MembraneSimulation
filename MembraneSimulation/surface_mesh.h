@@ -64,7 +64,7 @@ namespace MS {
 		math_public::Vec3 d_curv_g;
 		std::vector<math_public::Vec3> dn_curv_g;
 		
-		math_public::Vec3 n_vec; // Normal vector
+		math_public::Vec3 n_vec; // Normal vector (pseudo)
 		// We calculate the normal vector using the average of surrounding facet normal vectors.
 		//math_public::Mat3 d_n_vec;
 		//std::vector<math_public::Mat3> dn_n_vec;
@@ -208,6 +208,12 @@ namespace MS {
 			ind[1] = v[1]->neighbor_indices_map[v[0]];
 		}
 		bool operator==(const edge& operand);
+
+		math_public::Vec3 n_vec; // Normal vector (pseudo)
+
+		void calc_normal();
+		
+		void update_geo();
 	};
 
 	class surface_mesh {

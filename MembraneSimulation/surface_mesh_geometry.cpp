@@ -407,3 +407,17 @@ bool edge::operator==(const edge& operand) {
 
 	return false;
 }
+
+void MS::edge::calc_normal() {
+	/*****************************************************************************
+	This function calculates the normal vector at an edge using angle weighted pseudo normal method.
+
+	Must be used after the normal vectors of the sharing facets have been calculated
+	*****************************************************************************/
+
+	Vec3 sum = f[0]->n_vec + f[1]->n_vec;
+	n_vec = sum / sum.get_norm();
+}
+void MS::edge::update_geo() {
+	calc_normal();
+}
