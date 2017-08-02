@@ -115,6 +115,28 @@ MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::face
 		d1_beta = f.d_AR12[1] * B1 + f.AR12*d1_B1 + f.d_AR22[1] * B2,
 		d2_beta = f.d_AR12[2] * B1 + f.d_AR22[2] * B2 + f.AR22*d2_B2,
 		dp_beta = f.AR12*dp_B1 + f.AR22*dp_B2;
+	
+
+	if (alpha > 0 && beta > 0 && alpha + beta < 1) { // In triangle
+		Vec3 rO = *(f.v[0]->point) + alpha*f.v1 + beta*f.v2;
+		res.nearest_vec = *point - rO;
+		res.d = res.nearest_vec.get_norm();
+		Mat3 d0_rO = d0_alpha.tensor(f.v1) + d0_beta.tensor(f.v2) + (1 - alpha - beta)* Eye3,
+			d1_rO = d1_alpha.tensor(f.v1) + alpha*Eye3 + d1_beta.tensor(f.v2),
+			d2_rO = d2_alpha.tensor(f.v1) + d2_beta.tensor(f.v2) + beta*Eye3;
+		res.d_d[0] = (-d0_rO)*res.nearest_vec / res.d;
+		res.d_d[1] = (-d1_rO)*res.nearest_vec / res.d;
+		res.d_d[2] = (-d2_rO)*res.nearest_vec / res.d;
+		res.pos = 0;
+	}
+	else {
+		Vec3 r1p = *point - *(f.v[1]->point), r2p = *point - *(f.v[2]->point);
+		if(beta<=0 && dot(r0p,f.v1)>0 && dot(r1p,f.v1)<0){ // on edge v1
+
+		}
+	}
+
+
 
 
 
