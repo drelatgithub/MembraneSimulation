@@ -108,7 +108,7 @@ bool mesh_init(MS::surface_mesh &sm) {
 
 		// Facets-edges interplay
 		for (int i = 0; i < num_facets; i++) {
-			for (int j = 0; i < 3; j++)
+			for (int j = 0; j < 3; j++)
 				facets[i]->e[j] = facets[i]->v[j]->e[facets[i]->ind[j]];
 		}
 		for (int i = 0; i < num_edges; i++) {
