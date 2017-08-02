@@ -96,6 +96,7 @@ void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
 }
 MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::facet& f) {
 	tip_facet_interaction res;
+	res.which_facet = &f;
 
 	Vec3 r0p = *point - *(f.v[0]->point);
 	
@@ -248,6 +249,33 @@ MS::tip_edge_interaction MS::filament_tip::get_edge_interaction(const MS::edge& 
 	res.dp_d = (Eye3 - dp_rO)*res.nearest_vec / res.d;
 
 	return res;
+}
+
+void MS::filament_tip::recalc_interactions() {
+	int N = n_facets.size();
+	interactions.clear();
+	interactions.reserve(N);
+	for (int i = 0; i < N; i++) {
+		interactions.push_back(get_facet_interaction(*n_facets[i]));
+	}
+}
+void MS::filament_tip::calc_repulsion() {
+	int N = interactions.size();
+	H = 0;
+	if (N == 0) {
+		return; // No interaction
+	}
+	else {
+		double min_d = interactions[0].d;
+		int min_d_at = 0;
+		for (int i = 1; i < N; i++) {
+			if (interactions[i].d < min_d) {
+				min_d = interactions[i].d;
+				min_d_at = i;
+			}
+		}
+		interaction_winner = &interactions[min_d_at];
+	}
 }
 
 
