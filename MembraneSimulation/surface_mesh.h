@@ -192,7 +192,11 @@ namespace MS {
 		******************************/
 		int ind[2]; // the neighbor indices of v0-v1, v1-v0
 
-		edge(vertex *v0, vertex *v1) { v[0] = v0, v[1] = v1; }
+		edge(vertex *v0, vertex *v1) {
+			v[0] = v0, v[1] = v1;
+			ind[0] = v[0]->neighbor_indices_map[v[1]];
+			ind[1] = v[1]->neighbor_indices_map[v[0]];
+		}
 	};
 
 	class surface_mesh {
