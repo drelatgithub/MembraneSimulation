@@ -136,7 +136,12 @@ namespace MS {
 		******************************/
 		int ind[3]; // the neighbor indices of v0-v1, v1-v2, v2-v0.
 
-		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
+		facet(vertex *v0, vertex *v1, vertex *v2) {
+			v[0] = v0; v[1] = v1; v[2] = v2;
+			ind[0] = v[0]->neighbor_indices_map[v[1]];
+			ind[1] = v[1]->neighbor_indices_map[v[2]];
+			ind[2] = v[2]->neighbor_indices_map[v[0]];
+		}
 		bool operator==(const facet& operand);
 
 		void update_geo();

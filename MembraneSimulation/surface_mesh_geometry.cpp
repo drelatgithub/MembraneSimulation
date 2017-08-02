@@ -305,9 +305,7 @@ void vertex::make_last() {
 
 
 void facet::update_geo() {
-	ind[0] = v[0]->neighbor_indices_map[v[1]];
-	ind[1] = v[1]->neighbor_indices_map[v[2]];
-	ind[2] = v[2]->neighbor_indices_map[v[0]];
+	// do nothing
 }
 bool facet::operator==(const facet& operand) {
 	int first_index = 0;
