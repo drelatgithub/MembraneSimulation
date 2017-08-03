@@ -57,7 +57,7 @@ void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet
 		}
 	}
 }
-int MS::simulation_start(MS::surface_mesh &sm) {
+int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	auto &vertices = sm.vertices;
 	auto &facets = sm.facets;
 
@@ -73,7 +73,7 @@ int MS::simulation_start(MS::surface_mesh &sm) {
 		vertices[i]->make_initial();
 	}
 
-	{ // Do some statistics
+	{ // Doing some statistics
 		double total_edge_length = 0, total_area = 0, total_edge_length_sq = 0, total_area_sq = 0;
 		int num_edge2 = 0;
 		for (int i = 0; i < N; i++) {
@@ -109,7 +109,7 @@ int MS::simulation_start(MS::surface_mesh &sm) {
 			<< "Stdev edge length: " << stdev_edge_length << std::endl
 			<< big_divider;
 		LOG(INFO) << "Meshwork properties: " << std::endl << ss.str();
-	}
+	} // End doing statistics
 
 
 	std::ofstream p_out, f_out, a_out;
