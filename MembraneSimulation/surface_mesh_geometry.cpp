@@ -428,3 +428,19 @@ void MS::edge::calc_normal() {
 void MS::edge::update_geo() {
 	calc_normal();
 }
+
+void MS::surface_mesh::update_geo() {
+	int N;
+	N = facets.size();
+	for (int i = 0; i < N; i++) {
+		facets[i]->update_geo();
+	}
+	N = vertices.size();
+	for (int i = 0; i < N; i++) {
+		vertices[i]->update_geo();
+	}
+	N = edges.size();
+	for (int i = 0; i < N; i++) {
+		edges[i]->update_geo();
+	}
+}

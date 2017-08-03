@@ -43,7 +43,7 @@ namespace MS {
 		Energy part
 		******************************/
 		double H;
-		math_public::Vec3 d_H; // derivative of energy on THIS tip
+		math_public::Vec3 d_H; // derivative of energy on THIS tip. Other derivatives go to vertices.
 		void calc_repulsion();
 
 	};

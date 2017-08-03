@@ -120,7 +120,7 @@ namespace MS {
 				Energy caused by Gaussian curvature could be neglected because for a closed surface
 				it is a constant (Gauss-Bonnet theorem).
 			*/
-			// some of d_H_int might come from facet energies
+			// some of d_H_int might come from other sources
 			H = H_area + H_curv_h + H_int;
 			d_H = d_H_area + d_H_curv_h + d_H_int;
 		}
@@ -179,18 +179,7 @@ namespace MS {
 		/******************************
 		Energy part
 		******************************/
-		double H_int;
-		double H;
-		// Energy derivative would be on vertices
-
-		inline void sum_energy() {
-			H = H_int;
-		}
-
-		inline void calc_H_int() { H_int = 0; } // Serves as cleaning
-		void inc_H_int(math_public::Vec3 *p);
-
-		void update_energy(math_public::Vec3 *p); // TODO: This should be changed to interacting with all points
+		// Currently energy is not stored in facet.
 
 		/******************************
 		Test
@@ -224,10 +213,27 @@ namespace MS {
 	};
 
 	class surface_mesh {
+		/**********************************************************************
+		A surface_mesh topology contains interconnected vertices, facets and
+		edges.
+
+		Geometries are mostly stored in their own structures, but calculation
+		of the geometry might depend on one another.
+
+		Energies are mostly stored in their own structures, but derivatives of
+		energies are only stored in vertices. Further foreign interaction
+		energies might be added to this structure, and derivatives would also
+		be added only to vertices.
+		**********************************************************************/
 	public:
 		std::vector<vertex*> vertices;
 		std::vector<facet*> facets;
 		std::vector<edge*> edges;
+
+		void update_geo();
+
+		void update_energy(); // This will clear all foreign interactions and derivatives.
+		double get_sum_of_energy();
 	};
 
 }
