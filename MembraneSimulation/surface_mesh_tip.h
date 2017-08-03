@@ -48,7 +48,6 @@ namespace MS {
 
 	};
 	extern math_public::Vec3 *po;
-	double update_len(double param); // should be removed when considering real polymers
 
 	extern std::vector<facet*> po_neighbor;
 }

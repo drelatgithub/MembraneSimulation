@@ -69,13 +69,6 @@ void MS::facet::update_energy(math_public::Vec3 *p) {
 
 double polymer_len = 0;
 math_public::Vec3 *MS::po = new math_public::Vec3(polymer_len, 0, 0);
-std::vector<MS::facet*> MS::po_neighbor;
-
-double MS::update_len(double param) {
-	polymer_len = param;
-	po->x = polymer_len;
-	return polymer_len;
-}
 
 void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
 	// This function can be improved by putting vertices in different compartments,

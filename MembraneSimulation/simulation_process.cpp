@@ -120,9 +120,11 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 
 	switch (RUN_MODE) {
 	case 0:
+		// Place a filament
+		tips.push_back(new filament_tip(new math_public::Vec3()));
 		for (double a = 0.994e-6; a < 1.010e-6; a += 0.001e-6) {
 			// Update filament tip position
-			LOG(INFO) << "Polymer tip x position: " << update_len(a);
+			LOG(INFO) << "Polymer tip x position: " << (tips[0]->point->x = a);
 
 			minimization(sm);
 
