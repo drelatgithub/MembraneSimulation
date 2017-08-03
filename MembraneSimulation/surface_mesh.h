@@ -161,9 +161,7 @@ namespace MS {
 		void calc_vec();
 		void calc_normal();
 
-		void update_geo();
-
-		// Area and projection matrix are calculated only when necessary and is not updated in update_geo
+		// Area and projection matrix
 		double S;
 		math_public::Vec3 d_S[3];
 		/*
@@ -175,6 +173,8 @@ namespace MS {
 		double AR11, AR12, AR22; // AR12 = AR21
 		math_public::Vec3 d_AR11[3], d_AR12[3], d_AR22[3];
 		void calc_area_and_projmat();
+
+		void update_geo();
 
 		/******************************
 		Energy part

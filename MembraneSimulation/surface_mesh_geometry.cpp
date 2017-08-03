@@ -336,30 +336,10 @@ void facet::calc_normal() {
 	d_n_vec[1] = d1_res*temp;
 	d_n_vec[2] = d2_res*temp;
 }
-void facet::update_geo() {
-	calc_vec();
-	calc_normal();
-}
-bool facet::operator==(const facet& operand) {
-	int first_index = 0;
-	while (first_index < 3) {
-		if (v[0] == operand.v[first_index]) { // found a common vertex
-			for (int i = 1; i < 3; i++) {
-				if (v[i] != operand.v[math_public::loop_add(first_index, i, 3)])
-					return false;
-			}
-			return true;
-		}
-		++first_index;
-	}
-
-	return false;
-}
-
 void facet::calc_area_and_projmat() {
 
 	// Calculate the double area of the triangle.
-	S = cross(v1, v2).get_norm()/2;
+	S = cross(v1, v2).get_norm() / 2;
 	if (S <= 0) {
 		LOG(WARNING) << "Facet area is not positive. S = " << S;
 	}
@@ -396,6 +376,26 @@ void facet::calc_area_and_projmat() {
 	d_AR22[1] = (det_A*d1_norm2_v1 - v1.norm2*d1_det_A) / det_A2;
 	d_AR22[2] = -v1.norm2*d2_det_A / det_A2;
 
+}
+void facet::update_geo() {
+	calc_vec();
+	calc_normal();
+	calc_area_and_projmat();
+}
+bool facet::operator==(const facet& operand) {
+	int first_index = 0;
+	while (first_index < 3) {
+		if (v[0] == operand.v[first_index]) { // found a common vertex
+			for (int i = 1; i < 3; i++) {
+				if (v[i] != operand.v[math_public::loop_add(first_index, i, 3)])
+					return false;
+			}
+			return true;
+		}
+		++first_index;
+	}
+
+	return false;
 }
 
 

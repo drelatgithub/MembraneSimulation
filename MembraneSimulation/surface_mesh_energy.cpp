@@ -60,10 +60,6 @@ void MS::vertex::update_energy() {
 	sum_energy();
 }
 
-
-double polymer_len = 0;
-math_public::Vec3 *MS::po = new math_public::Vec3(polymer_len, 0, 0);
-
 void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
 	// This function can be improved by putting vertices in different compartments,
 	// so that we only need to search neighboring compartments.
@@ -208,6 +204,10 @@ MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::face
 			LOG(ERROR) << "Unexpected condition when interacting with the triangle";
 			LOG(DEBUG) << "Facet: " << f.v[0]->point->str(1) << " " << f.v[1]->point->str(1) << " " << f.v[2]->point->str(1)
 				<< " Point: " << point->str(1);
+			LOG(DEBUG) << "alpha: " << alpha << " beta: " << beta;
+			LOG(DEBUG) << "r0p: " << r0p.str(1);
+			LOG(DEBUG) << "r1p: " << r1p.str(1);
+			LOG(DEBUG) << "r2p: " << r2p.str(1);
 		}
 	}
 
