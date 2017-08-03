@@ -328,6 +328,13 @@ void facet::calc_vec() {
 void facet::calc_normal() {
 	Vec3 res = cross(v1, v2);
 	n_vec = res / res.get_norm();
+	Mat3 d0_res = -r12.to_skew_cross(),
+		d1_res = v2.to_skew_cross(),
+		d2_res = -v1.to_skew_cross(); // Notebook page 68
+	Mat3 temp = (Eye3 - n_vec.tensor(n_vec)) / res.norm;
+	d_n_vec[0] = d0_res*temp;
+	d_n_vec[1] = d1_res*temp;
+	d_n_vec[2] = d2_res*temp;
 }
 void facet::update_geo() {
 	calc_vec();
