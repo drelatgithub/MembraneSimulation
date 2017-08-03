@@ -119,16 +119,18 @@ MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::face
 			d2_beta = f.d_AR12[2] * B1 + f.d_AR22[2] * B2 + f.AR22*d2_B2,
 			dp_beta = f.AR12*dp_B1 + f.AR22*dp_B2;
 		Vec3 rO = *(f.v[0]->point) + alpha*f.v1 + beta*f.v2;
-		res.nearest_vec = *point - rO;
-		res.d = res.nearest_vec.get_norm();
 		Mat3 d0_rO = d0_alpha.tensor(f.v1) + d0_beta.tensor(f.v2) + (1 - alpha - beta)* Eye3,
 			d1_rO = d1_alpha.tensor(f.v1) + alpha*Eye3 + d1_beta.tensor(f.v2),
 			d2_rO = d2_alpha.tensor(f.v1) + d2_beta.tensor(f.v2) + beta*Eye3,
 			dp_rO = dp_alpha.tensor(f.v1) + dp_beta.tensor(f.v2);
-		res.d_d[0] = (-d0_rO)*res.nearest_vec / res.d;
-		res.d_d[1] = (-d1_rO)*res.nearest_vec / res.d;
-		res.d_d[2] = (-d2_rO)*res.nearest_vec / res.d;
-		res.dp_d = (Eye3 - dp_rO)*res.nearest_vec / res.d;
+		res.nearest_vec = *point - rO;
+		// d is not calculated by getting norm of nearest_vec because it would be non-differentiable when d->0
+		// instead, we use d = dot(n_vec, r0p)
+		res.d = dot(f.n_vec, r0p);
+		res.d_d[0] = f.d_n_vec[0] * r0p - f.n_vec;
+		res.d_d[1] = f.d_n_vec[1] * r0p;
+		res.d_d[2] = f.d_n_vec[2] * r0p;
+		res.dp_d = f.n_vec;
 		res.pos = 0;
 	}
 	else {
