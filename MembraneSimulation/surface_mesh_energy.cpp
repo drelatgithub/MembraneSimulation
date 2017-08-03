@@ -82,6 +82,12 @@ void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
 	}
 }
 MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::facet& f) {
+	/**************************************************************************
+	This function calculates the distance from the tip to a certain facet.
+
+	Returns:
+		A structure containing distance and closest vector information
+	**************************************************************************/
 	tip_facet_interaction res;
 	res.which_facet = &f;
 
