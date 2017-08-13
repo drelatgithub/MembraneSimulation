@@ -3,6 +3,7 @@
 #include"common.h"
 #include"mesh_initialization.h"
 #include"surface_mesh.h"
+#include"surface_mesh_tip.h"
 #include"simulation_process.h"
 #include"test.h"
 
@@ -11,14 +12,14 @@ int main() {
 
 	test::run_all_tests();
 
-	std::vector<MS::vertex*> vertices;
-	std::vector<MS::facet*> facets;
+	MS::surface_mesh sm;
+	std::vector<MS::filament_tip*> tips;
 
-	if (mesh_init(vertices, facets)) {
+	if (mesh_init(sm)) {
 
 		// starting simulation
 		LOG(INFO) << "Simulation starting...";
-		MS::simulation_start(vertices, facets);
+		MS::simulation_start(sm, tips);
 
 	}
 

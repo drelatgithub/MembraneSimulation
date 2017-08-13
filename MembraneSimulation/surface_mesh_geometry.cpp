@@ -245,7 +245,7 @@ double vertex::calc_curv_h() {
 		for (int i = 0; i < neighbors; i++) {
 			dn_curv_h[i] = (dn_K[i] * K) / (2 * K.norm);
 		}
-		n_vec = K / K.norm; // normal vector. would be very inaccurate when |K| is close to 0.
+		//n_vec = K / K.norm; // We no longer calculate normal vector here because it would be very inaccurate when |K| is close to 0.
 
 		return curv_h;
 	}
@@ -284,12 +284,27 @@ double vertex::calc_curv_g() {
 		return 0;
 	}
 }
+void vertex::calc_normal() {
+	/*****************************************************************************
+	This function calculates the normal vector around a vertex using angle weighted pseudo normal method.
+	
+	Must be used after
+		- the angles surrounding the vertex have been calculated
+		- the normal vectors of the surrounding facets have been calculated
+	*****************************************************************************/
+	Vec3 sum(0, 0, 0);
+	for (int i = 0; i < neighbors; i++) {
+		sum += f[i]->n_vec * theta[i];
+	}
+	n_vec = sum / sum.get_norm();
+}
 
 void vertex::update_geo() {
 	calc_angle();
 	calc_area();
 	calc_curv_h();
 	//calc_curv_g();
+	calc_normal();
 }
 
 void vertex::make_initial() {
@@ -302,12 +317,70 @@ void vertex::make_last() {
 	point_last->z = point->z;
 }
 
+void facet::calc_vec() {
+	v1 = *(v[1]->point) - *(v[0]->point);
+	v2 = *(v[2]->point) - *(v[0]->point);
+	r12 = v2 - v1;
+	v1.calc_norm();
+	v2.calc_norm();
+	r12.calc_norm();
+}
+void facet::calc_normal() {
+	Vec3 res = cross(v1, v2);
+	n_vec = res / res.get_norm();
+	Mat3 d0_res = -r12.to_skew_cross(),
+		d1_res = v2.to_skew_cross(),
+		d2_res = -v1.to_skew_cross(); // Notebook page 68
+	Mat3 temp = (Eye3 - n_vec.tensor(n_vec)) / res.norm;
+	d_n_vec[0] = d0_res*temp;
+	d_n_vec[1] = d1_res*temp;
+	d_n_vec[2] = d2_res*temp;
+}
+void facet::calc_area_and_projmat() {
 
+	// Calculate the double area of the triangle.
+	S = cross(v1, v2).get_norm() / 2;
+	if (S <= 0) {
+		LOG(WARNING) << "Facet area is not positive. S = " << S;
+	}
 
+	// alpha and beta need to satisfy the perpendicular condition
+	// A * (alpha, beta)' = B
+	// So (alpha, beta)' = A^(-1) * B
+	double dot12 = dot(v1, v2);
+	Vec3 d0_dot12 = -v2 - v1, d1_dot12 = v2, d2_dot12 = v1; // Already taken into account those "Eye"-derivatives.
+	Vec3 d0_norm2_v1 = -v1 * 2, d1_norm2_v1 = v1 * 2, d0_norm_v1 = -v1 / v1.norm, d1_norm_v1 = v1 / v1.norm;
+	Vec3 d0_norm2_v2 = -v2 * 2, d2_norm2_v2 = v2 * 2, d0_norm_v2 = -v2 / v2.norm, d2_norm_v2 = v2 / v2.norm;
+	Vec3 d1_norm2_r12 = -r12 * 2, d2_norm2_r12 = r12 * 2, d1_norm_r12 = -r12 / r12.norm, d2_norm_r12 = r12 / r12.norm;
+
+	d_S[0] = (-v1.norm2*v2 - v2.norm2*v1 + dot12*(v1 + v2)) / S / 4;
+	d_S[1] = (v2.norm2*v1 - dot12*v2) / S / 4;
+	d_S[2] = (v1.norm2*v2 - dot12*v1) / S / 4;
+
+	// det(A) = |v1|^2 |v2|^2 - (v1 * v2)^2, but theoretically this is essentially S2^2
+	double det_A = S * S * 4;
+	double det_A2 = det_A*det_A;
+	Vec3 d0_det_A = 8 * S * d_S[0],
+		d1_det_A = 8 * S * d_S[1],
+		d2_det_A = 8 * S * d_S[2];
+	AR11 = v2.norm2 / det_A;
+	AR12 = -dot12 / det_A; // AR21 = AR12
+	AR22 = v1.norm2 / det_A;
+	d_AR11[0] = (det_A*d0_norm2_v2 - v2.norm2*d0_det_A) / det_A2;
+	d_AR11[1] = -v2.norm2*d1_det_A / det_A2;
+	d_AR11[2] = (det_A*d2_norm2_v2 - v2.norm2*d2_det_A) / det_A2;
+	d_AR12[0] = -(det_A*d0_dot12 - dot12*d0_det_A) / det_A2;
+	d_AR12[1] = -(det_A*d1_dot12 - dot12*d1_det_A) / det_A2;
+	d_AR12[2] = -(det_A*d2_dot12 - dot12*d2_det_A) / det_A2;
+	d_AR22[0] = (det_A*d0_norm2_v1 - v1.norm2*d0_det_A) / det_A2;
+	d_AR22[1] = (det_A*d1_norm2_v1 - v1.norm2*d1_det_A) / det_A2;
+	d_AR22[2] = -v1.norm2*d2_det_A / det_A2;
+
+}
 void facet::update_geo() {
-	ind[0] = v[0]->neighbor_indices_map[v[1]];
-	ind[1] = v[1]->neighbor_indices_map[v[2]];
-	ind[2] = v[2]->neighbor_indices_map[v[0]];
+	calc_vec();
+	calc_normal();
+	calc_area_and_projmat();
 }
 bool facet::operator==(const facet& operand) {
 	int first_index = 0;
@@ -323,4 +396,51 @@ bool facet::operator==(const facet& operand) {
 	}
 
 	return false;
+}
+
+
+bool edge::operator==(const edge& operand) {
+	int first_index = 0;
+	while (first_index < 2) {
+		if (v[0] == operand.v[first_index]) { // found a common vertex
+			for (int i = 1; i < 2; i++) {
+				if (v[i] != operand.v[math_public::loop_add(first_index, i, 2)])
+					return false;
+			}
+			return true;
+		}
+		++first_index;
+	}
+
+	return false;
+}
+
+void MS::edge::calc_normal() {
+	/*****************************************************************************
+	This function calculates the normal vector at an edge using angle weighted pseudo normal method.
+
+	Must be used after the normal vectors of the sharing facets have been calculated
+	*****************************************************************************/
+
+	Vec3 sum = f[0]->n_vec + f[1]->n_vec;
+	n_vec = sum / sum.get_norm();
+}
+void MS::edge::update_geo() {
+	calc_normal();
+}
+
+void MS::surface_mesh::update_geo() {
+	int N;
+	N = facets.size();
+	for (int i = 0; i < N; i++) {
+		facets[i]->update_geo();
+	}
+	N = vertices.size();
+	for (int i = 0; i < N; i++) {
+		vertices[i]->update_geo();
+	}
+	N = edges.size();
+	for (int i = 0; i < N; i++) {
+		edges[i]->update_geo();
+	}
 }

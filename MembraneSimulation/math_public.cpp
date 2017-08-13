@@ -25,6 +25,13 @@ Mat3 math_public::Vec3::tensor(const Vec3& operand)const {
 	Mat3 ans(operator*(operand.x), operator*(operand.y), operator*(operand.z));
 	return ans;
 }
+Mat3 math_public::Vec3::to_skew_cross()const {
+	return Mat3(
+		0, -z, y,
+		z, 0, -x,
+		-y, x, 0
+	);
+}
 std::string math_public::Vec3::str(int mode)const {
 	std::stringstream ss;
 	switch (mode) {
@@ -99,6 +106,11 @@ test::TestCase math_public::Vec3::test_case("Vec3", []() {
 		test_case.assert_bool(op1.cross(op2).equal_to(ex));
 		test_case.assert_bool(equal(op1*ex, 0));
 		test_case.assert_bool(equal(op2*ex, 0));
+	}
+	{
+		test_case.new_step("Check cross product via skew-sym matrix");
+		Vec3 op1(1, 2, 3), op2(-3, -2, -1);
+		test_case.assert_bool(op1.cross(op2).equal_to(op1.to_skew_cross()*op2));
 	}
 	{
 		test_case.new_step("Check tensor product");

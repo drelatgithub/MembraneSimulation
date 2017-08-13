@@ -133,7 +133,7 @@
     <ClInclude Include="math_public.h" />
     <ClInclude Include="mesh_initialization.h" />
     <ClInclude Include="simulation_process.h" />
-    <ClInclude Include="surface_free_energy.h" />
+    <ClInclude Include="surface_mesh_tip.h" />
     <ClInclude Include="surface_mesh.h" />
     <ClInclude Include="test.h" />
   </ItemGroup>

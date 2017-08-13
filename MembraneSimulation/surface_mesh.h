@@ -13,11 +13,22 @@ Definition of point and vertex structure, and some common functions associated.
 #include"math_public.h"
 
 namespace MS {
+	class vertex;
+	class facet;
+	class edge;
 
 	class vertex {
+		/**********************************************************************
+		This is a class which describe a vertex.
+		
+		Different from facet and edge, this is the class where most of the derivatives
+		would finally go to.
+		**********************************************************************/
 	public:
 		math_public::Vec3 *point;
 		std::vector<vertex*> n, np, nn; // neighbor, previous neighbor, next neighbor
+		std::vector<facet*> f; // the facet with vertices (point, n, nn)
+		std::vector<edge*> e; // the edge with vertices (point, n)
 
 		vertex(math_public::Vec3 *npoint);
 		~vertex();
@@ -59,8 +70,8 @@ namespace MS {
 		math_public::Vec3 d_curv_g;
 		std::vector<math_public::Vec3> dn_curv_g;
 		
-		math_public::Vec3 n_vec; // Normal vector
-		// we do not calculate derivative of normal vector here, because it would be very inaccurate when curv_h is close to 0.
+		math_public::Vec3 n_vec; // Normal vector (pseudo)
+		// We calculate the normal vector using the average of surrounding facet normal vectors.
 		//math_public::Mat3 d_n_vec;
 		//std::vector<math_public::Mat3> dn_n_vec;
 
@@ -70,6 +81,7 @@ namespace MS {
 		double calc_area();
 		double calc_curv_h();
 		double calc_curv_g();
+		void calc_normal();
 
 		void update_geo();
 
@@ -108,7 +120,7 @@ namespace MS {
 				Energy caused by Gaussian curvature could be neglected because for a closed surface
 				it is a constant (Gauss-Bonnet theorem).
 			*/
-			// some of d_H_int might come from facet energies
+			// some of d_H_int might come from other sources
 			H = H_area + H_curv_h + H_int;
 			d_H = d_H_area + d_H_curv_h + d_H_int;
 		}
@@ -126,38 +138,102 @@ namespace MS {
 	class facet {
 	public:
 		vertex *v[3];
+		edge *e[3];
 
 		/******************************
 		Geometry is mostly calculated in vertex class
 		******************************/
 		int ind[3]; // the neighbor indices of v0-v1, v1-v2, v2-v0.
 
-		facet(vertex *v0, vertex *v1, vertex *v2) { v[0] = v0; v[1] = v1; v[2] = v2; }
+		facet(vertex *v0, vertex *v1, vertex *v2) {
+			v[0] = v0; v[1] = v1; v[2] = v2;
+			ind[0] = v[0]->neighbor_indices_map[v[1]];
+			ind[1] = v[1]->neighbor_indices_map[v[2]];
+			ind[2] = v[2]->neighbor_indices_map[v[0]];
+		}
 		bool operator==(const facet& operand);
+
+		math_public::Vec3 v1, v2, r12; // v1 is r01; v2 is r02
+
+		math_public::Vec3 n_vec; // normal vector pointing outward
+		math_public::Mat3 d_n_vec[3];
+
+		void calc_vec();
+		void calc_normal();
+
+		// Area and projection matrix
+		double S;
+		math_public::Vec3 d_S[3];
+		/*
+		How to use projmat:
+			B1 = dot(r0p, v1), B2 = dot(r0p, v2),
+			Then alpha = AR11*B1 + AR12*B2, beta = AR21 * B1 + AR22 * B2,
+			and r0O = alpha * v1 + beta * v2
+		*/
+		double AR11, AR12, AR22; // AR12 = AR21
+		math_public::Vec3 d_AR11[3], d_AR12[3], d_AR22[3];
+		void calc_area_and_projmat();
 
 		void update_geo();
 
 		/******************************
 		Energy part
 		******************************/
-		double H_int;
-		double H;
-		// Energy derivative would be on vertices
-
-		inline void sum_energy() {
-			H = H_int;
-		}
-
-		inline void calc_H_int() { H_int = 0; } // Serves as cleaning
-		void inc_H_int(math_public::Vec3 *p);
-
-		void update_energy(math_public::Vec3 *p); // TODO: This should be changed to interacting with all points
+		// Currently energy is not stored in facet.
 
 		/******************************
 		Test
 		******************************/
 		static test::TestCase test_case;
 
+	};
+
+	class edge {
+		// Defines a undirectioned edge
+	public:
+		vertex *v[2];
+		facet *f[2];
+		/******************************
+		Geometry part
+		******************************/
+		int ind[2]; // the neighbor indices of v0-v1, v1-v0
+
+		edge(vertex *v0, vertex *v1) {
+			v[0] = v0, v[1] = v1;
+			ind[0] = v[0]->neighbor_indices_map[v[1]];
+			ind[1] = v[1]->neighbor_indices_map[v[0]];
+		}
+		bool operator==(const edge& operand);
+
+		math_public::Vec3 n_vec; // Normal vector (pseudo)
+
+		void calc_normal();
+		
+		void update_geo();
+	};
+
+	class surface_mesh {
+		/**********************************************************************
+		A surface_mesh topology contains interconnected vertices, facets and
+		edges.
+
+		Geometries are mostly stored in their own structures, but calculation
+		of the geometry might depend on one another.
+
+		Energies are mostly stored in their own structures, but derivatives of
+		energies are only stored in vertices. Further foreign interaction
+		energies might be added to this structure, and derivatives would also
+		be added only to vertices.
+		**********************************************************************/
+	public:
+		std::vector<vertex*> vertices;
+		std::vector<facet*> facets;
+		std::vector<edge*> edges;
+
+		void update_geo();
+
+		void update_energy(); // This will clear all foreign interactions and derivatives.
+		double get_sum_of_energy();
 	};
 
 }

@@ -120,6 +120,11 @@ namespace math_public {
 			return norm2;
 		}
 
+		// Calculate skew-symmetric matrix to be used in a cross product
+		// (Vec3) a => (Mat3) [a]_x,
+		// where a x b = [a]_x * b
+		Mat3 to_skew_cross()const;
+
 		// update properties
 		inline void update() {
 			calc_norm();

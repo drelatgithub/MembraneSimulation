@@ -5,7 +5,7 @@
 #include"common.h"
 #include"math_public.h"
 #include"surface_mesh.h"
-#include"surface_free_energy.h"
+#include"surface_mesh_tip.h"
 
 #define USE_STEEPEST_DESCENT false
 #define USE_LINE_SEARCH true
@@ -30,9 +30,9 @@ const double d_eps = 1e-8; // Maximum tolerance for coordinates
 const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
 
-int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
+int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips);
 
-double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, int N, int N_f, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0);
+double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0);
 
 void test_derivatives(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
@@ -40,24 +40,23 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, bool update_geometry=true, bool update_energy=true) {
 	int len = vertices.size(), len_f = facets.size();
 	if (update_geometry) {
+		for (int i = 0; i < len_f; i++) {
+			facets[i]->update_geo();
+		}
 		for (int i = 0; i < len; i++) {
 			vertices[i]->update_geo();
-		}
-		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_geo(); // Just assigning indices. Currently no other calculations.
 		}
 	}
 	if (update_energy) {
 		for (int i = 0; i < len; i++) {
 			vertices[i]->update_energy();
 		}
-		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_energy(MS::po);
-			facets[i]->inc_H_int(MS::po); // This could also change energy derivatives in vertices
-		}
 	}
 }
-int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &facets) {
+int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
+	auto &vertices = sm.vertices;
+	auto &facets = sm.facets;
+
 	int N = vertices.size(),
 		N_f = facets.size();
 
@@ -70,7 +69,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 		vertices[i]->make_initial();
 	}
 
-	{ // Do some statistics
+	{ // Doing some statistics
 		double total_edge_length = 0, total_area = 0, total_edge_length_sq = 0, total_area_sq = 0;
 		int num_edge2 = 0;
 		for (int i = 0; i < N; i++) {
@@ -106,7 +105,7 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 			<< "Stdev edge length: " << stdev_edge_length << std::endl
 			<< big_divider;
 		LOG(INFO) << "Meshwork properties: " << std::endl << ss.str();
-	}
+	} // End doing statistics
 
 
 	std::ofstream p_out, f_out, a_out;
@@ -117,11 +116,13 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 	switch (RUN_MODE) {
 	case 0:
+		// Place a filament
+		tips.push_back(new filament_tip(new math_public::Vec3()));
 		for (double a = 0.994e-6; a < 1.010e-6; a += 0.001e-6) {
 			// Update filament tip position
-			LOG(INFO) << "Polymer tip x position: " << update_len(a);
+			LOG(INFO) << "Polymer tip x position: " << (tips[0]->point->x = a);
 
-			minimization(vertices, facets);
+			minimization(sm, tips);
 
 			update_all_energy(vertices, facets);
 
@@ -137,8 +138,9 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 
 		}
 
-		minimization(vertices, facets);
-		update_all_energy(vertices, facets);
+		minimization(sm, tips);
+		sm.update_geo();
+		sm.update_energy();
 
 		for (int i = 0; i < N; i++) {
 			p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
@@ -166,14 +168,16 @@ int MS::simulation_start(std::vector<vertex*> &vertices, std::vector<facet*> &fa
 	return 0;
 }
 
-int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
+int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	/**************************************************************************
 		This function uses the conjugate gradient method to do the energy
 		minimization for vertices/facets system.
 	**************************************************************************/
+	auto &vertices = sm.vertices;
+
 	bool finished = false;
 	int N = vertices.size(); // Number of vertices
-	int N_f = facets.size(); // Number of facets
+	int N_t = tips.size(); // Number of tips
 	double H = 0, H_new = 0;
 	double *d_H = new double[3 * N];
 	double *d_H_new = new double[3 * N];
@@ -188,10 +192,10 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 	sd_min_out.open("F:\\sd_min_out.txt");
 	
 	// Initializing
-	update_all_energy(vertices, facets);
+	sm.update_geo();
+	sm.update_energy();
 	for (int i = 0; i < N; i++) {
-		// Get H and d_H
-		H += vertices[i]->H; // This is only the vertices part of the energy
+		// Get d_H
 		math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
 		d_H[i * 3] = cur_d_h_all.x;
 		d_H[i * 3 + 1] = cur_d_h_all.y;
@@ -206,12 +210,17 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 
 		//temp_out << MS::d_h_curv_g(&vertices[i], 0) << '\t' << MS::d_h_curv_g(&vertices[i], 1) << '\t' << MS::d_h_curv_g(&vertices[i], 2) << '\t';
 	}
-	for (int i = 0; i < N_f; i++) {
-		H += facets[i]->H; // Now add the facets part of the energy
+	for (int i = 0; i < N_t; i++) {
+		// we only update neighbor facets once throughout the minimization.
+		tips[i]->get_neighbor_facets(sm);
+		tips[i]->recalc_interactions();
+		tips[i]->calc_repulsion(); // This will also assign derivatives to vertices
+		H += tips[i]->H;
 	}
+	H += sm.get_sum_of_energy();
 	//temp_out.close();
 
-	int k = 0; // Iteration counter. Only for debug use.
+	int k = 0; // Iteration counter.
 
 	while (true) {
 		k++;
@@ -262,7 +271,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 			}
 		}
 
-		alpha = line_search(vertices, facets, N, H, N_f, H_new, p, d_H_max, d_H_new, m, m_new, alpha0);
+		alpha = line_search(sm, tips, H, H_new, p, d_H_max, d_H_new, m, m_new, alpha0);
 		// So far, H_new and d_H_new have already been updated in line_search.
 
 		// Temporary debugging output
@@ -333,7 +342,7 @@ int minimization(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &fa
 
 	return 0;
 }
-double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, int N, int N_f, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0) {
+double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, double H, double &H_new, double* p, double d_H_max, double *d_H_new, double m, double &m_new, double alpha0) {
 	/**************************************************************************
 	Purpose:
 		This function does the line search for a given search direction.
@@ -341,6 +350,9 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 	Parameters:
 		alpha0: max value that alpha could take.
 	**************************************************************************/
+	int N = sm.vertices.size();
+	auto &vertices = sm.vertices;
+	int N_t = tips.size();
 
 	double MIN_D_ALPHA_FAC = 1e-15; // Minimum delta
 
@@ -368,7 +380,12 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 			vertices[i]->point->y = vertices[i]->point_last->y + alpha * p[i * 3 + 1];
 			vertices[i]->point->z = vertices[i]->point_last->z + alpha * p[i * 3 + 2];
 		}
-		update_all_energy(vertices, facets);
+		sm.update_energy();
+		for (int i = 0; i < N_t; i++) {
+			// we do not update neighbor facets in line search.
+			tips[i]->recalc_interactions();
+			tips[i]->calc_repulsion(); // This will also assign derivatives to vertices
+		}
 
 		// Make sure that area is not negative
 		for (int i = 0; i < N; i++) {
@@ -382,11 +399,9 @@ double line_search(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 
 		// Renew the sum of energy
 		H_new = 0;
-		for (int i = 0; i < N; i++) {
-			H_new += vertices[i]->H;
-		}
-		for (int i = 0; i < N_f; i++) {
-			H_new += facets[i]->H;
+		H_new += sm.get_sum_of_energy();
+		for (int i = 0; i < N_t; i++) {
+			H_new += tips[i]->H;
 		}
 
 		if (USE_LINE_SEARCH && (H_new >= H_p)) { // Armijo condition not satisfied. simply taking c1=0

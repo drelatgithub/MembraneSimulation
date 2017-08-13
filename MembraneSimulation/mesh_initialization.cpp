@@ -12,7 +12,11 @@ Loading an already defined mesh file into the data structure.
 #include"surface_mesh.h"
 #include"simulation_process.h"
 
-bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets) {
+bool mesh_init(MS::surface_mesh &sm) {
+	auto &vertices = sm.vertices;
+	auto &facets = sm.facets;
+	auto &edges = sm.edges;
+
 	bool success = false;
 
 	char *position_file = "position.txt";
@@ -61,35 +65,53 @@ bool mesh_init(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &face
 		LOG(INFO) << "Number of vertices: " << num_vertices << "; Number of edges: " << num_edges;
 		int predicted_num_facets = num_edges - num_vertices + 2; // Euler characteristic is 2
 
-		LOG(INFO) << "Registering facets...";
+		LOG(INFO) << "Registering edges and facets...";
 		facets.reserve(predicted_num_facets);
+		edges.reserve(num_edges);
 		num_facets = 0;
 		for (int i = 0; i < num_vertices; i++) {
+			vertices[i]->f.resize(vertices[i]->neighbors, 0);
+			vertices[i]->e.resize(vertices[i]->neighbors, 0);
+		}
+		for (int i = 0; i < num_vertices; i++) {
 			for (int j = 0; j < vertices[i]->neighbors; j++) {
-				// Propose a facet
-				MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->nn[j]);
-
-				// Check whether this facet has already existed
-				bool exist = false;
-				for (int k = 0; k < facets.size(); k++) {
-					if (*facets[k] == *f) {
-						exist = true;
-						break;
-					}
-				}
-				if (!exist) {
-					facets.push_back(f); // Leave the facet in heap
-					f->update_geo();
+				if (!vertices[i]->f[j]) { // facet not registered
+					// Propose a facet
+					MS::facet *f = new MS::facet(vertices[i], vertices[i]->n[j], vertices[i]->nn[j]);
+					// should have j == f->ind[0]
+					if (true && j != f->ind[0])LOG(ERROR) << "Facet inconsistent: i=" << i << ", j=" << j;
+					vertices[i]->f[j] = f;
+					vertices[i]->n[j]->f[f->ind[1]] = f;
+					vertices[i]->nn[j]->f[f->ind[2]] = f;
+					facets.push_back(f);
 					num_facets++;
 				}
-				else {
-					delete f;
+				if (!vertices[i]->e[j]) { // edge not registered
+					// Propose an edge
+					MS::edge *e = new MS::edge(vertices[i], vertices[i]->n[j]);
+					// should have j == e->ind[0]
+					if (true && j != e->ind[0])LOG(ERROR) << "Edge inconsistent: i=" << i << ", j=" << j;
+					vertices[i]->e[j] = e;
+					vertices[i]->n[j]->e[e->ind[1]] = e;
+					edges.push_back(e);
 				}
+
 			}
 		}
 		LOG(DEBUG) << "Predicted number of facets: " << predicted_num_facets << "; Number of facets: " << num_facets;
 		if (predicted_num_facets != num_facets)
 			LOG(WARNING) << "The number of facets (" << num_facets << ") is not as expected (" << predicted_num_facets << ").";
+
+		// Facets-edges interplay
+		for (int i = 0; i < num_facets; i++) {
+			for (int j = 0; j < 3; j++)
+				facets[i]->e[j] = facets[i]->v[j]->e[facets[i]->ind[j]];
+		}
+		for (int i = 0; i < num_edges; i++) {
+			for (int j = 0; j < 2; j++)
+				edges[i]->f[j] = edges[i]->v[j]->f[edges[i]->ind[j]];
+		}
+
 
 		position_in.close();
 		neighbors_in.close();
