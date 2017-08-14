@@ -44,7 +44,8 @@ namespace MS {
 		******************************/
 		double H;
 		math_public::Vec3 d_H; // derivative of energy on THIS tip. Other derivatives go to vertices.
-		void calc_repulsion();
+		void calc_repulsion_facet(facet& f);
+		void calc_repulsion(surface_mesh& sm);
 
 	};
 	extern math_public::Vec3 *po;

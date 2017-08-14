@@ -19,6 +19,9 @@ namespace math_public {
 		if (raw < 0)raw += loop_size;
 		return raw;
 	}
+	inline bool is_in_a_plane(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3, double eps = 1e-21) {
+		return equal(triple_product(p1 - p0, p2 - p0, p3 - p0), 0, eps);
+	}
 	inline double smooth_sgn(double x) {
 		return 0.5 + 0.5*tanh(x);
 	}
@@ -145,6 +148,9 @@ namespace math_public {
 	}
 	inline Vec3 cross(const Vec3 &op1, const Vec3 &op2) {
 		return op1.cross(op2);
+	}
+	inline double triple_product(const Vec3& op1, const Vec3& op2, const Vec3& op3) {
+		return op1.cross(op2).dot(op3);
 	}
 
 	inline double dist2(const Vec3 &op1, const Vec3 &op2) {
