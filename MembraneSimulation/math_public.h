@@ -19,7 +19,7 @@ namespace math_public {
 		if (raw < 0)raw += loop_size;
 		return raw;
 	}
-	inline bool is_in_a_plane(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3, double eps = 1e-21) {
+	inline bool is_in_a_plane(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3, double eps = 1e-25) {
 		return equal(triple_product(p1 - p0, p2 - p0, p3 - p0), 0, eps);
 	}
 	inline double smooth_sgn(double x) {
