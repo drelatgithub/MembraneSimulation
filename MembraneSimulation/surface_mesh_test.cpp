@@ -203,6 +203,7 @@ test::TestCase MS::filament_tip::test_case("Filament Tip Test", []() {
 		Vec3(-0.001e-7,0.005e-7,0.001e-7),
 		Vec3(0.001e-7,-0.001e-7,0.005e-7)
 	};
+	Vec3 movep(0.001e-7, 0.001e-7, -0.0001e-7);
 
 	test_case.new_step("Calculate energy");
 	ft.calc_repulsion(sm);
@@ -213,31 +214,24 @@ test::TestCase MS::filament_tip::test_case("Filament Tip Test", []() {
 		<< f.v[1]->d_H.str(1) << " "
 		<< f.v[2]->d_H.str(1);
 
-	test_case.new_step("Check area");
-	double ex_S = 3 * sqrt(3) / 4 * 1e-14;
-	LOG(TEST_DEBUG) << "Area: " << f.S << " Expected: " << ex_S;
-	test_case.assert_bool(equal(f.S, ex_S), "Area incorrect.");
-
 	test_case.new_step("Check derivatives");
-	Vec3 old_n_vec = f.n_vec;
-	double old_S = f.S;
-	Vec3 diff_n_vec_ex;
-	double diff_S_ex = 0;
+	double old_H = ft.H;
+	double diff_H_ex = 0;
 	for (int i = 0; i < 3; i++) {
-		diff_n_vec_ex += f.d_n_vec[i].transpose() * move[i];
-		diff_S_ex += f.d_S[i] * move[i]; // dot product
+		diff_H_ex += f.v[i]->d_H * move[i];
 	}
+	diff_H_ex += ft.d_H * movep;
 
 	for (int i = 0; i < 3; i++) {
 		*(f.v[i]->point) += move[i];
 	}
+	*(ft.point) += movep;
 	f.update_geo();
+	ft.calc_repulsion(sm);
 
-	Vec3 diff_n_vec = f.n_vec - old_n_vec;
-	double diff_S = f.S - old_S;
-	LOG(TEST_DEBUG) << "Normal vector difference: " << diff_n_vec.str(1) << " Expected: " << diff_n_vec_ex.str(1);
-	test_case.assert_bool(diff_n_vec.equal_to(diff_n_vec_ex, 1e-2), "Normal vector derivative incorrect.");
-	test_case.assert_bool(equal(diff_S, diff_S_ex), "Area derivative incorrect.");
+	double diff_H = ft.H - old_H;
+	LOG(TEST_DEBUG) << "Energy difference: " << diff_H << " Expected: " << diff_H_ex;
+	test_case.assert_bool(equal(diff_H, diff_H_ex, 1e-20), "Energy derivative incorrect.");
 
 	test_case.new_step("Cleaning");
 	for (int i = 0; i < N; i++) {
