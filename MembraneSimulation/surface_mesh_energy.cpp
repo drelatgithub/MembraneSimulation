@@ -63,202 +63,9 @@ void MS::vertex::update_energy() {
 	sum_energy();
 }
 
-void MS::filament_tip::get_neighbor_facets(const MS::surface_mesh& sm) {
-	// This function can be improved by putting vertices in different compartments,
-	// so that we only need to search neighboring compartments.
-	static double distance_cut_off = std::fmax(100e-9, 20);
-	int N = sm.vertices.size();
-	n_facets.clear();
-	for (int i = 0; i < N; i++) {
-		double d = dist(*point, *(sm.vertices[i]->point));
-		if (d < distance_cut_off) {
-			for (int j = 0; j < sm.vertices[i]->neighbors; j++) {
-				if (std::find(n_facets.begin(), n_facets.end(), sm.vertices[i]->f[j]) == n_facets.end()) {
-					n_facets.push_back(sm.vertices[i]->f[j]);
-				}
-			}
-		}
-	}
-}
-MS::tip_facet_interaction MS::filament_tip::get_facet_interaction(const MS::facet& f) {
-	/**************************************************************************
-	This function calculates the distance from the tip to a certain facet.
 
-	Returns:
-		A structure containing distance and closest vector information
-	**************************************************************************/
-	tip_facet_interaction res;
-	res.which_facet = &f;
-
-	Vec3 r0p = *point - *(f.v[0]->point);
-	
-
-	// Calculate alpha and beta
-	double B1 = r0p.dot(f.v1), B2 = r0p.dot(f.v2);
-	Vec3 d0_B1 = -f.v1 - r0p, d1_B1 = r0p, dp_B1 = f.v1,
-		d0_B2 = -f.v2 - r0p, d2_B2 = r0p, dp_B2 = f.v2;
-
-	double alpha = f.AR11*B1 + f.AR12*B2,
-		beta = f.AR12*B1 + f.AR22*B2; // Actually it's AR21 * B1 + AR22 * B2
-
-	if (alpha > 0 && beta > 0 && alpha + beta < 1) { // In triangle
-		Vec3 d0_alpha = f.d_AR11[0] * B1 + f.AR11*d0_B1 + f.d_AR12[0] * B2 + f.AR12*d0_B2,
-			d1_alpha = f.d_AR11[1] * B1 + f.AR11*d1_B1 + f.d_AR12[1] * B2,
-			d2_alpha = f.d_AR11[2] * B1 + f.d_AR12[2] * B2 + f.AR12*d2_B2,
-			dp_alpha = f.AR11*dp_B1 + f.AR12*dp_B2,
-			d0_beta = f.d_AR12[0] * B1 + f.AR12*d0_B1 + f.d_AR22[0] * B2 + f.AR22*d0_B2,
-			d1_beta = f.d_AR12[1] * B1 + f.AR12*d1_B1 + f.d_AR22[1] * B2,
-			d2_beta = f.d_AR12[2] * B1 + f.d_AR22[2] * B2 + f.AR22*d2_B2,
-			dp_beta = f.AR12*dp_B1 + f.AR22*dp_B2;
-		Vec3 rO = *(f.v[0]->point) + alpha*f.v1 + beta*f.v2;
-		Mat3 d0_rO = d0_alpha.tensor(f.v1) + d0_beta.tensor(f.v2) + (1 - alpha - beta)* Eye3,
-			d1_rO = d1_alpha.tensor(f.v1) + alpha*Eye3 + d1_beta.tensor(f.v2),
-			d2_rO = d2_alpha.tensor(f.v1) + d2_beta.tensor(f.v2) + beta*Eye3,
-			dp_rO = dp_alpha.tensor(f.v1) + dp_beta.tensor(f.v2);
-		res.nearest_vec = *point - rO;
-		// d is not calculated by getting norm of nearest_vec because it would be non-differentiable when d->0
-		// instead, we use d = dot(n_vec, r0p)
-		res.d = dot(f.n_vec, r0p);
-		res.d_d[0] = f.d_n_vec[0] * r0p - f.n_vec;
-		res.d_d[1] = f.d_n_vec[1] * r0p;
-		res.d_d[2] = f.d_n_vec[2] * r0p;
-		res.dp_d = f.n_vec;
-		res.pos = 0;
-	}
-	else {
-		Vec3 r1p = *point - *(f.v[1]->point), r2p = *point - *(f.v[2]->point);
-		if(beta<=0 && dot(r0p,f.v1)>0 && dot(r1p,f.v1)<0){ // on edge v1
-			bool edge_flip = false;
-			if (f.v[0] != f.e[0]->v[0])edge_flip = true;
-			tip_edge_interaction edge_result = get_edge_interaction(*(f.e[0]));
-			res.nearest_vec = edge_result.nearest_vec;
-			res.d = edge_result.d;
-			if (edge_flip) {
-				res.d_d[0] = edge_result.d_d[1];
-				res.d_d[1] = edge_result.d_d[0];
-			}
-			else {
-				res.d_d[0] = edge_result.d_d[0];
-				res.d_d[1] = edge_result.d_d[1];
-			}
-			res.d_d[2].set(0, 0, 0);
-			res.dp_d = edge_result.dp_d;
-			res.pos = 1;
-		}else if(alpha<=0 && dot(r0p,f.v2)>0 && dot(r2p,f.v2)<0){ // on edge v2
-			bool edge_flip = false;
-			if (f.v[2] != f.e[2]->v[0])edge_flip = true;
-			tip_edge_interaction edge_result = get_edge_interaction(*(f.e[2]));
-			res.nearest_vec = edge_result.nearest_vec;
-			res.d = edge_result.d;
-			if (edge_flip) {
-				res.d_d[2] = edge_result.d_d[1];
-				res.d_d[0] = edge_result.d_d[0];
-			}
-			else {
-				res.d_d[2] = edge_result.d_d[0];
-				res.d_d[0] = edge_result.d_d[1];
-			}
-			res.d_d[1].set(0, 0, 0);
-			res.dp_d = edge_result.dp_d;
-			res.pos = 3;
-		}else if(alpha+beta>=1 && dot(r1p,f.r12)>0 && dot(r2p,f.r12)<0){ // on edge r12
-			bool edge_flip = false;
-			if (f.v[1] != f.e[1]->v[0])edge_flip = true;
-			tip_edge_interaction edge_result = get_edge_interaction(*(f.e[1]));
-			res.nearest_vec = edge_result.nearest_vec;
-			res.d = edge_result.d;
-			if (edge_flip) {
-				res.d_d[1] = edge_result.d_d[1];
-				res.d_d[2] = edge_result.d_d[0];
-			}
-			else {
-				res.d_d[1] = edge_result.d_d[0];
-				res.d_d[2] = edge_result.d_d[1];
-			}
-			res.d_d[0].set(0, 0, 0);
-			res.dp_d = edge_result.dp_d;
-			res.pos = 2;
-		}else if(dot(r0p,f.v1)<=0 && dot(r0p,f.v2)<=0){ // on vertex 0
-			res.nearest_vec = *point - *(f.v[0]->point);
-			res.d = res.nearest_vec.get_norm();
-			res.d_d[0] = (-Eye3)*res.nearest_vec / res.d;
-			res.d_d[1].set(0, 0, 0);
-			res.d_d[2].set(0, 0, 0);
-			res.dp_d = (Eye3)*res.nearest_vec / res.d;
-			res.pos = 4;
-		}else if(dot(r1p,f.v1)>=0 && dot(r1p,f.r12)<=0){ // on vertex 1
-			res.nearest_vec = *point - *(f.v[1]->point);
-			res.d = res.nearest_vec.get_norm();
-			res.d_d[1] = (-Eye3)*res.nearest_vec / res.d;
-			res.d_d[0].set(0, 0, 0);
-			res.d_d[2].set(0, 0, 0);
-			res.dp_d = (Eye3)*res.nearest_vec / res.d;
-			res.pos = 5;
-		}else if(dot(r2p,f.r12)>=0 && dot(r2p,f.v2)>=0){ // on vertex 2
-			res.nearest_vec = *point - *(f.v[2]->point);
-			res.d = res.nearest_vec.get_norm();
-			res.d_d[2] = (-Eye3)*res.nearest_vec / res.d;
-			res.d_d[0].set(0, 0, 0);
-			res.d_d[1].set(0, 0, 0);
-			res.dp_d = (Eye3)*res.nearest_vec / res.d;
-			res.pos = 6;
-		}
-		else {
-			LOG(ERROR) << "Unexpected condition when interacting with the triangle";
-			LOG(DEBUG) << "Facet: " << f.v[0]->point->str(1) << " " << f.v[1]->point->str(1) << " " << f.v[2]->point->str(1)
-				<< " Point: " << point->str(1);
-			LOG(DEBUG) << "alpha: " << alpha << " beta: " << beta;
-			LOG(DEBUG) << "r0p: " << r0p.str(1);
-			LOG(DEBUG) << "r1p: " << r1p.str(1);
-			LOG(DEBUG) << "r2p: " << r2p.str(1);
-		}
-	}
-
-	return res;
-}
-MS::tip_edge_interaction MS::filament_tip::get_edge_interaction(const MS::edge& e) {
-	tip_edge_interaction res;
-
-	Vec3 v1 = *(e.v[1]->point) - *(e.v[0]->point);
-	v1.calc_norm();
-	Vec3 r0p = *point - *(e.v[0]->point);
-
-	// alpha = ( r0p \cdot v1 ) / |v1|^2
-	// First calculate derivative of v1 / |v1|^2
-	Vec3 vv = v1 / v1.norm2;
-	Mat3 d1_vv = Eye3 / v1.norm2 - 2 / (v1.norm2*v1.norm2)*v1.tensor(v1); // Notebook page 65
-	Mat3 d0_vv = -d1_vv;
-
-	// Then calculate the derivative of alpha
-	double alpha = dot(r0p, vv);
-	Vec3 d0_alpha = -vv + d0_vv*r0p,
-		d1_alpha = d1_vv*r0p,
-		dp_alpha = vv;
-
-	// Then rO
-	Vec3 rO = *(e.v[0]->point) + alpha*v1;
-	res.nearest_vec = *point - rO;
-	res.d = res.nearest_vec.get_norm();
-	Mat3 d0_rO = (1 - alpha)*Eye3 + d0_alpha.tensor(v1),
-		d1_rO = alpha*Eye3 + d1_alpha.tensor(v1),
-		dp_rO = dp_alpha.tensor(v1);
-	res.d_d[0] = (-d0_rO)*res.nearest_vec / res.d;
-	res.d_d[1] = (-d1_rO)*res.nearest_vec / res.d;
-	res.dp_d = (Eye3 - dp_rO)*res.nearest_vec / res.d;
-
-	return res;
-}
-
-void MS::filament_tip::recalc_interactions() {
-	int N = n_facets.size();
-	interactions.clear();
-	interactions.reserve(N);
-	for (int i = 0; i < N; i++) {
-		interactions.push_back(get_facet_interaction(*n_facets[i]));
-	}
-}
 void MS::filament_tip::calc_repulsion_facet(MS::facet& f) {
-	double H_rep = 0;
+	// Calculate interaction energy between the filament tip and a certain facet
 
 	if (is_in_a_plane(*(f.v[0]->point), *(f.v[1]->point), *(f.v[2]->point), *point)) {
 		*point -= f.n_vec*1e-10; // Move into the cell a little bit.
@@ -368,15 +175,16 @@ void MS::filament_tip::calc_repulsion_facet(MS::facet& f) {
 	// Calculate energy
 	// H = k * |r01 x r12| * I
 	double en = surface_repulsion_k * f.S * I;
+	H += en;
 
 	for (int i = 0; i < 3; i++) {
 		f.v[i]->inc_d_H_int(surface_repulsion_k*(f.d_S[i] * I + d_I[i] * f.S));
 	}
-	
 
 
 }
 void MS::filament_tip::calc_repulsion(MS::surface_mesh& sm) {
+	H = 0;
 	int n_f = sm.facets.size();
 	for (int i = 0; i < n_f; i++) {
 		calc_repulsion_facet(*(sm.facets[i]));
