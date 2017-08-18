@@ -212,9 +212,7 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	}
 	for (int i = 0; i < N_t; i++) {
 		// we only update neighbor facets once throughout the minimization.
-		tips[i]->get_neighbor_facets(sm);
-		tips[i]->recalc_interactions();
-		tips[i]->calc_repulsion(); // This will also assign derivatives to vertices
+		tips[i]->calc_repulsion(sm); // This will also assign derivatives to vertices
 		H += tips[i]->H;
 	}
 	H += sm.get_sum_of_energy();
@@ -383,8 +381,7 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 		sm.update_energy();
 		for (int i = 0; i < N_t; i++) {
 			// we do not update neighbor facets in line search.
-			tips[i]->recalc_interactions();
-			tips[i]->calc_repulsion(); // This will also assign derivatives to vertices
+			tips[i]->calc_repulsion(sm); // This will also assign derivatives to vertices
 		}
 
 		// Make sure that area is not negative

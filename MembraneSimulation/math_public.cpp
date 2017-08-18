@@ -3,6 +3,10 @@
 
 using namespace math_public;
 
+bool math_public::is_in_a_plane(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3, double eps) {
+	return equal(triple_product(p1 - p0, p2 - p0, p3 - p0), 0, eps);
+}
+
 test::TestCase math_public::test_case_arithmetics("Math arithmetics", []() {
 	auto& tc = test_case_arithmetics;
 	{
