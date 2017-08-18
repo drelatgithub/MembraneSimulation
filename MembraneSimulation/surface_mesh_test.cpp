@@ -132,9 +132,9 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	f.update_geo();
 
 	Vec3 move[3] = {
-		Vec3(0.05e-7,0.01e-7,-0.01e-7),
-		Vec3(-0.01e-7,0.05e-7,0.01e-7),
-		Vec3(0.01e-7,-0.01e-7,0.05e-7)
+		Vec3(0.005e-7,0.001e-7,-0.001e-7),
+		Vec3(-0.001e-7,0.005e-7,0.001e-7),
+		Vec3(0.001e-7,-0.001e-7,0.005e-7)
 	};
 
 	test_case.new_step("Check normal vector");
@@ -149,20 +149,23 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	test_case.new_step("Check derivatives");
 	Vec3 old_n_vec = f.n_vec;
 	double old_S = f.S;
-	Vec3 new_n_vec_ex = f.n_vec;
-	double new_S_ex = f.S;
+	Vec3 diff_n_vec_ex;
+	double diff_S_ex = 0;
 	for (int i = 0; i < 3; i++) {
-		new_n_vec_ex += f.d_n_vec[i] * move[i];
-		new_S_ex += f.d_S[i] * move[i];
+		diff_n_vec_ex += f.d_n_vec[i].transpose() * move[i];
+		diff_S_ex += f.d_S[i] * move[i]; // dot product
 	}
 
 	for (int i = 0; i < 3; i++) {
 		*(f.v[i]->point) += move[i];
 	}
-	Vec3 new_n_vec = f.n_vec;
-	double new_S = f.S;
-	test_case.assert_bool(new_n_vec.equal_to(new_n_vec_ex), "Normal vector derivative incorrect.");
-	test_case.assert_bool(equal(new_S, new_S_ex), "Area derivative incorrect.");
+	f.update_geo();
+
+	Vec3 diff_n_vec = f.n_vec - old_n_vec;
+	double diff_S = f.S - old_S;
+	LOG(TEST_DEBUG) << "Normal vector difference: " << diff_n_vec.str(1) << " Expected: " << diff_n_vec_ex.str(1);
+	test_case.assert_bool(diff_n_vec.equal_to(diff_n_vec_ex,1e-2), "Normal vector derivative incorrect.");
+	test_case.assert_bool(equal(diff_S, diff_S_ex), "Area derivative incorrect.");
 
 	/*
 
