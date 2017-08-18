@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 #include"surface_mesh.h"
+#include"surface_mesh_tip.h"
 
 using namespace math_public;
 
@@ -122,6 +123,7 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 
 	LOG(TEST_DEBUG) << "Generating a triangle mesh which includes 3 vertices...";
 	std::vector<vertex*> vertices;
+	int N = 3;
 
 	vertices.push_back(new vertex(new Vec3(1e-7, 0, 0)));
 	vertices.push_back(new vertex(new Vec3(-0.5e-7, sqrt(3) /2 *1e-7, 0)));
@@ -166,5 +168,81 @@ test::TestCase MS::facet::test_case("Facet Test", []() {
 	LOG(TEST_DEBUG) << "Normal vector difference: " << diff_n_vec.str(1) << " Expected: " << diff_n_vec_ex.str(1);
 	test_case.assert_bool(diff_n_vec.equal_to(diff_n_vec_ex,1e-2), "Normal vector derivative incorrect.");
 	test_case.assert_bool(equal(diff_S, diff_S_ex), "Area derivative incorrect.");
+
+	test_case.new_step("Cleaning");
+	for (int i = 0; i < N; i++) {
+		vertices[i]->release_point();
+		delete vertices[i];
+	}
+
+});
+
+test::TestCase MS::filament_tip::test_case("Filament Tip Test", []() {
+	test_case.new_step("Initializing...");
+
+	LOG(TEST_DEBUG) << "Generating a triangle mesh which includes 3 vertices...";
+	std::vector<vertex*> vertices;
+	int N = 3;
+
+	vertices.push_back(new vertex(new Vec3(1e-7, 0, 0)));
+	vertices.push_back(new vertex(new Vec3(-0.5e-7, sqrt(3) / 2 * 1e-7, 0)));
+	vertices.push_back(new vertex(new Vec3(-0.5e-7, -sqrt(3) / 2 * 1e-7, 0)));
+
+	facet f(vertices[0], vertices[1], vertices[2]);
+
+	f.update_geo();
+
+	surface_mesh sm;
+	sm.facets.push_back(&f);
+
+	LOG(TEST_DEBUG) << "Generating a filament tip...";
+	filament_tip ft(new Vec3(0, 0, 0.5e-8));
+
+	Vec3 move[3] = {
+		Vec3(0.005e-7,0.001e-7,-0.001e-7),
+		Vec3(-0.001e-7,0.005e-7,0.001e-7),
+		Vec3(0.001e-7,-0.001e-7,0.005e-7)
+	};
+
+	test_case.new_step("Calculate energy");
+	ft.calc_repulsion(sm);
+	LOG(TEST_DEBUG) << "Interaction energy: " << ft.H;
+	LOG(TEST_DEBUG) << "Energy derivative on tip: " << ft.d_H.str(1);
+	LOG(TEST_DEBUG) << "Energy derivative on vertices: "
+		<< f.v[0]->d_H.str(1) << " "
+		<< f.v[1]->d_H.str(1) << " "
+		<< f.v[2]->d_H.str(1);
+
+	test_case.new_step("Check area");
+	double ex_S = 3 * sqrt(3) / 4 * 1e-14;
+	LOG(TEST_DEBUG) << "Area: " << f.S << " Expected: " << ex_S;
+	test_case.assert_bool(equal(f.S, ex_S), "Area incorrect.");
+
+	test_case.new_step("Check derivatives");
+	Vec3 old_n_vec = f.n_vec;
+	double old_S = f.S;
+	Vec3 diff_n_vec_ex;
+	double diff_S_ex = 0;
+	for (int i = 0; i < 3; i++) {
+		diff_n_vec_ex += f.d_n_vec[i].transpose() * move[i];
+		diff_S_ex += f.d_S[i] * move[i]; // dot product
+	}
+
+	for (int i = 0; i < 3; i++) {
+		*(f.v[i]->point) += move[i];
+	}
+	f.update_geo();
+
+	Vec3 diff_n_vec = f.n_vec - old_n_vec;
+	double diff_S = f.S - old_S;
+	LOG(TEST_DEBUG) << "Normal vector difference: " << diff_n_vec.str(1) << " Expected: " << diff_n_vec_ex.str(1);
+	test_case.assert_bool(diff_n_vec.equal_to(diff_n_vec_ex, 1e-2), "Normal vector derivative incorrect.");
+	test_case.assert_bool(equal(diff_S, diff_S_ex), "Area derivative incorrect.");
+
+	test_case.new_step("Cleaning");
+	for (int i = 0; i < N; i++) {
+		vertices[i]->release_point();
+		delete vertices[i];
+	}
 
 });

@@ -25,8 +25,14 @@ namespace MS {
 		void calc_repulsion_facet(facet& f);
 		void calc_repulsion(surface_mesh& sm);
 
-	};
-	extern math_public::Vec3 *po;
 
-	extern std::vector<facet*> po_neighbor;
+		/******************************
+		Test
+		******************************/
+		static test::TestCase test_case;
+
+
+	};
+
+
 }
