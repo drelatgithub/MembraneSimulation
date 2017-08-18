@@ -119,16 +119,53 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 
 test::TestCase MS::facet::test_case("Facet Test", []() {
 	test_case.new_step("Initializing");
-	// TODO: This test is obsolete. Need to rewrite test.
-	/*
+
 	LOG(TEST_DEBUG) << "Generating a triangle mesh which includes 3 vertices...";
 	std::vector<vertex*> vertices;
 
-	vertices.push_back(new vertex(new Vec3(0.01, 0, 0)));
-	vertices.push_back(new vertex(new Vec3(-0.005, sqrt(3)/200, 0)));
-	vertices.push_back(new vertex(new Vec3(-0.005, -sqrt(3)/200, 0)));
+	vertices.push_back(new vertex(new Vec3(1e-7, 0, 0)));
+	vertices.push_back(new vertex(new Vec3(-0.5e-7, sqrt(3) /2 *1e-7, 0)));
+	vertices.push_back(new vertex(new Vec3(-0.5e-7, -sqrt(3) /2 *1e-7, 0)));
 
 	facet f(vertices[0], vertices[1], vertices[2]);
+
+	f.update_geo();
+
+	Vec3 move[3] = {
+		Vec3(0.05e-7,0.01e-7,-0.01e-7),
+		Vec3(-0.01e-7,0.05e-7,0.01e-7),
+		Vec3(0.01e-7,-0.01e-7,0.05e-7)
+	};
+
+	test_case.new_step("Check normal vector");
+	LOG(TEST_DEBUG) << "Normal vector: " << f.n_vec.str(1);
+	test_case.assert_bool(f.n_vec.equal_to(Vec3(0, 0, 1)), "Normal vector incorrect.");
+
+	test_case.new_step("Check area");
+	double ex_S = 3 * sqrt(3) / 4 * 1e-14;
+	LOG(TEST_DEBUG) << "Area: " << f.S << " Expected: " << ex_S;
+	test_case.assert_bool(equal(f.S, ex_S), "Area incorrect.");
+
+	test_case.new_step("Check derivatives");
+	Vec3 old_n_vec = f.n_vec;
+	double old_S = f.S;
+	Vec3 new_n_vec_ex = f.n_vec;
+	double new_S_ex = f.S;
+	for (int i = 0; i < 3; i++) {
+		new_n_vec_ex += f.d_n_vec[i] * move[i];
+		new_S_ex += f.d_S[i] * move[i];
+	}
+
+	for (int i = 0; i < 3; i++) {
+		*(f.v[i]->point) += move[i];
+	}
+	Vec3 new_n_vec = f.n_vec;
+	double new_S = f.S;
+	test_case.assert_bool(new_n_vec.equal_to(new_n_vec_ex), "Normal vector derivative incorrect.");
+	test_case.assert_bool(equal(new_S, new_S_ex), "Area derivative incorrect.");
+
+	/*
+
 	for (int i = 0; i < 3; i++) {
 		f.ind[i] = 0;
 		vertices[i]->n.push_back(vertices[loop_add(i, 1, 3)]);
