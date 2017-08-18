@@ -338,7 +338,7 @@ void facet::calc_normal() {
 }
 void facet::calc_area_and_projmat() {
 
-	// Calculate the double area of the triangle.
+	// Calculate the area of the triangle.
 	S = cross(v1, v2).get_norm() / 2;
 	if (S <= 0) {
 		LOG(WARNING) << "Facet area is not positive. S = " << S;
