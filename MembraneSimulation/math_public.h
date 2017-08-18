@@ -232,6 +232,11 @@ namespace math_public {
 			get_row_vec();
 		}
 
+		inline Mat3 transpose()const {
+			// This function only works when no changes are made after update() is called.
+			return Mat3(x_row, y_row, z_row);
+		}
+
 		// test
 		static test::TestCase test_case;
 	};
