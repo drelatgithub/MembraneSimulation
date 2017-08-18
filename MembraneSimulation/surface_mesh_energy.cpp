@@ -176,7 +176,7 @@ void MS::filament_tip::calc_repulsion_facet(MS::facet& f) {
 	// H = k * |r01 x r12| * I
 	double en = surface_repulsion_k * f.S * I;
 	H += en;
-	d_H = surface_repulsion_k*(f.d_S[3] * I + d_I[3] * f.S);
+	d_H += surface_repulsion_k*(f.d_S[3] * I + d_I[3] * f.S);
 
 	for (int i = 0; i < 3; i++) {
 		f.v[i]->inc_d_H_int(surface_repulsion_k*(f.d_S[i] * I + d_I[i] * f.S));
@@ -186,6 +186,7 @@ void MS::filament_tip::calc_repulsion_facet(MS::facet& f) {
 }
 void MS::filament_tip::calc_repulsion(MS::surface_mesh& sm) {
 	H = 0;
+	d_H.set(0, 0, 0);
 	int n_f = sm.facets.size();
 	for (int i = 0; i < n_f; i++) {
 		calc_repulsion_facet(*(sm.facets[i]));
