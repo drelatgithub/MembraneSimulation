@@ -118,7 +118,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 	case 0:
 		// Place a filament
 		tips.push_back(new filament_tip(new math_public::Vec3()));
-		for (double a = 0.994e-6; a < 1.010e-6; a += 0.001e-6) {
+		for (double a = 0.990e-6; a < 1.010e-6; a += 0.001e-6) {
 			// Update filament tip position
 			LOG(INFO) << "Polymer tip x position: " << (tips[0]->point->x = a);
 
@@ -191,9 +191,17 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	f_min_out.open("F:\\f_min_out.txt");
 	sd_min_out.open("F:\\sd_min_out.txt");
 	
-	// Initializing
+	// First calculation of energy and their derivatives
 	sm.update_geo();
 	sm.update_energy();
+	for (int i = 0; i < N_t; i++) {
+		// we only update neighbor facets once throughout the minimization.
+		tips[i]->calc_repulsion(sm); // This will also assign derivatives to vertices
+		H += tips[i]->H;
+	}
+	H += sm.get_sum_of_energy();
+
+	// Initializing
 	for (int i = 0; i < N; i++) {
 		// Get d_H
 		math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
@@ -208,15 +216,7 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 		// Store vertices location as the last location
 		vertices[i]->make_last();
 
-		//temp_out << MS::d_h_curv_g(&vertices[i], 0) << '\t' << MS::d_h_curv_g(&vertices[i], 1) << '\t' << MS::d_h_curv_g(&vertices[i], 2) << '\t';
 	}
-	for (int i = 0; i < N_t; i++) {
-		// we only update neighbor facets once throughout the minimization.
-		tips[i]->calc_repulsion(sm); // This will also assign derivatives to vertices
-		H += tips[i]->H;
-	}
-	H += sm.get_sum_of_energy();
-	//temp_out.close();
 
 	int k = 0; // Iteration counter.
 
@@ -378,6 +378,7 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 			vertices[i]->point->y = vertices[i]->point_last->y + alpha * p[i * 3 + 1];
 			vertices[i]->point->z = vertices[i]->point_last->z + alpha * p[i * 3 + 2];
 		}
+		sm.update_geo();
 		sm.update_energy();
 		for (int i = 0; i < N_t; i++) {
 			// we do not update neighbor facets in line search.
