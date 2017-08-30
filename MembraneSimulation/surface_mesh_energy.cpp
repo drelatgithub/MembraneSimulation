@@ -217,7 +217,7 @@ void MS::surface_mesh::update_energy() {
 	int N;
 	N = vertices.size();
 	for (int i = 0; i < N; i++) {
-		vertices[i]->update_energy();
+		vertices[i]->update_energy(osm_p);
 	}
 }
 double MS::surface_mesh::get_sum_of_energy() {

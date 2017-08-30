@@ -244,6 +244,11 @@ namespace MS {
 
 		void update_energy(); // This will clear all foreign interactions and derivatives.
 		double get_sum_of_energy();
+
+		/************************************
+		Universal variables for the meshwork
+		************************************/
+		double osm_p;
 	};
 
 }

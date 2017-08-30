@@ -54,7 +54,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	vertices[0]->calc_curv_g();
 	vertices[0]->make_last();
 	vertices[0]->make_initial();
-	vertices[0]->update_energy();
+	vertices[0]->update_energy(0);
 	Vec3 dx(-0.001, 0.00001, 0.0005);
 	double cur_area = vertices[0]->area,
 		cur_H_area = vertices[0]->H_area,
@@ -77,7 +77,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	vertices[0]->calc_area();
 	vertices[0]->calc_curv_h();
 	vertices[0]->calc_curv_g();
-	vertices[0]->update_energy();
+	vertices[0]->update_energy(0);
 
 	LOG(TEST_DEBUG) << "-------------------- After change --------------------";
 	double del_area = vertices[0]->area - cur_area,
