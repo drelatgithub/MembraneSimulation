@@ -72,13 +72,14 @@ namespace MS {
 		
 		math_public::Vec3 n_vec; // Normal vector (pseudo)
 		// We calculate the normal vector using the average of surrounding facet normal vectors.
-		//math_public::Mat3 d_n_vec;
-		//std::vector<math_public::Mat3> dn_n_vec;
+		math_public::Mat3 d_n_vec;
+		std::vector<math_public::Mat3> dn_n_vec;
 		
 		math_public::Vec3 Div1VecField;
 		math_public::Mat3 d_Div1VecField;
 		double volume_op; // The volume contribution of a vertex using divergence theorem.
 		math_public::Vec3 d_volume_op;
+		std::vector<math_public::Vec3> dn_volume_op;
 
 		int dump_data_vectors(int size=1);
 

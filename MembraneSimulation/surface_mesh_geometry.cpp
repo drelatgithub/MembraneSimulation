@@ -60,6 +60,12 @@ int vertex::dump_data_vectors(int size) {
 		dn_area.push_back(Vec3());
 		dn_curv_h.push_back(Vec3());
 		dn_curv_g.push_back(Vec3());
+
+		// normal
+		dn_n_vec.push_back(Mat3());
+
+		// volume integrand
+		dn_volume_op.push_back(Vec3());
 	}
 
 	return 0;
@@ -297,9 +303,37 @@ void vertex::calc_normal() {
 		sum += f[i]->n_vec * theta[i];
 	}
 	n_vec = sum / sum.get_norm();
+
+	// determine derivative of "sum"
+	Mat3 d_sum;
+	Mat3 *dn_sum = new Mat3[neighbors];
+	for (int i = 0; i < neighbors; i++) {
+		// Find the index j on the facet which points to the central vertex
+		int j = 0;
+		while (j < 3 && f[i]->v[j] != this) j++;
+		// Give the derivative to the central vertex
+		d_sum += f[i]->d_n_vec[j] * theta[i] + d_theta[i].tensor(f[i]->n_vec);
+		// Give the derivative to the neighbor vertex
+		dn_sum[i] += f[i]->d_n_vec[loop_add(j, 1, 3)] * theta[i] + dn_theta[i].tensor(f[i]->n_vec);
+		// Give the derivative to the next neighbor vertex
+		dn_sum[loop_add(i, 1, neighbors)] += f[i]->d_n_vec[loop_add(j, 2, 3)] * theta[i] + dnn_theta[i].tensor(f[i]->n_vec);
+	}
+
+	Mat3 param1 = (Eye3 - n_vec.tensor(n_vec)) / sum.norm;
+	d_n_vec = d_sum * param1;
+	for (int i = 0; i < neighbors; i++) {
+		dn_n_vec[i] = dn_sum[i] * param1;
+	}
+
+	delete[] dn_sum;
 }
 
 double vertex::calc_volume_op() {
+	/*****************************************************************************
+	Must be used after
+		- the normal vector at the vertex is calculated
+		- the area is calculated
+	*****************************************************************************/
 	// Setting up the vector field with divergence 1.
 	Div1VecField.set(point->x, 0, 0);
 	d_Div1VecField = Mat3(1, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -307,6 +341,9 @@ double vertex::calc_volume_op() {
 	double field_in_normal_dir = dot(Div1VecField, n_vec);
 	volume_op = field_in_normal_dir*area;
 	d_volume_op = (d_Div1VecField * n_vec + d_n_vec * Div1VecField) * area + field_in_normal_dir*d_area;
+	for (int i = 0; i < neighbors; i++) {
+		dn_volume_op[i] = (dn_n_vec[i] * Div1VecField) * area + field_in_normal_dir * dn_area[i];
+	}
 	return volume_op;
 }
 
