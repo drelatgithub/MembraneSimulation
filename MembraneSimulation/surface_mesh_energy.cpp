@@ -49,11 +49,22 @@ void MS::vertex::calc_H_curv_g() {
 		d_H_curv_g += k_g * (each_n->dn_curv_g[i] * each_n->area + each_n->curv_g * each_n->dn_area[i]);
 	}
 }
-void MS::vertex::calc_H_osm() {
+void MS::vertex::calc_H_osm(double osm_p) {
 	/*
 	This function calculates the energy resulted from osmotic pressure while
 	considering the osmotic pressure as a constant.
+
+	Currently, the osmotic pressure is taken as a parameter, so that all
+	vertices could share the same value. However, if different osmotic pressure
+	near different vertices is needed, then we can simply set the osmotic
+	pressure as an internal property at vertex.
 	*/
+	H_osm = osm_p * volume_op;
+	d_H_osm = osm_p * d_volume_op;
+	for (int i = 0; i < neighbors; i++) {
+		int j = n[i]->neighbor_indices_map[this];
+		d_H_osm += osm_p *n[i]->dn_volume_op[j];
+	}
 	
 }
 void MS::vertex::inc_d_H_int(const Vec3 &d) {
@@ -62,10 +73,11 @@ void MS::vertex::inc_d_H_int(const Vec3 &d) {
 }
 
 
-void MS::vertex::update_energy() {
+void MS::vertex::update_energy(double osm_p) {
 	calc_H_area();
 	calc_H_curv_h();
 	//calc_H_curv_g();
+	calc_H_osm(osm_p);
 	calc_H_int();
 	sum_energy();
 }

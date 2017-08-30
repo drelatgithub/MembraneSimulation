@@ -121,7 +121,7 @@ namespace MS {
 		void calc_H_area();
 		void calc_H_curv_h();
 		void calc_H_curv_g();
-		void calc_H_osm();
+		void calc_H_osm(double osm_p);
 		inline void calc_H_int() { H_int = 0; d_H_int.set(0, 0, 0); } // This actually serves as cleaning
 		void inc_d_H_int(const math_public::Vec3 &d);
 		
@@ -131,11 +131,11 @@ namespace MS {
 				it is a constant (Gauss-Bonnet theorem).
 			*/
 			// some of d_H_int might come from other sources
-			H = H_area + H_curv_h + H_int;
-			d_H = d_H_area + d_H_curv_h + d_H_int;
+			H = H_area + H_curv_h + H_osm + H_int;
+			d_H = d_H_area + d_H_curv_h + d_H_osm + d_H_int;
 		}
 
-		void update_energy();
+		void update_energy(double osm_p);
 
 		/******************************
 		Test

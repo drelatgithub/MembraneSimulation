@@ -353,6 +353,7 @@ void vertex::update_geo() {
 	calc_curv_h();
 	//calc_curv_g();
 	calc_normal();
+	calc_volume_op();
 }
 
 void vertex::make_initial() {
