@@ -28,7 +28,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	vertices[0]->gen_next_prev_n();
 
 	for (int i = 0; i < 6; i++) {
-		vertices[0]->f.push_back(new facet(vertices[0], vertices[i], vertices[loop_add(i, 1, 6)]));
+		vertices[0]->f.push_back(new facet(vertices[0], vertices[i+1], vertices[loop_add(i, 1, 6)+1]));
 		vertices[0]->f[i]->calc_vec();
 		vertices[0]->f[i]->calc_normal();
 	}
@@ -53,7 +53,8 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	test_case.assert_bool(equal(vertices[0]->curv_h, 0), "Mean curvature is incorrect.");
 	test_case.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
 
-	test_case.assert_bool(vertices[0]->n_vec.equal_to(Vec3(1, 0, 0)), "Normal vector is incorrect.");
+	LOG(TEST_DEBUG) << vertices[0]->n_vec.str(1);
+	test_case.assert_bool(vertices[0]->n_vec.equal_to(Vec3(0, 0, 1)), "Normal vector is incorrect.");
 
 	test_case.new_step("Check self derivatives");
 	vertices[0]->point->set(0, 0, 0.5);
