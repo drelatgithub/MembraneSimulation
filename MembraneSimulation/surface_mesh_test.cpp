@@ -27,6 +27,12 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	}
 	vertices[0]->gen_next_prev_n();
 
+	for (int i = 0; i < 6; i++) {
+		vertices[0]->f.push_back(new facet(vertices[0], vertices[i], vertices[loop_add(i, 1, 6)]));
+		vertices[0]->f[i]->calc_vec();
+		vertices[0]->f[i]->calc_normal();
+	}
+
 	int N = vertices.size();
 
 	test_case.new_step("Check neighbor counts");
@@ -36,7 +42,8 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	vertices[0]->calc_area();
 	vertices[0]->calc_curv_h();
 	vertices[0]->calc_curv_g();
-	test_case.new_step("Check angles, area and curvature");
+	vertices[0]->calc_normal();
+	test_case.new_step("Check angles, area, curvature and normal vector");
 	for (int i = 0; i < 6; i++) {
 		test_case.assert_bool(equal(vertices[0]->theta[i], M_PI / 3), "Theta is incorrect.");
 		test_case.assert_bool(equal(vertices[0]->theta2[i], M_PI / 3), "Theta2 is incorrect.");
@@ -45,6 +52,8 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	test_case.assert_bool(equal(vertices[0]->area, sqrt(3) / 2.0), "Area is incorrect.");
 	test_case.assert_bool(equal(vertices[0]->curv_h, 0), "Mean curvature is incorrect.");
 	test_case.assert_bool(equal(vertices[0]->curv_g, 0), "Gaussian curvature is incorrect.");
+
+	test_case.assert_bool(vertices[0]->n_vec.equal_to(Vec3(1, 0, 0)), "Normal vector is incorrect.");
 
 	test_case.new_step("Check self derivatives");
 	vertices[0]->point->set(0, 0, 0.5);

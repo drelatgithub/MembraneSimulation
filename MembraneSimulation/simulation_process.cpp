@@ -37,22 +37,6 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 void test_derivatives(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 
-void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, bool update_geometry=true, bool update_energy=true) {
-	int len = vertices.size(), len_f = facets.size();
-	if (update_geometry) {
-		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_geo();
-		}
-		for (int i = 0; i < len; i++) {
-			vertices[i]->update_geo();
-		}
-	}
-	if (update_energy) {
-		for (int i = 0; i < len; i++) {
-			vertices[i]->update_energy();
-		}
-	}
-}
 int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	auto &vertices = sm.vertices;
 	auto &facets = sm.facets;
@@ -124,7 +108,8 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 
 			minimization(sm, tips);
 
-			update_all_energy(vertices, facets);
+			sm.update_geo();
+			sm.update_energy();
 
 			for (int i = 0; i < N; i++) {
 				p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
@@ -463,9 +448,9 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 				for (int i = 0; i < vertices[ind]->neighbors; i++) {
 					vertices[ind]->n[i]->update_geo();
 				}
-				vertices[ind]->update_energy();
+				vertices[ind]->update_energy(sm.osm_p);
 				for (int i = 0; i < vertices[ind]->neighbors; i++) {
-					vertices[ind]->n[i]->update_energy();
+					vertices[ind]->n[i]->update_energy(sm.osm_p);
 				}
 
 				// Renew energy
@@ -638,10 +623,10 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 	double H = vertices[v_index]->H;
 	for (int j = 0; j < len; j++) {
 		vertices[v_index]->n[j]->update_geo();
-		vertices[v_index]->n[j]->update_energy();
+		vertices[v_index]->n[j]->update_energy(0);
 		H += vertices[v_index]->n[j]->H;
 	}
-	vertices[v_index]->update_energy();
+	vertices[v_index]->update_energy(0);
 
 	vertices[v_index]->make_last();
 	double n_x = vertices[v_index]->n_vec.x;
@@ -658,7 +643,7 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + n_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + n_z*move;
 		vertices[v_index]->update_geo();
-		vertices[v_index]->update_energy();
+		vertices[v_index]->update_energy(0);
 		H_new = 0;
 		H_new = vertices[v_index]->H;
 		for (int j = 0; j < len; j++) {
@@ -674,7 +659,7 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + l1_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + l1_z*move;
 		vertices[v_index]->update_geo();
-		vertices[v_index]->update_energy();
+		vertices[v_index]->update_energy(0);
 		H_new = 0;
 		H_new = vertices[v_index]->H;
 		for (int j = 0; j < len; j++) {
