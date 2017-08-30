@@ -299,6 +299,17 @@ void vertex::calc_normal() {
 	n_vec = sum / sum.get_norm();
 }
 
+double vertex::calc_volume_op() {
+	// Setting up the vector field with divergence 1.
+	Div1VecField.set(point->x, 0, 0);
+	d_Div1VecField = Mat3(1, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	double field_in_normal_dir = dot(Div1VecField, n_vec);
+	volume_op = field_in_normal_dir*area;
+	d_volume_op = (d_Div1VecField * n_vec + d_n_vec * Div1VecField) * area + field_in_normal_dir*d_area;
+	return volume_op;
+}
+
 void vertex::update_geo() {
 	calc_angle();
 	calc_area();

@@ -49,6 +49,13 @@ void MS::vertex::calc_H_curv_g() {
 		d_H_curv_g += k_g * (each_n->dn_curv_g[i] * each_n->area + each_n->curv_g * each_n->dn_area[i]);
 	}
 }
+void MS::vertex::calc_H_osm() {
+	/*
+	This function calculates the energy resulted from osmotic pressure while
+	considering the osmotic pressure as a constant.
+	*/
+	
+}
 void MS::vertex::inc_d_H_int(const Vec3 &d) {
 	d_H_int += d;
 	d_H += d;
