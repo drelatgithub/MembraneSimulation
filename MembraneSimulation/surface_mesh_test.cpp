@@ -57,37 +57,55 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	test_case.assert_bool(vertices[0]->n_vec.equal_to(Vec3(0, 0, 1)), "Normal vector is incorrect.");
 
 	test_case.new_step("Check self derivatives");
+	double osm_p = 0.1;
 	vertices[0]->point->set(0, 0, 0.5);
+	for (int i = 0; i < 6; i++) {
+		vertices[0]->f[i]->update_geo();
+	}
 	vertices[0]->calc_angle();
 	vertices[0]->calc_area();
 	vertices[0]->calc_curv_h();
 	vertices[0]->calc_curv_g();
+	vertices[0]->calc_normal();
+	vertices[0]->calc_volume_op();
 	vertices[0]->make_last();
 	vertices[0]->make_initial();
-	vertices[0]->update_energy(0);
+	vertices[0]->update_energy(osm_p);
 	Vec3 dx(-0.001, 0.00001, 0.0005);
 	double cur_area = vertices[0]->area,
 		cur_H_area = vertices[0]->H_area,
 		cur_curv_h = vertices[0]->curv_h,
 		cur_H_curv_h = vertices[0]->H_curv_h,
 		cur_curv_g = vertices[0]->curv_g,
-		cur_H_curv_g = vertices[0]->H_curv_g;
+		cur_H_curv_g = vertices[0]->H_curv_g,
+		cur_volume_op = vertices[0]->volume_op,
+		cur_H_osm = vertices[0]->H_osm;
+	Vec3 cur_n_vec = vertices[0]->n_vec;
 	LOG(TEST_DEBUG) << "-------------------- Before change --------------------";
 	LOG(TEST_DEBUG) << "area: " << cur_area << " curv_h: " << cur_curv_h << " curv_g: " << cur_curv_g;
 	LOG(TEST_DEBUG) << "H_area: " << cur_H_area << " H_curv_h: " << cur_H_curv_h << " H_curv_g: " << cur_H_curv_g;
+	LOG(TEST_DEBUG) << "volume integrand: " << cur_volume_op << " osmotic energy: " << cur_H_osm;
 	double ex_del_area = vertices[0]->d_area.dot(dx),
 		ex_del_H_area = vertices[0]->d_H_area.dot(dx),
 		ex_del_curv_h = vertices[0]->d_curv_h.dot(dx),
 		ex_del_H_curv_h = vertices[0]->d_H_curv_h.dot(dx),
 		ex_del_curv_g = vertices[0]->d_curv_g.dot(dx),
-		ex_del_H_curv_g = vertices[0]->d_H_curv_g.dot(dx);
+		ex_del_H_curv_g = vertices[0]->d_H_curv_g.dot(dx),
+		ex_del_volume_op = vertices[0]->d_volume_op.dot(dx),
+		ex_del_H_osm = vertices[0]->d_H_osm.dot(dx);
+	Vec3 ex_del_n_vec = vertices[0]->d_n_vec.transpose()*dx;
 
 	*(vertices[0]->point) += dx; // Move the central vertex by a little bit.
+	for (int i = 0; i < 6; i++) {
+		vertices[0]->f[i]->update_geo();
+	}
 	vertices[0]->calc_angle();
 	vertices[0]->calc_area();
 	vertices[0]->calc_curv_h();
 	vertices[0]->calc_curv_g();
-	vertices[0]->update_energy(0);
+	vertices[0]->calc_normal();
+	vertices[0]->calc_volume_op();
+	vertices[0]->update_energy(osm_p);
 
 	LOG(TEST_DEBUG) << "-------------------- After change --------------------";
 	double del_area = vertices[0]->area - cur_area,
@@ -95,13 +113,18 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 		del_curv_h = vertices[0]->curv_h - cur_curv_h,
 		del_H_curv_h = vertices[0]->H_curv_h - cur_H_curv_h,
 		del_curv_g = vertices[0]->curv_g - cur_curv_g,
-		del_H_curv_g = vertices[0]->H_curv_g - cur_H_curv_g;
+		del_H_curv_g = vertices[0]->H_curv_g - cur_H_curv_g,
+		del_volume_op = vertices[0]->volume_op - cur_volume_op,
+		del_H_osm = vertices[0]->H_osm - cur_H_osm;
+	Vec3 del_n_vec = vertices[0]->n_vec - cur_n_vec;
 	double log_diff_del_area = log10(fabs(ex_del_area - del_area)),
 		log_diff_del_H_area = log10(fabs(ex_del_H_area - del_H_area)),
 		log_diff_del_curv_h = log10(fabs(ex_del_curv_h - del_curv_h)),
 		log_diff_del_H_curv_h = log10(fabs(ex_del_H_curv_h - del_H_curv_h)),
 		log_diff_del_curv_g = log10(fabs(ex_del_curv_g - del_curv_g)),
-		log_diff_del_H_curv_g = log10(fabs(ex_del_H_curv_g - del_H_curv_g));
+		log_diff_del_H_curv_g = log10(fabs(ex_del_H_curv_g - del_H_curv_g)),
+		log_diff_del_volume_op = log10(fabs(ex_del_volume_op - del_volume_op)),
+		log_diff_del_H_osm = log10(fabs(ex_del_H_osm - del_H_osm));
 
 	LOG(TEST_DEBUG) << "Area changed: " << del_area << " Expected: " << ex_del_area << " lg diff: " << log_diff_del_area;
 	test_case.assert_bools_lv(log_diff_del_area <= -6, log_diff_del_area <= -5, "Area change inaccurate", "Area change incorrect");
@@ -120,8 +143,20 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 
 	LOG(TEST_DEBUG) << "Gaussian curv energy changed: " << del_H_curv_g << " Expected: " << ex_del_H_curv_g << " lg diff: " << log_diff_del_H_curv_g;
 	test_case.assert_bools_lv(log_diff_del_H_curv_g <= -25, log_diff_del_H_curv_g <= -24, "Gaussian Curv energy change inaccurate", "Gaussian Curv energy change incorrect");
+	
+	LOG(TEST_DEBUG) << "Volume integrand changed: " << del_volume_op << " Expected: " << ex_del_volume_op << " lg diff: " << log_diff_del_volume_op;
+	test_case.assert_bools_lv(log_diff_del_volume_op <= -7, log_diff_del_volume_op <= -6, "Volume integrand change inaccurate", "Volume integrand change incorrect");
+
+	LOG(TEST_DEBUG) << "Osmotic energy changed: " << del_H_osm << " Expected: " << ex_del_H_osm << " lg diff: " << log_diff_del_H_osm;
+	test_case.assert_bools_lv(log_diff_del_H_osm <= -7, log_diff_del_H_osm <= -6, "Volume integrand change inaccurate", "Volume integrand change incorrect");
+
+	LOG(TEST_DEBUG) << "Normal vector changed: " << del_n_vec.str(1) << " Expected: " << ex_del_n_vec.str(1);
+	test_case.assert_bool(del_n_vec.equal_to(ex_del_n_vec, 1e-3), "Normal vector change incorrect.");
 
 	test_case.new_step("Cleaning");
+	for (int i = 0; i < 6; i++) {
+		delete vertices[0]->f[i];
+	}
 	for (int i = 0; i < N; i++) {
 		vertices[i]->release_point();
 		delete vertices[i];
