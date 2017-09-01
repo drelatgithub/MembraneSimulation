@@ -48,6 +48,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 
 	{ // Doing some statistics
 		double total_edge_length = 0, total_area = 0, total_edge_length_sq = 0, total_area_sq = 0;
+		double_t total_volume = 0;
 		int num_edge2 = 0;
 		for (int i = 0; i < N; i++) {
 			total_area += vertices[i]->area;
@@ -57,6 +58,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 				total_edge_length += vertices[i]->r_p_n[j];
 				total_edge_length_sq += vertices[i]->r_p_n[j] * vertices[i]->r_p_n[j];
 			}
+			total_volume += vertices[i]->volume_op;
 		}
 		double avg_edge_length = total_edge_length / num_edge2,
 			avg_edge_length_sq = total_edge_length_sq / num_edge2;
@@ -77,6 +79,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 			<< "Diameter if spherical: " << sqrt(total_area / M_PI) << std::endl
 			<< "Average vertex area: " << avg_area << std::endl
 			<< "Stdev vertex area: " << stdev_area << std::endl
+			<< "Volume: " << total_volume << std::endl
 			<< small_divider << std::endl
 			<< "Average edge length: " << avg_edge_length << std::endl
 			<< "Stdev edge length: " << stdev_edge_length << std::endl
