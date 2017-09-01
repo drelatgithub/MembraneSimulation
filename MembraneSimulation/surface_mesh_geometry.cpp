@@ -335,8 +335,8 @@ double vertex::calc_volume_op() {
 		- the area is calculated
 	*****************************************************************************/
 	// Setting up the vector field with divergence 1.
-	Div1VecField.set(point->x, 0, 0);
-	d_Div1VecField = Mat3(1, 0, 0, 0, 0, 0, 0, 0, 0);
+	Div1VecField.set(point->x / 3, point->y / 3, point->z / 3);
+	d_Div1VecField = Mat3(1.0/3, 0, 0, 0, 1.0/3, 0, 0, 0, 1.0/3);
 
 	double field_in_normal_dir = dot(Div1VecField, n_vec);
 	volume_op = field_in_normal_dir*area;

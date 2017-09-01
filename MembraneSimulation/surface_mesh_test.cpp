@@ -148,7 +148,7 @@ test::TestCase MS::vertex::test_case("Vertex Test", []() {
 	test_case.assert_bools_lv(log_diff_del_volume_op <= -7, log_diff_del_volume_op <= -6, "Volume integrand change inaccurate", "Volume integrand change incorrect");
 
 	LOG(TEST_DEBUG) << "Osmotic energy changed: " << del_H_osm << " Expected: " << ex_del_H_osm << " lg diff: " << log_diff_del_H_osm;
-	test_case.assert_bools_lv(log_diff_del_H_osm <= -7, log_diff_del_H_osm <= -6, "Volume integrand change inaccurate", "Volume integrand change incorrect");
+	test_case.assert_bools_lv(log_diff_del_H_osm <= -7, log_diff_del_H_osm <= -6, "Osmotic energy change inaccurate", "Osmotic energy change incorrect");
 
 	LOG(TEST_DEBUG) << "Normal vector changed: " << del_n_vec.str(1) << " Expected: " << ex_del_n_vec.str(1);
 	test_case.assert_bool(del_n_vec.equal_to(ex_del_n_vec, 1e-3), "Normal vector change incorrect.");
