@@ -42,6 +42,9 @@
     <ClCompile Include="surface_mesh_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="surface_mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="surface_mesh.h">

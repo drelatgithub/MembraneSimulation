@@ -44,14 +44,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 	int N = vertices.size(),
 		N_f = facets.size();
 
-	for (int i = 0; i < N; i++) {
-		vertices[i]->count_neighbors();
-		if (i == 0) {
-			int a = 1;
-		}
-		vertices[i]->update_geo();
-		vertices[i]->make_initial();
-	}
+	sm.initialize();
 
 	{ // Doing some statistics
 		double total_edge_length = 0, total_area = 0, total_edge_length_sq = 0, total_area_sq = 0;

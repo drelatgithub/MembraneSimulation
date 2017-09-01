@@ -240,6 +240,8 @@ namespace MS {
 		std::vector<facet*> facets;
 		std::vector<edge*> edges;
 
+		void initialize();
+
 		void update_geo();
 
 		void update_energy(); // This will clear all foreign interactions and derivatives.
