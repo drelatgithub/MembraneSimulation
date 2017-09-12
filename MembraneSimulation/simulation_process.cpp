@@ -37,22 +37,6 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 void test_derivatives(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets);
 
-void update_all_energy(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &facets, bool update_geometry=true, bool update_energy=true) {
-	int len = vertices.size(), len_f = facets.size();
-	if (update_geometry) {
-		for (int i = 0; i < len_f; i++) {
-			facets[i]->update_geo();
-		}
-		for (int i = 0; i < len; i++) {
-			vertices[i]->update_geo();
-		}
-	}
-	if (update_energy) {
-		for (int i = 0; i < len; i++) {
-			vertices[i]->update_energy();
-		}
-	}
-}
 int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	auto &vertices = sm.vertices;
 	auto &facets = sm.facets;
@@ -60,17 +44,11 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 	int N = vertices.size(),
 		N_f = facets.size();
 
-	for (int i = 0; i < N; i++) {
-		vertices[i]->count_neighbors();
-		if (i == 0) {
-			int a = 1;
-		}
-		vertices[i]->update_geo();
-		vertices[i]->make_initial();
-	}
+	sm.initialize();
 
 	{ // Doing some statistics
 		double total_edge_length = 0, total_area = 0, total_edge_length_sq = 0, total_area_sq = 0;
+		double_t total_volume = 0;
 		int num_edge2 = 0;
 		for (int i = 0; i < N; i++) {
 			total_area += vertices[i]->area;
@@ -80,6 +58,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 				total_edge_length += vertices[i]->r_p_n[j];
 				total_edge_length_sq += vertices[i]->r_p_n[j] * vertices[i]->r_p_n[j];
 			}
+			total_volume += vertices[i]->volume_op;
 		}
 		double avg_edge_length = total_edge_length / num_edge2,
 			avg_edge_length_sq = total_edge_length_sq / num_edge2;
@@ -100,6 +79,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 			<< "Diameter if spherical: " << sqrt(total_area / M_PI) << std::endl
 			<< "Average vertex area: " << avg_area << std::endl
 			<< "Stdev vertex area: " << stdev_area << std::endl
+			<< "Volume: " << total_volume << std::endl
 			<< small_divider << std::endl
 			<< "Average edge length: " << avg_edge_length << std::endl
 			<< "Stdev edge length: " << stdev_edge_length << std::endl
@@ -118,13 +98,14 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 	case 0:
 		// Place a filament
 		tips.push_back(new filament_tip(new math_public::Vec3()));
-		for (double a = 0.994e-6; a < 1.010e-6; a += 0.001e-6) {
+		for (double a = 0.990e-6; a < 1.010e-6; a += 0.001e-6) {
 			// Update filament tip position
 			LOG(INFO) << "Polymer tip x position: " << (tips[0]->point->x = a);
 
 			minimization(sm, tips);
 
-			update_all_energy(vertices, facets);
+			sm.update_geo();
+			sm.update_energy();
 
 			for (int i = 0; i < N; i++) {
 				p_out << vertices[i]->point->x << '\t' << vertices[i]->point->y << '\t' << vertices[i]->point->z << '\t';
@@ -191,9 +172,17 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	f_min_out.open("F:\\f_min_out.txt");
 	sd_min_out.open("F:\\sd_min_out.txt");
 	
-	// Initializing
+	// First calculation of energy and their derivatives
 	sm.update_geo();
 	sm.update_energy();
+	for (int i = 0; i < N_t; i++) {
+		// we only update neighbor facets once throughout the minimization.
+		tips[i]->calc_repulsion(sm); // This will also assign derivatives to vertices
+		H += tips[i]->H;
+	}
+	H += sm.get_sum_of_energy();
+
+	// Initializing
 	for (int i = 0; i < N; i++) {
 		// Get d_H
 		math_public::Vec3 cur_d_h_all = vertices[i]->d_H;
@@ -208,17 +197,7 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 		// Store vertices location as the last location
 		vertices[i]->make_last();
 
-		//temp_out << MS::d_h_curv_g(&vertices[i], 0) << '\t' << MS::d_h_curv_g(&vertices[i], 1) << '\t' << MS::d_h_curv_g(&vertices[i], 2) << '\t';
 	}
-	for (int i = 0; i < N_t; i++) {
-		// we only update neighbor facets once throughout the minimization.
-		tips[i]->get_neighbor_facets(sm);
-		tips[i]->recalc_interactions();
-		tips[i]->calc_repulsion(); // This will also assign derivatives to vertices
-		H += tips[i]->H;
-	}
-	H += sm.get_sum_of_energy();
-	//temp_out.close();
 
 	int k = 0; // Iteration counter.
 
@@ -380,11 +359,11 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 			vertices[i]->point->y = vertices[i]->point_last->y + alpha * p[i * 3 + 1];
 			vertices[i]->point->z = vertices[i]->point_last->z + alpha * p[i * 3 + 2];
 		}
+		sm.update_geo();
 		sm.update_energy();
 		for (int i = 0; i < N_t; i++) {
 			// we do not update neighbor facets in line search.
-			tips[i]->recalc_interactions();
-			tips[i]->calc_repulsion(); // This will also assign derivatives to vertices
+			tips[i]->calc_repulsion(sm); // This will also assign derivatives to vertices
 		}
 
 		// Make sure that area is not negative
@@ -465,9 +444,9 @@ double line_search(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips, d
 				for (int i = 0; i < vertices[ind]->neighbors; i++) {
 					vertices[ind]->n[i]->update_geo();
 				}
-				vertices[ind]->update_energy();
+				vertices[ind]->update_energy(sm.osm_p);
 				for (int i = 0; i < vertices[ind]->neighbors; i++) {
-					vertices[ind]->n[i]->update_energy();
+					vertices[ind]->n[i]->update_energy(sm.osm_p);
 				}
 
 				// Renew energy
@@ -640,10 +619,10 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 	double H = vertices[v_index]->H;
 	for (int j = 0; j < len; j++) {
 		vertices[v_index]->n[j]->update_geo();
-		vertices[v_index]->n[j]->update_energy();
+		vertices[v_index]->n[j]->update_energy(0);
 		H += vertices[v_index]->n[j]->H;
 	}
-	vertices[v_index]->update_energy();
+	vertices[v_index]->update_energy(0);
 
 	vertices[v_index]->make_last();
 	double n_x = vertices[v_index]->n_vec.x;
@@ -660,7 +639,7 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + n_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + n_z*move;
 		vertices[v_index]->update_geo();
-		vertices[v_index]->update_energy();
+		vertices[v_index]->update_energy(0);
 		H_new = 0;
 		H_new = vertices[v_index]->H;
 		for (int j = 0; j < len; j++) {
@@ -676,7 +655,7 @@ void force_profile(std::vector<MS::vertex*> &vertices, std::vector<MS::facet*> &
 		vertices[v_index]->point->y = vertices[v_index]->point_last->y + l1_y*move;
 		vertices[v_index]->point->z = vertices[v_index]->point_last->z + l1_z*move;
 		vertices[v_index]->update_geo();
-		vertices[v_index]->update_energy();
+		vertices[v_index]->update_energy(0);
 		H_new = 0;
 		H_new = vertices[v_index]->H;
 		for (int j = 0; j < len; j++) {

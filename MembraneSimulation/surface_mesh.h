@@ -72,8 +72,14 @@ namespace MS {
 		
 		math_public::Vec3 n_vec; // Normal vector (pseudo)
 		// We calculate the normal vector using the average of surrounding facet normal vectors.
-		//math_public::Mat3 d_n_vec;
-		//std::vector<math_public::Mat3> dn_n_vec;
+		math_public::Mat3 d_n_vec;
+		std::vector<math_public::Mat3> dn_n_vec;
+		
+		math_public::Vec3 Div1VecField;
+		math_public::Mat3 d_Div1VecField;
+		double volume_op; // The volume contribution of a vertex using divergence theorem.
+		math_public::Vec3 d_volume_op;
+		std::vector<math_public::Vec3> dn_volume_op;
 
 		int dump_data_vectors(int size=1);
 
@@ -82,6 +88,7 @@ namespace MS {
 		double calc_curv_h();
 		double calc_curv_g();
 		void calc_normal();
+		double calc_volume_op();
 
 		void update_geo();
 
@@ -97,12 +104,14 @@ namespace MS {
 		double H_area, // Energy due to change in area
 			H_curv_h, // Energy due to mean curvature
 			H_curv_g, // Energy due to Gaussian curvature
+			H_osm, // Energy due to osmotic pressure
 			H_int; // Energy due to interaction with objects that are not neighboring vertices.
 		double H; // Free energy of this vertex in J. Interaction energy with facet lies in the facet class.
 
 		math_public::Vec3 d_H_area,
 			d_H_curv_h,
 			d_H_curv_g,
+			d_H_osm,
 			d_H_int;
 		math_public::Vec3 d_H; // Energy derivative on this vertex. in J/m.
 
@@ -112,6 +121,7 @@ namespace MS {
 		void calc_H_area();
 		void calc_H_curv_h();
 		void calc_H_curv_g();
+		void calc_H_osm(double osm_p);
 		inline void calc_H_int() { H_int = 0; d_H_int.set(0, 0, 0); } // This actually serves as cleaning
 		void inc_d_H_int(const math_public::Vec3 &d);
 		
@@ -121,11 +131,11 @@ namespace MS {
 				it is a constant (Gauss-Bonnet theorem).
 			*/
 			// some of d_H_int might come from other sources
-			H = H_area + H_curv_h + H_int;
-			d_H = d_H_area + d_H_curv_h + d_H_int;
+			H = H_area + H_curv_h + H_osm + H_int;
+			d_H = d_H_area + d_H_curv_h + d_H_osm + d_H_int;
 		}
 
-		void update_energy();
+		void update_energy(double osm_p);
 
 		/******************************
 		Test
@@ -230,10 +240,17 @@ namespace MS {
 		std::vector<facet*> facets;
 		std::vector<edge*> edges;
 
+		void initialize();
+
 		void update_geo();
 
 		void update_energy(); // This will clear all foreign interactions and derivatives.
 		double get_sum_of_energy();
+
+		/************************************
+		Universal variables for the meshwork
+		************************************/
+		double osm_p;
 	};
 
 }
