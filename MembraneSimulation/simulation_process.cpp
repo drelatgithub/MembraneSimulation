@@ -266,19 +266,19 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 
 		if (!USE_STEEPEST_DESCENT) { // Conjugate gradient method renewal of search direction.
 			// Find beta (Fletcher-Reeves)
-			double a = 0, b = 0;
-			for (int i = 0; i < 3 * N; i++) {
-				a += d_H_new[i] * d_H_new[i];
-				b += d_H[i] * d_H[i];
-			}
-			beta = a / b;
-			// Find beta (Polak-Ribiere)
 			//double a = 0, b = 0;
 			//for (int i = 0; i < 3 * N; i++) {
-			//	a += d_H_new[i] * (d_H_new[i] - d_H[i]);
+			//	a += d_H_new[i] * d_H_new[i];
 			//	b += d_H[i] * d_H[i];
 			//}
-			//beta = (a >= 0) ? a / b : 0;
+			//beta = a / b;
+			// Find beta (Polak-Ribiere)
+			double a = 0, b = 0;
+			for (int i = 0; i < 3 * N; i++) {
+				a += d_H_new[i] * (d_H_new[i] - d_H[i]);
+				b += d_H[i] * d_H[i];
+			}
+			beta = (a >= 0) ? a / b : 0;
 
 			// Renew search direction
 			for (int i = 0; i < 3 * N; i++) {
