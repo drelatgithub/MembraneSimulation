@@ -87,10 +87,6 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 		LOG(INFO) << "Meshwork properties: " << std::endl << ss.str();
 	} // End doing statistics
 
-	{
-		// Bending energy verifying
-	}
-
 
 	std::ofstream p_out, f_out, a_out;
 	p_out.open("F:\\p_out.txt");
