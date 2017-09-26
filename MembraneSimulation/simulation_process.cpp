@@ -25,7 +25,7 @@ const double tau = 0.1; // Shrink size of alpha after each iteration
 // Curvature condition
 const double c2 = 0.1;
 
-const double h_eps = 1e-12; // Maximum tolerance for forces
+const double h_eps = 5e-12; // Maximum tolerance for forces
 const double d_eps = 1e-8; // Maximum tolerance for coordinates
 const double max_move = 5e-8; // Maximum displacement for each step in any direction
 
