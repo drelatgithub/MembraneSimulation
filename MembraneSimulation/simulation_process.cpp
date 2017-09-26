@@ -168,9 +168,9 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	double beta;
 
 	std::ofstream p_min_out, f_min_out, sd_min_out;
-	p_min_out.open("C:\\p_min_out.txt");
-	f_min_out.open("C:\\f_min_out.txt");
-	sd_min_out.open("C:\\sd_min_out.txt");
+	p_min_out.open("p_min_out.SimOut");
+	f_min_out.open("f_min_out.SimOut");
+	sd_min_out.open("sd_min_out.SimOut");
 	
 	// First calculation of energy and their derivatives
 	sm.update_geo();

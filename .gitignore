@@ -241,3 +241,6 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 /MembraneSimulation/v_data.txt
+
+# Simulation outputs
+*.SimOut
