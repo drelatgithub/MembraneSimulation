@@ -98,7 +98,7 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 	case 0:
 		// Place a filament
 		tips.push_back(new filament_tip(new math_public::Vec3()));
-		for (double a = 0.990e-6; a < 1.010e-6; a += 0.001e-6) {
+		for (double a = 0.980e-6; a < 1.100e-6; a += 0.005e-6) {
 			// Update filament tip position
 			LOG(INFO) << "Polymer tip x position: " << (tips[0]->point->x = a);
 
@@ -168,9 +168,9 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 	double beta;
 
 	std::ofstream p_min_out, f_min_out, sd_min_out;
-	p_min_out.open("F:\\p_min_out.txt");
-	f_min_out.open("F:\\f_min_out.txt");
-	sd_min_out.open("F:\\sd_min_out.txt");
+	p_min_out.open("C:\\p_min_out.txt");
+	f_min_out.open("C:\\f_min_out.txt");
+	sd_min_out.open("C:\\sd_min_out.txt");
 	
 	// First calculation of energy and their derivatives
 	sm.update_geo();

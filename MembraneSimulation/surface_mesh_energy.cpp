@@ -86,6 +86,11 @@ void MS::vertex::update_energy(double osm_p) {
 void MS::filament_tip::calc_repulsion_facet(MS::facet& f) {
 	// Calculate interaction energy between the filament tip and a certain facet
 
+	// cut off
+	if (dist(*point, *(f.v[0]->point)) > 200e-9) {
+		return;
+	}
+
 	if (is_in_a_plane(*(f.v[0]->point), *(f.v[1]->point), *(f.v[2]->point), *point)) {
 		*point -= f.n_vec*1e-10; // Move into the cell a little bit.
 	}
@@ -202,7 +207,6 @@ void MS::filament_tip::calc_repulsion_facet(MS::facet& f) {
 	for (int i = 0; i < 3; i++) {
 		f.v[i]->inc_d_H_int(surface_repulsion_k*(f.d_S[i] * I + d_I[i] * f.S) * expandFactor);
 	}
-
 
 }
 void MS::filament_tip::calc_repulsion(MS::surface_mesh& sm) {
