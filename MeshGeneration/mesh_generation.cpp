@@ -38,6 +38,7 @@ FT sphere_function(Point_3 p) {
 int mesh_init() {
 	char *position_file = "position.txt";
 	char *neighbors_file = "neighbors.txt";
+	char *triangles_file = "triangles.txt";
 
 	Tr tr;
 	C2t3 c2t3(tr);
@@ -73,6 +74,8 @@ int mesh_init() {
 	position_out.precision(17); // double
 	std::ofstream neighbors_out;
 	neighbors_out.open(neighbors_file);
+	std::ofstream triangles_out;
+	triangles_out.open(triangles_file);
 
 	// registering vertex positions
 	int num = 0;
@@ -105,9 +108,21 @@ int mesh_init() {
 	}
 	delete[] vertices_neighbors;
 
+	// registering triangles
+	for (Polyhedron::Facet_iterator fit = p.facets_begin(); fit != p.facets_end(); fit++) {
+		Polyhedron::Halfedge_iterator hit = fit->facet_begin();
+		Polyhedron::Halfedge_iterator hit_new = hit;
+		do {
+			triangles_out << vertices_index_map[hit_new->vertex()] << '\t';
+			hit_new = hit_new->next();
+		} while (hit_new != hit);
+		triangles_out << std::endl;
+	}
+
 	std::cout << "Finished writing files.";
 	position_out.close();
 	neighbors_out.close();
+	triangles_out.close();
 
 	return 0;
 }
