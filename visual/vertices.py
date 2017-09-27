@@ -36,7 +36,7 @@ class Plottor(object):
         self.ax.patch.set_alpha(0.0)
 
     
-        #self.ax.axis('off')
+        self.ax.axis('off')
 
     def plotVertices(self, loader, snapshotNum, sort=None):
         """
@@ -70,21 +70,23 @@ class Plottor(object):
             newToBePlotted[:, 1], # x (actually y)
             newToBePlotted[:, 2], # y (actually z)
             newTri,
-            mask = None
+            mask=None
         )
         
-        self.ax.plot_trisurf(tri, newToBePlotted[:, 0], alpha=0.3, linewidth=2)
+        self.ax.plot_trisurf(tri, newToBePlotted[:, 0], alpha=0.3, linewidth=1, edgecolor='k')
 
 if __name__ == '__main__':
     loader = VertexLoader(r'C:\Users\drels\OneDrive\Documents\Source\Repos\MembraneSimulation\MembraneSimulation\p_out.SimOut')
     loader.loadAll()
 
     plottor = Plottor()
-    sortVertices = lambda x: x[:,0] > 0.965e-6
-    #plottor.plotVertices(loader, 5, sort=sortVertices)
-    plottor.plotTriangles(loader, 4, sort=sortVertices)
-    plottor.ax.set_xlim(-0.3e-6, 0.30e-6)
-    plottor.ax.set_ylim(-0.3e-6, 0.30e-6)
+    sortVertices = lambda x: x[:, 0] > 0.97e-6
+    wantedSnapshot = 6
+    filamentTipX = wantedSnapshot * 0.005e-6 + 0.99
+    #plottor.plotVertices(loader, wantedSnapshot, sort=sortVertices)
+    plottor.plotTriangles(loader, wantedSnapshot, sort=sortVertices)
+    plottor.ax.set_xlim(-0.25e-6, 0.25e-6)
+    plottor.ax.set_ylim(-0.25e-6, 0.25e-6)
     plottor.ax.set_zlim(0.97e-6, 1.10e-6)
 
     plt.show()
