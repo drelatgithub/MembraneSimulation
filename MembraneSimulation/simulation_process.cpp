@@ -89,16 +89,16 @@ int MS::simulation_start(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &t
 
 
 	std::ofstream p_out, f_out, a_out;
-	p_out.open("F:\\p_out.txt");
-	f_out.open("F:\\f_out.txt");
-	a_out.open("F:\\a_out.txt");
+	p_out.open("p_out.SimOut");
+	f_out.open("f_out.SimOut");
+	a_out.open("a_out.SimOut");
 
 
 	switch (RUN_MODE) {
 	case 0:
 		// Place a filament
 		tips.push_back(new filament_tip(new math_public::Vec3()));
-		for (double a = 0.980e-6; a < 1.100e-6; a += 0.005e-6) {
+		for (double a = 0.980e-6; a < 1.200e-6; a += 0.005e-6) {
 			// Update filament tip position
 			LOG(INFO) << "Polymer tip x position: " << (tips[0]->point->x = a);
 
