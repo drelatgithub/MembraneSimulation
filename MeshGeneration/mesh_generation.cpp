@@ -50,8 +50,8 @@ int mesh_init() {
 
 									 // defining meshing criteria
 	CGAL::Surface_mesh_default_criteria_3<Tr> criteria(30.,  // angular bound
-		CELL_RADIUS / 20,  // radius bound
-		CELL_RADIUS / 20); // distance bound
+		CELL_RADIUS / 30,  // radius bound
+		CELL_RADIUS / 30); // distance bound
 
 			  // meshing surface
 	std::cout << "Meshing surface using CGAL...\n";
