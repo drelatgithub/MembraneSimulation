@@ -19,7 +19,10 @@ class VertexLoader(object):
         self.data = rawData.reshape(self.numSnapshots, self.numVertices, 3)
 
     def loadTopo(self):
-        topoLoader = topo.MeshworkLoader(r"C:\Users\drels\OneDrive\Documents\Source\Repos\MembraneSimulation\MeshGeneration\neighbors.txt")
+        topoLoader = topo.MeshworkLoader(
+            r"C:\Users\drels\OneDrive\Documents\Source\Repos\MembraneSimulation\MeshGeneration\neighbors.txt",
+            r"C:\Users\drels\OneDrive\Documents\Source\Repos\MembraneSimulation\MeshGeneration\triangles.txt"
+        )
         self.meshwork = topo.Meshwork()
         topoLoader.loadTo(self.meshwork)
     
@@ -63,8 +66,13 @@ class Plottor(object):
         # newIndexMap is something like [N, 0, N, 1, 2, N, N, 3, ...]
         indexIter = iter(range(len(newToBePlotted)))
         newIndexMap = [(next(indexIter) if areSortedIndices[x] else None) for x in range(len(toBePlotted))]
+        print("NIM size: %d"%len(newIndexMap))
 
-        newTri = [[newIndexMap[eachIndex] for eachIndex in eachTri.vIndices] for eachTri in loader.meshwork.facets if np.all([(newIndexMap[eachIndex] is not None) for eachIndex in eachTri.vIndices])]
+        # Retrieve the new triangle indices
+        newTri = [[newIndexMap[eachIndex] for eachIndex in eachTri.vIndices]
+            for eachTri in loader.meshwork.facets
+            if np.all([(newIndexMap[eachIndex] is not None) for eachIndex in eachTri.vIndices])
+        ]
 
         tri = matplotlib.tri.Triangulation(
             newToBePlotted[:, 1], # x (actually y)
