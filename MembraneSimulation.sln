@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MembraneSimulation", "MembraneSimulation\MembraneSimulation.vcxproj", "{72C66CD5-43CB-46FD-9A4B-774992EBDD22}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshGeneration", "MeshGeneration\MeshGeneration.vcxproj", "{B114D6A2-BBC4-4D72-8489-96A1A831CC3F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rendering", "Rendering\Rendering.vcxproj", "{0E771445-74A2-481A-B330-4095B064346A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,8 +33,19 @@ Global
 		{B114D6A2-BBC4-4D72-8489-96A1A831CC3F}.Release|x64.Build.0 = Release|x64
 		{B114D6A2-BBC4-4D72-8489-96A1A831CC3F}.Release|x86.ActiveCfg = Release|Win32
 		{B114D6A2-BBC4-4D72-8489-96A1A831CC3F}.Release|x86.Build.0 = Release|Win32
+		{0E771445-74A2-481A-B330-4095B064346A}.Debug|x64.ActiveCfg = Debug|x64
+		{0E771445-74A2-481A-B330-4095B064346A}.Debug|x64.Build.0 = Debug|x64
+		{0E771445-74A2-481A-B330-4095B064346A}.Debug|x86.ActiveCfg = Debug|Win32
+		{0E771445-74A2-481A-B330-4095B064346A}.Debug|x86.Build.0 = Debug|Win32
+		{0E771445-74A2-481A-B330-4095B064346A}.Release|x64.ActiveCfg = Release|x64
+		{0E771445-74A2-481A-B330-4095B064346A}.Release|x64.Build.0 = Release|x64
+		{0E771445-74A2-481A-B330-4095B064346A}.Release|x86.ActiveCfg = Release|Win32
+		{0E771445-74A2-481A-B330-4095B064346A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C991AE74-E968-4591-B2A3-3E0764E34B02}
 	EndGlobalSection
 EndGlobal
