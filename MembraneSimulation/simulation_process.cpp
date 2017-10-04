@@ -279,6 +279,12 @@ int minimization(MS::surface_mesh &sm, std::vector<MS::filament_tip*> &tips) {
 				b += d_H[i] * d_H[i];
 			}
 			beta = (a >= 0) ? a / b : 0;
+			// Check orthogonality
+			double a1 = 0;
+			for (int i = 0; i < 3 * N; i++) {
+				a1 += d_H_new[i] * d_H[i];
+			}
+			LOG(INFO) << "Loss of orthogonality: " << (fabs(a1) / b);
 
 			// Renew search direction
 			for (int i = 0; i < 3 * N; i++) {
