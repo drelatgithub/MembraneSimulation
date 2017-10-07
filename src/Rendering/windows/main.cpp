@@ -1,4 +1,5 @@
 #include"glew/glew.h"
 
-#include<gl/GL.h>
-#include<gl/GLU.h>
+int main() {
+	return 0;
+}
