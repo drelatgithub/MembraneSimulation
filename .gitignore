@@ -248,3 +248,8 @@ ModelManifest.xml
 __pycache__/
 *.py[cod]
 
+# 3rd party source
+include/glew/
+
+# Includes
+!/build/

@@ -9,7 +9,7 @@ Loading an already defined mesh file into the data structure.
 
 #include"common.h"
 #include"math_public.h"
-#include"surface_mesh.h"
+#include"Mechanics/surface_mesh.h"
 #include"simulation_process.h"
 
 bool mesh_init(MS::surface_mesh &sm) {
