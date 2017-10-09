@@ -248,8 +248,8 @@ ModelManifest.xml
 __pycache__/
 *.py[cod]
 
-# 3rd party source
-#/deps/
-
 # Includes
 !/build/
+
+# 3rd Party Library
+#/build/VC/External
