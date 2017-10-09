@@ -18,5 +18,8 @@
     <ClCompile Include="..\..\..\src\Rendering\windows\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

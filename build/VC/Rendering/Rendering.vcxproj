@@ -112,7 +112,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\log.cpp" />
     <ClCompile Include="..\..\..\src\Rendering\windows\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\glfw-build\glfw.vcxproj">
+      <Project>{d2cddbac-41eb-3151-8b46-0c43bf2cb18a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
