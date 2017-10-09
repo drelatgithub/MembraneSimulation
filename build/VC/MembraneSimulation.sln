@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshGeneration", "MeshGener
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rendering", "Rendering\Rendering.vcxproj", "{8C4F6829-B87A-4CB6-8A50-F5A14D23C1EE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glfw", "glfw-build\glfw.vcxproj", "{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -79,18 +77,6 @@ Global
 		{8C4F6829-B87A-4CB6-8A50-F5A14D23C1EE}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{8C4F6829-B87A-4CB6-8A50-F5A14D23C1EE}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
 		{8C4F6829-B87A-4CB6-8A50-F5A14D23C1EE}.RelWithDebInfo|x86.Build.0 = Release|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.Debug|x64.ActiveCfg = Debug|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.Debug|x86.ActiveCfg = Debug|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.Debug|x86.Build.0 = Debug|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.MinSizeRel|x64.ActiveCfg = MinSizeRel|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.MinSizeRel|x86.ActiveCfg = MinSizeRel|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.MinSizeRel|x86.Build.0 = MinSizeRel|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.Release|x64.ActiveCfg = Release|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.Release|x86.ActiveCfg = Release|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.Release|x86.Build.0 = Release|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.RelWithDebInfo|x86.ActiveCfg = RelWithDebInfo|Win32
-		{D2CDDBAC-41EB-3151-8B46-0C43BF2CB18A}.RelWithDebInfo|x86.Build.0 = RelWithDebInfo|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
