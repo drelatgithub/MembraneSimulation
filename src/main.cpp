@@ -5,7 +5,7 @@
 #include"Mechanics/surface_mesh.h"
 #include"Mechanics/surface_mesh_tip.h"
 #include"simulation_process.h"
-#include"test.h"
+#include"Test/test.h"
 
 int main() {
 	logger::Logger::default_init("simulation.log");

@@ -120,7 +120,7 @@
     <ClInclude Include="..\..\..\src\Mechanics\surface_mesh_tip.h" />
     <ClInclude Include="..\..\..\src\mesh_initialization.h" />
     <ClInclude Include="..\..\..\src\simulation_process.h" />
-    <ClInclude Include="..\..\..\src\test.h" />
+    <ClInclude Include="..\..\..\src\Test\test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\log.cpp" />
@@ -132,7 +132,7 @@
     <ClCompile Include="..\..\..\src\Mechanics\surface_mesh_test.cpp" />
     <ClCompile Include="..\..\..\src\mesh_initialization.cpp" />
     <ClCompile Include="..\..\..\src\simulation_process.cpp" />
-    <ClCompile Include="..\..\..\src\test.cpp" />
+    <ClCompile Include="..\..\..\src\Test\test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

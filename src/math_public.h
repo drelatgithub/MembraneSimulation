@@ -2,7 +2,7 @@
 
 #include<math.h>
 
-#include"test.h"
+#include"Test/test.h"
 
 namespace math_public {
 
