@@ -120,7 +120,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\log.cpp" />
     <ClCompile Include="..\..\..\src\Rendering\windows\main.cpp" />
+    <ClCompile Include="..\..\..\src\Rendering\windows\shader_loader.cpp" />
     <ClCompile Include="..\External\src\glew\glew.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\Rendering\windows\shader_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

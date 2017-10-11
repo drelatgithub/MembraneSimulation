@@ -1,0 +1,1 @@
+../../../src/Rendering/windows/simple_vertex_shader.glsl
