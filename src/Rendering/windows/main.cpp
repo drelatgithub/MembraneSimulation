@@ -1,5 +1,8 @@
 #include"glew/glew.h"
 #include"GLFW/glfw3.h"
+#include"glm/glm.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include"glm/gtx/transform.hpp"
 
 #include"common.h"
 #include"shader_loader.h"
@@ -21,7 +24,9 @@ int main() {
 
 	// Open a window and create its OpenGL context
 	GLFWwindow* window;
-	window = glfwCreateWindow(1024, 768, "test", NULL, NULL);
+	GLuint windowWidth = 1024;
+	GLuint windowHeight = 768;
+	window = glfwCreateWindow(windowWidth, windowHeight, "Plot", NULL, NULL);
 	if (window == NULL) {
 		LOG(ERROR) << "Failed to open GLFW window.";
 		glfwTerminate();
@@ -36,7 +41,7 @@ int main() {
 		return -1;
 	}
 
-	// VAO
+	// Vertex array object
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
@@ -67,12 +72,27 @@ int main() {
 	// Load shaders
 	GLuint program_id = LoadShaders("simple_vertex_shader.glsl", "simple_fragment_shader.glsl");
 
+	// Transformations
+	glm::mat4 model = glm::mat4(1); // Identity matrix
+	glm::mat4 view = glm::lookAt(glm::vec3(4, 3, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	glm::mat4 projection = glm::perspective(
+		glm::quarter_pi<double_t>(),
+		(double_t)windowWidth / (double_t)windowHeight,
+		0.1, 100.0
+	);
+	glm::mat4 mvp = projection * view * model;
+
+	GLuint matrixId = glGetUniformLocation(program_id, "mvp");
+
 	// Main Loop
+	double_t viewZ = 4.0;
 	do {
 
 		// Clear screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Apply transformation
+		glUniformMatrix4fv(matrixId, 1, GL_FALSE, &mvp[0][0]);
 		// Use shader
 		glUseProgram(program_id);
 
