@@ -47,13 +47,9 @@ int main() {
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	gen_mesh_vertex_buffer_data("p_out.SimOut", "triangles.txt", 0);
-	// An array of 3 vectors which represents 3 vertices
-	static const GLfloat g_vertex_buffer_data[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		0.0f,  1.0f, 0.0f,
-	};
+	// Generate vertex array
+	gl_vertex_holder glvh;
+	glvh.gen_mesh_vertex_buffer_data("p_out.SimOut", "triangles.txt", 0);
 
 	// Drawing
 	// This will identify our vertex buffer
@@ -63,8 +59,7 @@ int main() {
 	// The following commands will talk about our 'vertexbuffer' buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
+	glBufferData(GL_ARRAY_BUFFER, glvh.num_tris * 9 * sizeof(GLfloat), glvh.vertex_buffer_data.data(), GL_STATIC_DRAW);
 
 
 	// Ensure we can capture the escape key being pressed below
@@ -76,18 +71,17 @@ int main() {
 
 	// Transformations
 	glm::mat4 model = glm::mat4(1); // Identity matrix
-	glm::mat4 view = glm::lookAt(glm::vec3(4, 3, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	glm::mat4 view = glm::lookAt(glm::vec3(4e-6, 3e-6, 4e-6), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 projection = glm::perspective(
 		glm::quarter_pi<double_t>(),
 		(double_t)windowWidth / (double_t)windowHeight,
-		0.1, 100.0
+		0.1e-6, 100.0e-6
 	);
 	glm::mat4 mvp = projection * view * model;
 
 	GLuint matrixId = glGetUniformLocation(program_id, "mvp");
 
 	// Main Loop
-	double_t viewZ = 4.0;
 	do {
 
 		// Clear screen
@@ -103,14 +97,14 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 		glVertexAttribPointer(
 			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-			3,                  // size
+			3,                 // size
 			GL_FLOAT,           // type
 			GL_FALSE,           // normalized?
 			0,                  // stride
 			(void*)0            // array buffer offset
 		);
 		// Draw the triangle !
-		glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+		glDrawArrays(GL_TRIANGLES, 0, glvh.num_tris*3); // Starting from vertex 0; 6 vertices total -> 2 triangle
 		glDisableVertexAttribArray(0);
 
 
