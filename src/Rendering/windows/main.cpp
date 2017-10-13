@@ -5,6 +5,7 @@
 #include"glm/gtx/transform.hpp"
 
 #include"common.h"
+#include"data_loader.h"
 #include"shader_loader.h"
 
 int main() {
@@ -46,6 +47,7 @@ int main() {
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
+	gen_mesh_vertex_buffer_data("xxx.SimOut", "triangles.txt", 0);
 	// An array of 3 vectors which represents 3 vertices
 	static const GLfloat g_vertex_buffer_data[] = {
 		-1.0f, -1.0f, 0.0f,

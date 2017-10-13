@@ -27,9 +27,15 @@
     <ClCompile Include="..\..\..\src\Rendering\windows\shader_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\Rendering\windows\data_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Rendering\windows\shader_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Rendering\windows\data_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
